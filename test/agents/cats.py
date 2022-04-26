@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
-from agents.thompson_sampling import thompson_sampling
+from agents.cats import cats
 
 
 if __name__ == '__main__':
@@ -11,8 +11,8 @@ if __name__ == '__main__':
     context = jnp.array([5.0, 5.0, 2.0, 2.0, 5.0])
 
     # agent setup
-    decay = 1.0
-    agent = thompson_sampling(context, decay)
+    decay, collision_probability = 1.0, 0.4
+    agent = cats(context, decay)
     agent = agent._replace(
         sample=jax.jit(agent.sample),
         update=jax.jit(agent.update)
@@ -27,24 +27,24 @@ if __name__ == '__main__':
 
     for t in time:
         # pull selected arm
-        key, random_key, sample_key = jax.random.split(key, 3)
+        key, random_key, sample_key1, sample_key2 = jax.random.split(key, 4)
         r = jax.random.uniform(random_key) < arms_probs[a]
 
         # update state and sample
         state = agent.update(state, a, r, t)
-        a, state = agent.sample(state, sample_key, t)
+        a, state = agent.sample(state, collision_probability, (sample_key1, sample_key2), t)
 
         # save selected action
         actions.append(a)
 
     # print agent state
-    print(f'TS approximate arms probabilities: {state.alpha / (state.alpha + state.beta)}')
+    print(f'CATS approximate arms probabilities: {state.alpha[0] / (state.alpha[0] + state.beta[0])}')
 
     # action vs time plot
     plt.figure(figsize=(8, 5), dpi=200)
     plt.scatter(time, actions, s=2)
     plt.ylim((-0.5, 4.5))
-    plt.title(f'ThompsonSampling agent [decay = {decay}]')
+    plt.title(f'CATS agent [decay = {decay}, collision probability = {collision_probability}]')
     plt.xlabel('Time')
     plt.ylabel('Action')
     plt.show()
