@@ -76,7 +76,7 @@ def cats(context: chex.Array, decay: jnp.float32 = 1.0) -> BaseAgent:
         return state
 
     def sample(state: AgentState, collision_probability: jnp.float32, keys: Tuple[jax.random.PRNGKey],
-               time: jnp.float32 = 0.0) -> tuple[jnp.float32, AgentState]:
+               time: jnp.float32 = 0.0) -> Tuple[jnp.float32, AgentState]:
         """
         Selects next action based on current agent state and collision probability.
 

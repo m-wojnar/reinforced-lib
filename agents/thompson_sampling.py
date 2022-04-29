@@ -1,4 +1,4 @@
-from typing import NamedTuple, Callable
+from typing import NamedTuple, Callable, Tuple
 
 import chex
 import jax
@@ -63,7 +63,7 @@ def thompson_sampling(context: chex.Array, decay: jnp.float32 = 1.0) -> BaseAgen
         )
         return state
 
-    def sample(state: AgentState, key: jax.random.PRNGKey, time: jnp.float32 = 0.0) -> tuple[jnp.float32, AgentState]:
+    def sample(state: AgentState, key: jax.random.PRNGKey, time: jnp.float32 = 0.0) -> Tuple[jnp.float32, AgentState]:
         """
         Selects next action based on current agent state.
 
