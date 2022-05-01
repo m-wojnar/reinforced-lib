@@ -6,6 +6,19 @@ import jax.numpy as jnp
 
 
 class BaseAgent(NamedTuple):
+    """
+    Container for functions of the ThompsonSampling agent.
+
+    Fields
+    ------
+    init : Callable
+        Creates and initializes state for ThompsonSampling agent.
+    update : Callable
+        Updates the state of the agent after performing some action and receiving a reward.
+    sample : Callable
+        Selects next action based on current agent state.
+    """
+
     init: Callable
     update: Callable
     sample: Callable
@@ -13,10 +26,18 @@ class BaseAgent(NamedTuple):
 
 class AgentState(NamedTuple):
     """
-    alpha: number of successes for each arm
-    beta: number of failures for each arm
-    last_decay: time of the last decay for each arm
+    Container for the state of the CATS agent.
+
+    Fields
+    ------
+    alpha : chex.Array
+        Number of successes for each arm.
+    beta : chex.Array
+        Number of failures for each arm.
+    last_decay : chex.Array
+        Time of the last decay for each arm.
     """
+
     alpha: chex.Array
     beta: chex.Array
     last_decay: chex.Array
@@ -26,16 +47,27 @@ def thompson_sampling(context: chex.Array, decay: jnp.float32 = 1.0) -> BaseAgen
     """
     Contextual Bernoulli Thompson sampling agent with exponential smoothing.
 
-    :param context: one-dimensional array of arms values
-    :param decay: smoothing factor (decay = 0.0 means no smoothing)
-    :return: set of ThompsonSampling agent functions
+    Parameters
+    ----------
+    context : chex.Array
+        One-dimensional array of arms values.
+    decay : float
+        Smoothing factor (decay = 0.0 means no smoothing).
+
+    Returns
+    -------
+    out : BaseAgent
+        Set of ThompsonSampling agent functions.
     """
 
     def init() -> AgentState:
         """
         Creates and initializes state for ThompsonSampling agent.
 
-        :return: initial state of ThompsonSampling agent
+        Returns
+        -------
+        out : AgentState
+            Initial state of the ThompsonSampling agent.
         """
 
         return AgentState(
@@ -48,11 +80,21 @@ def thompson_sampling(context: chex.Array, decay: jnp.float32 = 1.0) -> BaseAgen
         """
         Updates the state of the agent after performing some action and receiving a reward.
 
-        :param state: current state of agent
-        :param a: previously selected action
-        :param r: binary reward received for the previous action (1 - success, 0 - failure)
-        :param time: current time
-        :return: update agent state
+        Parameters
+        ----------
+        state : AgentState
+            Current state of agent.
+        a : int
+            Previously selected action.
+        r : int or bool
+            Binary reward received for the previous action (1 - success, 0 - failure).
+        time : float
+            Current time.
+
+        Returns
+        -------
+        out : AgentState
+            Updated agent state.
         """
 
         state = _decay_one(state, a, time)
@@ -67,10 +109,19 @@ def thompson_sampling(context: chex.Array, decay: jnp.float32 = 1.0) -> BaseAgen
         """
         Selects next action based on current agent state.
 
-        :param state: current state of the agent
-        :param key: a PRNG key used as the random key
-        :param time: current time
-        :return: tuple containing selected action and updated agent state
+        Parameters
+        ----------
+        state : AgentState
+            Current state of the agent.
+        key : jax.random.PRNGKey
+            A PRNG key used as the random key.
+        time : float
+            Current time.
+
+        Returns
+        -------
+        out : Tuple[jnp.float32, AgentState]
+            Tuple containing selected action and updated agent state.
         """
 
         state = _decay_all(state, time)
@@ -82,10 +133,19 @@ def thompson_sampling(context: chex.Array, decay: jnp.float32 = 1.0) -> BaseAgen
         """
         Applies exponential smoothing for values connected with action "a".
 
-        :param state: current state of the agent
-        :param a: action to apply smoothing
-        :param time: current time
-        :return: update agent state
+        Parameters
+        ----------
+        state : AgentState
+            Current state of the agent.
+        a : int
+            Action to apply smoothing.
+        time : float
+            Current time.
+
+        Returns
+        -------
+        out : AgentState
+            Updated agent state.
         """
 
         smoothing_value = jnp.exp(decay * (state.last_decay[a] - time))
@@ -100,9 +160,17 @@ def thompson_sampling(context: chex.Array, decay: jnp.float32 = 1.0) -> BaseAgen
         """
         Applies exponential smoothing for all values.
 
-        :param state: current state of the agent
-        :param time: current time
-        :return: update agent state
+        Parameters
+        ----------
+        state : AgentState
+            Current state of the agent.
+        time : float
+            Current time.
+
+        Returns
+        -------
+        out : AgentState
+            Updated agent state.
         """
 
         smoothing_value = jnp.exp(decay * (state.last_decay - time))

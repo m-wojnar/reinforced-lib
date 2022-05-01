@@ -6,6 +6,19 @@ import jax.numpy as jnp
 
 
 class BaseAgent(NamedTuple):
+    """
+    Container for functions of the CATS agent.
+
+    Fields
+    ------
+    init : Callable
+        Creates and initializes state for CATS agent.
+    update : Callable
+        Updates the state of the agent after performing some action and receiving a reward.
+    sample : Callable
+        Selects next action based on current agent state and collision probability.
+    """
+
     init: Callable
     update: Callable
     sample: Callable
@@ -13,10 +26,18 @@ class BaseAgent(NamedTuple):
 
 class AgentState(NamedTuple):
     """
-    alpha: number of successes for each arm
-    beta: number of failures for each arm
-    last_decay: time of the last decay for each arm
+    Container for the state of the CATS agent.
+
+    Fields
+    ------
+    alpha : chex.Array
+        Number of successes for each arm.
+    beta : chex.Array
+        Number of failures for each arm.
+    last_decay : chex.Array
+        Time of the last decay for each arm.
     """
+
     alpha: chex.Array
     beta: chex.Array
     last_decay: chex.Array
@@ -26,16 +47,27 @@ def cats(context: chex.Array, decay: jnp.float32 = 1.0) -> BaseAgent:
     """
     CATS (Collisions Aware Thompson Sampling) agent with exponential smoothing.
 
-    :param context: one-dimensional array of arms values
-    :param decay: smoothing factor (decay = 0.0 means no smoothing)
-    :return: set of CATS agent functions
+    Parameters
+    ----------
+    context : chex.Array
+        One-dimensional array of arms values.
+    decay : float
+        Smoothing factor (decay = 0.0 means no smoothing).
+
+    Returns
+    -------
+    out : BaseAgent
+        Set of CATS agent functions.
     """
 
     def init() -> AgentState:
         """
         Creates and initializes state for CATS agent.
 
-        :return: initial state of CATS agent
+        Returns
+        -------
+        out : AgentState
+            Initial state of the CATS agent.
         """
 
         return AgentState(
@@ -48,11 +80,21 @@ def cats(context: chex.Array, decay: jnp.float32 = 1.0) -> BaseAgent:
         """
         Updates the state of the agent after performing some action and receiving a reward.
 
-        :param state: current state of agent
-        :param a: previously selected action
-        :param r: binary reward received for the previous action (1 - success, 0 - failure)
-        :param time: current time
-        :return: update agent state
+        Parameters
+        ----------
+        state : AgentState
+            Current state of agent.
+        a : int
+            Previously selected action.
+        r : int or bool
+            Binary reward received for the previous action (1 - success, 0 - failure).
+        time : float
+            Current time.
+
+        Returns
+        -------
+        out : AgentState
+            Updated agent state.
         """
 
         def success(operands: Tuple) -> AgentState:
@@ -75,16 +117,26 @@ def cats(context: chex.Array, decay: jnp.float32 = 1.0) -> BaseAgent:
         state = jax.lax.cond(r > 0, success, failure, (state, a, r))
         return state
 
-    def sample(state: AgentState, collision_probability: jnp.float32, keys: Tuple[jax.random.PRNGKey],
-               time: jnp.float32 = 0.0) -> Tuple[jnp.float32, AgentState]:
+    def sample(state: AgentState, collision_probability: jnp.float32, keys: Tuple, time: jnp.float32 = 0.0
+               ) -> Tuple[jnp.float32, AgentState]:
         """
         Selects next action based on current agent state and collision probability.
 
-        :param state: current state of the agent
-        :param collision_probability: calculated probability of frames collision (IEEE 802.11 property)
-        :param keys: tuple of two PRNG keys used as the random keys
-        :param time: current time
-        :return: tuple containing selected action and updated agent state
+        Parameters
+        ----------
+        state : AgentState
+            Current state of the agent.
+        collision_probability : float
+            Calculated probability of frames collision (IEEE 802.11 property).
+        keys : Tuple[jax.random.PRNGKey, jax.random.PRNGKey]
+            Tuple of two PRNG keys used as the random keys.
+        time : float
+            Current time.
+
+        Returns
+        -------
+        out : Tuple[jnp.float32, AgentState]
+            Tuple containing selected action and updated agent state.
         """
 
         def collision(operands: Tuple) -> chex.Array:
@@ -105,10 +157,19 @@ def cats(context: chex.Array, decay: jnp.float32 = 1.0) -> BaseAgent:
         """
         Applies exponential smoothing for values connected with action "a".
 
-        :param state: current state of the agent
-        :param a: action to apply smoothing
-        :param time: current time
-        :return: update agent state
+        Parameters
+        ----------
+        state : AgentState
+            Current state of the agent.
+        a : int
+            Action to apply smoothing.
+        time : float
+            Current time.
+
+        Returns
+        -------
+        out : AgentState
+            Updated agent state.
         """
 
         smoothing_value = jnp.exp(decay * (state.last_decay[a] - time))
@@ -123,9 +184,17 @@ def cats(context: chex.Array, decay: jnp.float32 = 1.0) -> BaseAgent:
         """
         Applies exponential smoothing for all values.
 
-        :param state: current state of the agent
-        :param time: current time
-        :return: update agent state
+        Parameters
+        ----------
+        state : AgentState
+            Current state of the agent.
+        time : float
+            Current time.
+
+        Returns
+        -------
+        out : AgentState
+            Updated agent state.
         """
 
         smoothing_value = jnp.exp(decay * (state.last_decay - time))
