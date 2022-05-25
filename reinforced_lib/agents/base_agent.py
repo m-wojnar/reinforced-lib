@@ -28,6 +28,6 @@ class BaseAgent(NamedTuple):
     update: Callable
     sample: Callable
 
-    update_observation_space: gym.spaces.Space
-    sample_observation_space: gym.spaces.Space
-    action_space: gym.spaces.Space
+    update_observation_space: gym.spaces.Dict
+    sample_observation_space: gym.spaces.Dict
+    action_space: gym.spaces.Tuple
