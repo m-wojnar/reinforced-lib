@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
-from agents.thompson_sampling import thompson_sampling
+from reinforced_lib.agents.thompson_sampling import thompson_sampling
 
 
 if __name__ == '__main__':
@@ -19,6 +19,11 @@ if __name__ == '__main__':
     )
     state = agent.init()
 
+    # print observation and action spaces
+    print(agent.update_observation_space())
+    print(agent.sample_observation_space())
+    print(agent.action_space())
+
     # helper variables
     key = jax.random.PRNGKey(42)
     time = jnp.linspace(0, 20, 2000)
@@ -32,7 +37,7 @@ if __name__ == '__main__':
 
         # update state and sample
         state = agent.update(state, a, r, t)
-        a, state = agent.sample(state, sample_key, t)
+        state, a = agent.sample(state, sample_key, t)
 
         # save selected action
         actions.append(a)
