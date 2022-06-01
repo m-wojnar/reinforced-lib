@@ -10,7 +10,7 @@ class BaseAgent(NamedTuple):
     Fields
     ------
     init : Callable
-        Creates and initializes state for ThompsonSampling agent.
+        Creates and initializes state for the agent.
     update : Callable
         Updates the state of the agent after performing some action and receiving a reward.
     sample : Callable
@@ -28,6 +28,6 @@ class BaseAgent(NamedTuple):
     update: Callable
     sample: Callable
 
-    update_observation_space: gym.spaces.Dict
-    sample_observation_space: gym.spaces.Dict
-    action_space: gym.spaces.Tuple
+    update_observation_space: gym.spaces.Space
+    sample_observation_space: gym.spaces.Space
+    action_space: gym.spaces.Space

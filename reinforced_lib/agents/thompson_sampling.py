@@ -43,7 +43,7 @@ def thompson_sampling(context: chex.Array, decay: chex.Scalar = 1.0) -> BaseAgen
     Returns
     -------
     out : BaseAgent
-        Set of the Thompson Sampling agent functions.
+        Container for functions of the Thompson Sampling agent.
     """
 
     def update_observation_space() -> gym.spaces.Dict:
@@ -152,7 +152,7 @@ def thompson_sampling(context: chex.Array, decay: chex.Scalar = 1.0) -> BaseAgen
         Returns
         -------
         out : Tuple[ThompsonSamplingState, int]
-            Tuple containing selected action and updated agent state.
+            Tuple containing updated agent state and selected action.
         """
 
         state = _decay_all(state, time)
