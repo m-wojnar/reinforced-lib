@@ -1,6 +1,6 @@
 from typing import NamedTuple, Callable
 
-import gym
+import gym.spaces
 
 
 class BaseAgent(NamedTuple):
