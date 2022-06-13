@@ -1,13 +1,13 @@
 from abc import abstractmethod, ABC
 from functools import partial
-from typing import Callable, Dict, Tuple, Any, List
+from typing import Callable, Dict, Tuple, Any, List, Union
 
 import gym.spaces
 
 from reinforced_lib.agents.agent_state import AgentState
 from reinforced_lib.agents.base_agent import BaseAgent
 from reinforced_lib.envs.env_state import EnvState
-from reinforced_lib.envs.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete, FunctionInfo
+from reinforced_lib.envs.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete
 from reinforced_lib.utils.exceptions import IllegalSpaceError, IncompatibleSpacesError
 
 
@@ -58,7 +58,12 @@ class BaseEnv(ABC):
         self.update_space = self._transform_spaces(self.observation_space, self._agent.update_observation_space)
         self.sample_space = self._transform_spaces(self.observation_space, self._agent.sample_observation_space)
 
-    def _transform_spaces(self, in_space: gym.spaces.Space, out_space: gym.spaces.Space) -> Callable:
+    def _transform_spaces(
+            self,
+            in_space: gym.spaces.Space,
+            out_space: gym.spaces.Space,
+            accessor: Union[str, int] = None
+    ) -> Callable:
         """
         Creates function that transforms environments functions and observation space to given space.
 
@@ -68,6 +73,8 @@ class BaseEnv(ABC):
             Source space.
         out_space : gym.spaces.Space
             Target space.
+        accessor : Union[str, int]
+            Name defining path to nested parameters.
 
         Returns
         -------
@@ -92,7 +99,7 @@ class BaseEnv(ABC):
             test_function = simple_types[type(out_space)]
 
             if test_function(in_space, out_space):
-                return self._simple_transform
+                return partial(self._simple_transform, accessor)
 
             for parameter_function in self._observation_space_functions.values():
                 func_spec = parameter_function.function_info.space_type
@@ -109,9 +116,9 @@ class BaseEnv(ABC):
             for name, space in out_space.spaces.items():
                 if name in in_space.spaces:
                     if type(space) not in simple_types:
-                        parameters[name] = self._transform_spaces(in_space[name], space)
+                        parameters[name] = self._transform_spaces(in_space[name], space, name)
                     elif simple_types[type(space)](in_space[name], space):
-                        parameters[name] = lambda *args, **kwargs: kwargs[name]
+                        parameters[name] = partial(lambda inner_name, *args, **kwargs: kwargs[inner_name], name)
                     else:
                         raise IncompatibleSpacesError(space, in_space)
                 elif name in self._observation_space_functions:
@@ -124,7 +131,7 @@ class BaseEnv(ABC):
                 else:
                     raise IncompatibleSpacesError(space, in_space)
 
-            return partial(self._dict_transform, parameters)
+            return partial(self._dict_transform, parameters, accessor)
 
         if isinstance(out_space, gym.spaces.Tuple):
             if not isinstance(in_space, gym.spaces.Tuple) or len(in_space.spaces) != len(out_space.spaces):
@@ -135,35 +142,47 @@ class BaseEnv(ABC):
             for i, (agent_space, env_space) in enumerate(zip(in_space.spaces, out_space.spaces)):
                 if type(agent_space) in simple_types:
                     if simple_types[type(agent_space)](env_space, agent_space):
-                        parameters.append(lambda *args, **kwargs: args[i])
+                        parameters.append(partial(lambda inner_i, *args, **kwargs: args[inner_i], i))
                     else:
                         raise IncompatibleSpacesError(agent_space, in_space)
                 else:
-                    parameters.append(self._transform_spaces(env_space, agent_space))
+                    parameters.append(self._transform_spaces(env_space, agent_space, i))
 
-            return partial(self._tuple_transform, parameters)
+            return partial(self._tuple_transform, parameters, accessor)
 
         raise IllegalSpaceError()
 
     @staticmethod
-    def _simple_transform(*args: Tuple, **kwargs: Dict) -> Any:
-        # TODO fix "leaf" methods
+    def _get_selected_args(accessor: Union[str, int], *args, **kwargs) -> Any:
+        if accessor is not None:
+            if isinstance(accessor, int):
+                arguments = args[accessor]
+            else:
+                arguments = kwargs[accessor]
 
-        assert len(args) + len(kwargs) == 1, 'Provided too many arguments!'
+            if isinstance(arguments, Dict):
+                return tuple(), arguments
+            else:
+                return arguments, {}
 
-        if len(args) == 1:
+        return args, kwargs
+
+    def _simple_transform(self, accessor: Union[str, int], *args, **kwargs) -> Any:
+        args, kwargs = self._get_selected_args(accessor, *args, **kwargs)
+
+        if len(args) > 0:
             return args[0]
         else:
             first, *_ = kwargs.values()
             return first
 
-    @staticmethod
-    def _dict_transform(parameters: Dict[str, Callable], *args: Tuple, **kwargs: Dict) -> Dict:
-        return {name: func(args, kwargs) for name, func in parameters.items()}
+    def _dict_transform(self, parameters: Dict[str, Callable], accessor: Union[str, int], *args, **kwargs) -> Dict:
+        args, kwargs = self._get_selected_args(accessor, *args, **kwargs)
+        return {name: func(*args, **kwargs) for name, func in parameters.items()}
 
-    @staticmethod
-    def _tuple_transform(parameters: List[Callable], *args: Tuple, **kwargs: Dict) -> Tuple:
-        return tuple(func(args, kwargs) for func in parameters)
+    def _tuple_transform(self, parameters: List[Callable], accessor: Union[str, int], *args, **kwargs) -> Tuple:
+        args, kwargs = self._get_selected_args(accessor, *args, **kwargs)
+        return tuple(func(*args, **kwargs) for func in parameters)
 
     @property
     @abstractmethod
@@ -194,7 +213,7 @@ class BaseEnv(ABC):
         pass
 
     @abstractmethod
-    def act(self, *args: Tuple, **kwargs: Dict) -> Any:
+    def act(self, *args, **kwargs) -> Any:
         """
         Updates the state of the environment after performing some action.
         Returns the action selected by agent based on the current environment state.

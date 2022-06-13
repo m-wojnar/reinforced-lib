@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, Any
+from typing import Any
 
 import gym.spaces
 import numpy as np
@@ -17,12 +17,15 @@ class DummyAgent:
         'n': gym.spaces.Discrete(10),
         'params': gym.spaces.Tuple([
             gym.spaces.Discrete(20),
-            gym.spaces.Discrete(30)
+            gym.spaces.Discrete(30),
+            gym.spaces.Dict({
+                'test': gym.spaces.Discrete(40)
+            })
         ])
     })
 
     sample_observation_space = gym.spaces.Dict({
-        'matrix': gym.spaces.Box(low=0.0, high=1.0, shape=(10, 2))
+        'matrix': gym.spaces.Box(0.0, 1.0, (10, 2))
     })
 
     action_space = gym.spaces.Discrete(10)
@@ -33,7 +36,10 @@ class DummyEnv(BaseEnv):
         'n': gym.spaces.Discrete(10),
         'params': gym.spaces.Tuple([
             gym.spaces.Discrete(20),
-            gym.spaces.Discrete(30)
+            gym.spaces.Discrete(30),
+            gym.spaces.Dict({
+                'test': gym.spaces.Discrete(40)
+            })
         ]),
         'not_used': gym.spaces.MultiBinary((12, 15))
     })
@@ -44,19 +50,19 @@ class DummyEnv(BaseEnv):
         super().__init__(agent, agent_state)
         self.action_space = agent.action_space
 
-    @observation(parameter_type=gym.spaces.Box(low=0.0, high=1.0, shape=(10, 2)))
-    def matrix(self, arg: float) -> ndarray:
+    @observation(parameter_type=gym.spaces.Box(0.0, 1.0, (10, 2)))
+    def matrix(self, arg: float, *args, **kwargs) -> ndarray:
         assert 0.0 <= arg <= 1.0
         return np.full((10, 2), arg)
 
     @observation('time')
-    def dummy_function(self) -> float:
+    def dummy_function(self, *args, **kwargs) -> float:
         return 0.1234
 
     def reset(self) -> EnvState:
         pass
 
-    def act(self, *args: Tuple, **kwargs: Dict) -> Any:
+    def act(self, *args, **kwargs) -> Any:
         pass
 
 
@@ -64,10 +70,5 @@ if __name__ == '__main__':
     agent = DummyAgent()
     env = DummyEnv(agent, None)
 
-    obs = {
-        'n': 5,
-        'params': [10, 15]
-    }
-
-    print(env.update_space(obs))
-    print(env.sample_space(obs))
+    print(env.update_space(0.5, n=5, params=(10, 15, {'test': 20})))
+    print(env.sample_space(0.5, n=5, params=(10, 15, {'test': 20})))
