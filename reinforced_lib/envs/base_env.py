@@ -4,15 +4,12 @@ from typing import Callable, Dict, Tuple, Any, List, Union
 
 import gym.spaces
 
-from reinforced_lib.agents.agent_state import AgentState
-from reinforced_lib.agents.base_agent import BaseAgent
-from reinforced_lib.envs.env_state import EnvState
 from reinforced_lib.envs.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete
 from reinforced_lib.utils.exceptions import IllegalSpaceError, IncompatibleSpacesError
 
 
 class BaseEnv(ABC):
-    def __init__(self, agent: BaseAgent, agent_state: AgentState) -> None:
+    def __init__(self, agent_update_space: gym.spaces.Space, agent_sample_space: gym.spaces.Space) -> None:
         """
         Container for functions of the environment and definition of action and state spaces.
         Provides transformation from environments functions and observation space to agents observation spaces.
@@ -38,14 +35,11 @@ class BaseEnv(ABC):
 
         Parameters
         ----------
-        agent : BaseAgent
-            Container for functions of the agent.
-        agent_state : AgentState
-            Container for the state of agent.
+        agent_update_space : gym.spaces.Space
+            Parameters required by the agents 'update' function in OpenAI Gym format.
+        agent_sample_space : gym.spaces.Space
+            Parameters required by the agents 'sample' function in OpenAI Gym format.
         """
-
-        self._agent = agent
-        self._agent_state = agent_state
 
         self._observation_space_functions: Dict[str, Callable] = {}
 
@@ -55,8 +49,8 @@ class BaseEnv(ABC):
             if hasattr(obj, 'function_info'):
                 self._observation_space_functions[obj.function_info.parameter_name] = obj
 
-        self.update_space = self._transform_spaces(self.observation_space, self._agent.update_observation_space)
-        self.sample_space = self._transform_spaces(self.observation_space, self._agent.sample_observation_space)
+        self.update_space = self._transform_spaces(self.observation_space, agent_update_space)
+        self.sample_space = self._transform_spaces(self.observation_space, agent_sample_space)
 
     def _transform_spaces(
             self,
@@ -201,14 +195,9 @@ class BaseEnv(ABC):
         pass
 
     @abstractmethod
-    def reset(self) -> EnvState:
+    def reset(self) -> None:
         """
         Resets environment to initial state and returns the initial state.
-
-        Returns
-        -------
-        out : EnvState
-            Initial environment state.
         """
         pass
 
