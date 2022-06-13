@@ -1,15 +1,17 @@
-import abc
-from typing import Callable, Dict, Tuple, Any
+from abc import abstractmethod, ABC
+from functools import partial
+from typing import Callable, Dict, Tuple, Any, List
 
 import gym.spaces
 
-from envs.env_state import EnvState
 from reinforced_lib.agents.agent_state import AgentState
 from reinforced_lib.agents.base_agent import BaseAgent
+from reinforced_lib.envs.env_state import EnvState
 from reinforced_lib.envs.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete, FunctionInfo
+from reinforced_lib.utils.exceptions import IllegalSpaceError, IncompatibleSpacesError
 
 
-class BaseEnv(abc.ABC):
+class BaseEnv(ABC):
     def __init__(self, agent: BaseAgent, agent_state: AgentState) -> None:
         """
         Container for functions of the environment and definition of action and state spaces.
@@ -24,9 +26,9 @@ class BaseEnv(abc.ABC):
 
         Functions
         ----------
-        update_space_transform : Callable
+        update_space : Callable
             Transformation to agents update_observation_space.
-        sample_space_transform : Callable
+        sample_space : Callable
             Transformation to agents sample_observation_space.
         reset : Callable
             Returns the environments initial state.
@@ -45,16 +47,25 @@ class BaseEnv(abc.ABC):
         self._agent = agent
         self._agent_state = agent_state
 
-        self._observation_space_functions: Dict[str, FunctionInfo] = {}
-        self.update_space_transform = self._transform_spaces(self._agent.update_observation_space)
-        self.sample_space_transform = self._transform_spaces(self._agent.sample_observation_space)
+        self._observation_space_functions: Dict[str, Callable] = {}
 
-    def _transform_spaces(self, out_space: gym.spaces.Space) -> Callable:
+        for name in dir(self):
+            obj = getattr(self, name)
+
+            if hasattr(obj, 'function_info'):
+                self._observation_space_functions[obj.function_info.parameter_name] = obj
+
+        self.update_space = self._transform_spaces(self.observation_space, self._agent.update_observation_space)
+        self.sample_space = self._transform_spaces(self.observation_space, self._agent.sample_observation_space)
+
+    def _transform_spaces(self, in_space: gym.spaces.Space, out_space: gym.spaces.Space) -> Callable:
         """
         Creates function that transforms environments functions and observation space to given space.
 
         Parameters
         ----------
+        in_space : gym.spaces.Space
+            Source space.
         out_space : gym.spaces.Space
             Target space.
 
@@ -75,26 +86,69 @@ class BaseEnv(abc.ABC):
         }
 
         if type(out_space) in simple_types:
+            if type(in_space) not in simple_types:
+                raise IncompatibleSpacesError(in_space, out_space)
+
             test_function = simple_types[type(out_space)]
 
-            if test_function(self.observation_space, out_space):
+            if test_function(in_space, out_space):
                 return self._simple_transform
 
-            for space_function in dir(self):
-                func = getattr(self, space_function)
+            for parameter_function in self._observation_space_functions.values():
+                func_spec = parameter_function.function_info.space_type
 
-                if not hasattr(func, 'function_info'):
-                    continue
+                if func_spec is None or test_function(func_spec, out_space):
+                    return lambda *args, **kwargs: parameter_function(*args, **kwargs)
 
-                if test_function(func.function_info.space_type, out_space):
-                    return lambda *args, **kwargs: getattr(self, space_function)(*args, **kwargs)
+        if isinstance(out_space, gym.spaces.Dict):
+            if not isinstance(in_space, gym.spaces.Dict):
+                raise IncompatibleSpacesError(in_space, out_space)
 
-        # TODO gym.spaces.Dict
+            parameters: Dict[str, Callable] = {}
 
-        # TODO gym.spaces.Tuple
+            for name, space in out_space.spaces.items():
+                if name in in_space.spaces:
+                    if type(space) not in simple_types:
+                        parameters[name] = self._transform_spaces(in_space[name], space)
+                    elif simple_types[type(space)](in_space[name], space):
+                        parameters[name] = lambda *args, **kwargs: kwargs[name]
+                    else:
+                        raise IncompatibleSpacesError(space, in_space)
+                elif name in self._observation_space_functions:
+                    func_space = self._observation_space_functions[name].function_info.space_type
+
+                    if func_space is None or simple_types[type(space)](func_space, space):
+                        parameters[name] = self._observation_space_functions[name]
+                    else:
+                        raise IncompatibleSpacesError(space, func_space)
+                else:
+                    raise IncompatibleSpacesError(space, in_space)
+
+            return partial(self._dict_transform, parameters)
+
+        if isinstance(out_space, gym.spaces.Tuple):
+            if not isinstance(in_space, gym.spaces.Tuple) or len(in_space.spaces) != len(out_space.spaces):
+                raise IncompatibleSpacesError(in_space, out_space)
+
+            parameters: List[Callable] = []
+
+            for i, (agent_space, env_space) in enumerate(zip(in_space.spaces, out_space.spaces)):
+                if type(agent_space) in simple_types:
+                    if simple_types[type(agent_space)](env_space, agent_space):
+                        parameters.append(lambda *args, **kwargs: args[i])
+                    else:
+                        raise IncompatibleSpacesError(agent_space, in_space)
+                else:
+                    parameters.append(self._transform_spaces(env_space, agent_space))
+
+            return partial(self._tuple_transform, parameters)
+
+        raise IllegalSpaceError()
 
     @staticmethod
-    def _simple_transform(*args, **kwargs) -> Any:
+    def _simple_transform(*args: Tuple, **kwargs: Dict) -> Any:
+        # TODO fix "leaf" methods
+
         assert len(args) + len(kwargs) == 1, 'Provided too many arguments!'
 
         if len(args) == 1:
@@ -103,8 +157,16 @@ class BaseEnv(abc.ABC):
             first, *_ = kwargs.values()
             return first
 
+    @staticmethod
+    def _dict_transform(parameters: Dict[str, Callable], *args: Tuple, **kwargs: Dict) -> Dict:
+        return {name: func(args, kwargs) for name, func in parameters.items()}
+
+    @staticmethod
+    def _tuple_transform(parameters: List[Callable], *args: Tuple, **kwargs: Dict) -> Tuple:
+        return tuple(func(args, kwargs) for func in parameters)
+
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def observation_space(self) -> gym.spaces.Space:
         """
         Parameters required by the environments 'act' function in OpenAI Gym format.
@@ -112,14 +174,14 @@ class BaseEnv(abc.ABC):
         pass
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def action_space(self) -> gym.spaces.Space:
         """
         Action selected by the agent in OpenAI Gym format.
         """
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def reset(self) -> EnvState:
         """
         Resets environment to initial state and returns the initial state.
@@ -131,7 +193,7 @@ class BaseEnv(abc.ABC):
         """
         pass
 
-    @abc.abstractmethod
+    @abstractmethod
     def act(self, *args: Tuple, **kwargs: Dict) -> Any:
         """
         Updates the state of the environment after performing some action.
