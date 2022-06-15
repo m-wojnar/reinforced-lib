@@ -9,7 +9,11 @@ from reinforced_lib.utils.exceptions import IllegalSpaceError, IncompatibleSpace
 
 
 class BaseEnv(ABC):
-    def __init__(self, agent_update_space: gym.spaces.Space, agent_sample_space: gym.spaces.Space) -> None:
+    def __init__(
+            self,
+            agent_update_space: gym.spaces.Space = None,
+            agent_sample_space: gym.spaces.Space = None
+    ) -> None:
         """
         Container for domain-specific knowledge and functions for a given environment. Provides transformation
         from environment functions and observation space to agents observation and sample spaces.
@@ -17,18 +21,18 @@ class BaseEnv(ABC):
         Parameters
         ----------
         agent_update_space : gym.spaces.Space
-            Parameters required by the agents 'update' function in OpenAI Gym format.
+            Observations required by the agents 'update' function in OpenAI Gym format.
         agent_sample_space : gym.spaces.Space
-            Parameters required by the agents 'sample' function in OpenAI Gym format.
+            Observations required by the agents 'sample' function in OpenAI Gym format.
         """
 
-        self._observation_space_functions: Dict[str, Callable] = {}
+        self._observation_functions: Dict[str, Callable] = {}
 
         for name in dir(self):
             obj = getattr(self, name)
 
             if hasattr(obj, 'function_info'):
-                self._observation_space_functions[obj.function_info.parameter_name] = obj
+                self._observation_functions[obj.function_info.observation_name] = obj
 
         self._update_space_transform = self._transform_spaces(self.observation_space, agent_update_space)
         self._sample_space_transform = self._transform_spaces(self.observation_space, agent_sample_space)
@@ -37,7 +41,7 @@ class BaseEnv(ABC):
     @abstractmethod
     def observation_space(self) -> gym.spaces.Space:
         """
-        Parameters required by the 'transform' function in OpenAI Gym format.
+        Observations taken by the 'transform' function in OpenAI Gym format.
         """
 
         pass
@@ -85,54 +89,57 @@ class BaseEnv(ABC):
             if test_function(in_space, out_space):
                 return partial(self._simple_transform, accessor)
 
-            for parameter_function in self._observation_space_functions.values():
-                func_spec = parameter_function.function_info.space_type
+            for observation_function in self._observation_functions.values():
+                func_spec = observation_function.function_info.observation_type
 
                 if func_spec is None or test_function(func_spec, out_space):
-                    return lambda *args, **kwargs: parameter_function(*args, **kwargs)
+                    return observation_function
 
         if isinstance(out_space, gym.spaces.Dict):
             if not isinstance(in_space, gym.spaces.Dict):
                 raise IncompatibleSpacesError(in_space, out_space)
 
-            parameters: Dict[str, Callable] = {}
+            observations: Dict[str, Callable] = {}
 
             for name, space in out_space.spaces.items():
                 if name in in_space.spaces:
                     if type(space) not in simple_types:
-                        parameters[name] = self._transform_spaces(in_space[name], space, name)
+                        observations[name] = self._transform_spaces(in_space[name], space, name)
                     elif simple_types[type(space)](in_space[name], space):
-                        parameters[name] = partial(lambda inner_name, *args, **kwargs: kwargs[inner_name], name)
+                        observations[name] = partial(lambda inner_name, *args, **kwargs: kwargs[inner_name], name)
                     else:
                         raise IncompatibleSpacesError(space, in_space)
-                elif name in self._observation_space_functions:
-                    func_space = self._observation_space_functions[name].function_info.space_type
+                elif name in self._observation_functions:
+                    func_space = self._observation_functions[name].function_info.observation_type
 
                     if func_space is None or simple_types[type(space)](func_space, space):
-                        parameters[name] = self._observation_space_functions[name]
+                        observations[name] = partial(
+                            lambda func, inner_name, inner_accessor, *args, **kwargs:
+                            self._function_transform(func, inner_name, inner_accessor, *args, **kwargs),
+                            self._observation_functions[name], name, accessor
+                        )
                     else:
                         raise IncompatibleSpacesError(space, func_space)
                 else:
                     raise IncompatibleSpacesError(space, in_space)
 
-            return partial(self._dict_transform, parameters, accessor)
+            return partial(self._dict_transform, observations, accessor)
 
         if isinstance(out_space, gym.spaces.Tuple):
             if not isinstance(in_space, gym.spaces.Tuple) or len(in_space.spaces) != len(out_space.spaces):
                 raise IncompatibleSpacesError(in_space, out_space)
 
-            parameters: List[Callable] = []
+            observations: List[Callable] = []
 
             for i, (agent_space, env_space) in enumerate(zip(in_space.spaces, out_space.spaces)):
-                if type(agent_space) in simple_types:
-                    if simple_types[type(agent_space)](env_space, agent_space):
-                        parameters.append(partial(lambda inner_i, *args, **kwargs: args[inner_i], i))
-                    else:
-                        raise IncompatibleSpacesError(agent_space, in_space)
+                if type(agent_space) not in simple_types:
+                    observations.append(self._transform_spaces(env_space, agent_space, i))
+                elif simple_types[type(agent_space)](env_space, agent_space):
+                    observations.append(partial(lambda inner_i, *args, **kwargs: args[inner_i], i))
                 else:
-                    parameters.append(self._transform_spaces(env_space, agent_space, i))
+                    raise IncompatibleSpacesError(agent_space, in_space)
 
-            return partial(self._tuple_transform, parameters, accessor)
+            return partial(self._tuple_transform, observations, accessor)
 
         raise IllegalSpaceError()
 
@@ -196,14 +203,44 @@ class BaseEnv(ABC):
             first, *_ = kwargs.values()
             return first
 
-    def _dict_transform(self, parameters: Dict[str, Callable], accessor: Union[str, int], *args, **kwargs) -> Dict:
+    def _function_transform(self, func: Callable, name: str, accessor: Union[str, int], *args, **kwargs) -> Any:
+        """
+        Returns the appropriate observation from environment function (or from observation space if present).
+
+        Parameters
+        ----------
+        func : Callable
+            Function that returns selected observation.
+        name : str
+            Name of selected observation.
+        accessor : Union[str, int]
+            Path to nested observations.
+        args : Tuple
+            Environment observation space.
+        kwargs : Dict
+            Environment observation space.
+
+        Returns
+        -------
+        out : Any
+            Selected observation from environment function.
+        """
+
+        args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
+
+        if name in kwargs:
+            return kwargs[name]
+        else:
+            return func(*args, **kwargs)
+
+    def _dict_transform(self, observations: Dict[str, Callable], accessor: Union[str, int], *args, **kwargs) -> Dict:
         """
         Returns a dictionary filled with appropriate observations from environment functions and observation space.
         
         Parameters
         ----------
-        parameters : Dict[str, Callable]
-            Dictionary with parameter names and functions that provide selected observations.
+        observations : Dict[str, Callable]
+            Dictionary with observation names and functions that provide selected observations.
         accessor : Union[str, int]
             Path to nested observations.
         args : Tuple
@@ -218,15 +255,15 @@ class BaseEnv(ABC):
         """
         
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
-        return {name: func(*args, **kwargs) for name, func in parameters.items()}
+        return {name: func(*args, **kwargs) for name, func in observations.items()}
 
-    def _tuple_transform(self, parameters: List[Callable], accessor: Union[str, int], *args, **kwargs) -> Tuple:
+    def _tuple_transform(self, observations: List[Callable], accessor: Union[str, int], *args, **kwargs) -> Tuple:
         """
         Returns a tuple filled with appropriate observations from environment functions and observation space.
 
         Parameters
         ----------
-        parameters : List[Callable]
+        observations : List[Callable]
             List with functions that provide selected observations.
         accessor : Union[str, int]
             Path to nested observations.
@@ -242,7 +279,7 @@ class BaseEnv(ABC):
         """
 
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
-        return tuple(func(*args, **kwargs) for func in parameters)
+        return tuple(func(*args, **kwargs) for func in observations)
 
     def transform(self, *args, **kwargs) -> Tuple[Any, Any]:
         """

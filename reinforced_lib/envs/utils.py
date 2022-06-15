@@ -16,19 +16,19 @@ class FunctionInfo(NamedTuple):
         Type of the provided parameter in OpenAI Gym format.
     """
 
-    parameter_name: str
-    space_type: gym.spaces.Space
+    observation_name: str
+    observation_type: gym.spaces.Space
 
 
-def observation(parameter_name: str = None, parameter_type: gym.spaces.Space = None) -> Callable:
+def observation(observation_name: str = None, observation_type: gym.spaces.Space = None) -> Callable:
     """
     Decorator used to annotate functions that provide one of the parameters of the observation space.
 
     Parameters
     ----------
-    parameter_name : str
+    observation_name : str
         Name of the provided parameter.
-    parameter_type : gym.spaces.Space
+    observation_type : gym.spaces.Space
         Type of the provided parameter in OpenAI Gym format.
 
     Returns
@@ -38,8 +38,8 @@ def observation(parameter_name: str = None, parameter_type: gym.spaces.Space = N
     """
 
     def decorator(function):
-        name = parameter_name if parameter_name is not None else function.__name__
-        function.function_info = FunctionInfo(name, parameter_type)
+        name = observation_name if observation_name is not None else function.__name__
+        function.function_info = FunctionInfo(name, observation_type)
         return function
 
     return decorator

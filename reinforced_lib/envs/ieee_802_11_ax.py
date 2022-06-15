@@ -70,18 +70,18 @@ class IEEE_802_11_ax(BaseEnv):
         33.6907,
     ])
 
-    @observation(parameter_type=gym.spaces.Box(0.0, np.inf, (len(_wifi_modes_rates),)))
+    @observation(observation_type=gym.spaces.Box(0.0, np.inf, (len(_wifi_modes_rates),)))
     def rates(self, *args, **kwargs) -> np.ndarray:
         return self._wifi_modes_rates
 
-    @observation(parameter_type=gym.spaces.Box(0.0, np.inf, (len(_wifi_modes_snrs),)))
+    @observation(observation_type=gym.spaces.Box(0.0, np.inf, (len(_wifi_modes_snrs),)))
     def min_snr(self, *args, **kwargs) -> np.ndarray:
         return self._wifi_modes_snrs
 
-    @observation(parameter_type=gym.spaces.Box(0.0, np.inf, (len(_wifi_modes_rates),)))
+    @observation(observation_type=gym.spaces.Box(0.0, np.inf, (len(_wifi_modes_rates),)))
     def context(self, *args, **kwargs) -> np.ndarray:
         return self._wifi_modes_rates
 
-    @observation(parameter_type=gym.spaces.Box(0.0, 1.0, (1,)))
+    @observation(observation_type=gym.spaces.Box(0.0, 1.0, (1,)))
     def collision_probability(self, n_wifi: int, *args, **kwargs) -> float:
         return 0.154887 * np.log(1.03102 * n_wifi)
