@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 import gym.spaces
 
 from reinforced_lib.envs.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete
-from reinforced_lib.utils.exceptions import IllegalSpaceError, IncompatibleSpacesError
+from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpacesError
 
 
 class BaseEnv(ABC):
@@ -134,7 +134,7 @@ class BaseEnv(ABC):
 
             return partial(self._tuple_transform, parameters, accessor)
 
-        raise IllegalSpaceError()
+        raise IncorrectSpaceError()
 
     @staticmethod
     def _get_nested_args(accessor: Union[str, int], *args, **kwargs) -> Tuple[Tuple, Dict]:
