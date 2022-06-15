@@ -90,9 +90,9 @@ class BaseEnv(ABC):
                 return partial(self._simple_transform, accessor)
 
             for observation_function in self._observation_functions.values():
-                func_spec = observation_function.function_info.observation_type
+                func_space = observation_function.function_info.observation_type
 
-                if func_spec is None or test_function(func_spec, out_space):
+                if func_space is None or test_function(func_space, out_space):
                     return observation_function
 
         if isinstance(out_space, gym.spaces.Dict):
