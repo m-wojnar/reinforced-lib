@@ -42,7 +42,7 @@ class DummyEnv(BaseEnv):
         'not_used': gym.spaces.MultiBinary((12, 15))
     })
 
-    @observation(parameter_type=gym.spaces.Box(0.0, 1.0, (10, 2)))
+    @observation(observation_type=gym.spaces.Box(0.0, 1.0, (10, 2)))
     def matrix(self, arg: float, *args, **kwargs) -> ndarray:
         assert 0.0 <= arg <= 1.0
         return np.full((10, 2), arg)
@@ -56,5 +56,5 @@ if __name__ == '__main__':
     agent = DummyAgent()
     env = DummyEnv(agent.update_observation_space, agent.sample_observation_space)
 
-    print(env._update_space_transform(0.5, n=5, params=(10, 15, {'test': 20})))
+    print(env._update_space_transform(0.5, time=123, n=5, params=(10, 15, {'test': 20})))
     print(env._sample_space_transform(0.5, n=5, params=(10, 15, {'test': 20})))
