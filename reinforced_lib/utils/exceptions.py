@@ -5,7 +5,7 @@ import gym.spaces
 
 class NoAgentError(Exception):
     """
-    Exception is raised when no agent is specified.
+    Raised when no agent is specified.
     """
 
     def __str__(self) -> str:
@@ -14,7 +14,7 @@ class NoAgentError(Exception):
 
 class NoEnvironmentError(Exception):
     """
-    Exception is raised when no environment is specified.
+    Raised when no environment is specified.
     """
 
     def __str__(self) -> str:
@@ -23,7 +23,7 @@ class NoEnvironmentError(Exception):
 
 class IncorrectTypeError(Exception):
     """
-    Exception is raised when provided class type is incorrect.
+    Raised when provided class type is incorrect.
     """
 
     def __init__(self, provided_type: type = None, expected: str = None) -> None:
@@ -36,7 +36,7 @@ class IncorrectTypeError(Exception):
 
 class IncorrectAgentTypeError(IncorrectTypeError):
     """
-    Exception is raised when provided agent is not an agent class.
+    Raised when provided agent is not an agent class.
     """
 
     def __init__(self, provided_type: Any) -> None:
@@ -45,7 +45,7 @@ class IncorrectAgentTypeError(IncorrectTypeError):
 
 class IncorrectEnvironmentTypeError(IncorrectTypeError):
     """
-    Exception is raised when provided environment is not an environment class.
+    Raised when provided environment is not an environment class.
     """
 
     def __init__(self, provided_type: Any) -> None:
@@ -54,7 +54,7 @@ class IncorrectEnvironmentTypeError(IncorrectTypeError):
         
 class ForbiddenOperationError(Exception):
     """
-    Exception is raised when user is trying to perform forbidden operation.
+    Raised when user is trying to perform forbidden operation.
     """
 
     def __str__(self) -> str:
@@ -63,25 +63,25 @@ class ForbiddenOperationError(Exception):
 
 class ForbiddenAgentChangeError(ForbiddenOperationError):
     """
-    Exception is raised when user is trying to change agent type after agents initialization.
+    Raised when user is trying to change the agent type after the first agent instance is initialized.
     """
 
     def __str__(self) -> str:
-        return 'Cannot change agent type after agents initialization.'
+        return 'Cannot change agent type after the first agent instance is initialized.'
 
 
 class ForbiddenEnvironmentChangeError(ForbiddenOperationError):
     """
-    Exception is raised when user is trying to change environment type after agents initialization.
+    Raised when user is trying to change the environment type after the first agent instance is initialized.
     """
 
     def __str__(self) -> str:
-        return 'Cannot change environment type after agents initialization.'
+        return 'Cannot change environment type after the first agent instance is initialized.'
 
 
 class ForbiddenEnvironmentSetError(ForbiddenOperationError):
     """
-    Exception is raised when user is trying to set environment type when 'no_env_mode' is enabled.
+    Raised when user is trying to set environment type when 'no_env_mode' is enabled.
     """
 
     def __str__(self) -> str:
@@ -90,7 +90,7 @@ class ForbiddenEnvironmentSetError(ForbiddenOperationError):
 
 class IncorrectSpaceError(Exception):
     """
-    Exception is raised when unknown space is provided, for example custom OpenAI Gym space.
+    Raised when unknown space is provided, for example custom OpenAI Gym space.
     """
 
     def __str__(self) -> str:
@@ -99,7 +99,7 @@ class IncorrectSpaceError(Exception):
 
 class IncompatibleSpacesError(Exception):
     """
-    Exception is raised when observation spaces of two different modules are not compatible.
+    Raised when observation spaces of two different modules are not compatible.
     """
 
     def __init__(self, env_space: gym.spaces.Space, agent_space: gym.spaces.Space) -> None:
