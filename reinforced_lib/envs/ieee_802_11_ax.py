@@ -1,5 +1,6 @@
 import gym.spaces
 import numpy as np
+from scipy.special import erf
 
 from reinforced_lib.envs.base_env import BaseEnv
 from reinforced_lib.envs.utils import observation
@@ -8,9 +9,9 @@ from reinforced_lib.envs.utils import observation
 class IEEE_802_11_ax(BaseEnv):
     def __init__(self, agent_update_space: gym.spaces.Space, agent_sample_space: gym.spaces.Space) -> None:
         """
-        IEEE 802.11ax [1] environment. Provides data rates (in Mb/s) for consecutive MCS (modulation and coding
-        scheme) modes, minimal SNR (signal-to-noise ratio) for each mode and approximated collision probability
-        for given number of transmitting stations.
+        IEEE 802.11ax [1] environment. Provides data rates (in Mb/s) for consecutive MCS (modulation and coding scheme)
+        modes, minimal SNR (signal-to-noise ratio) for each MCS, approximated collision probability for a given number
+        of transmitting stations, and approximated transmission success probability for a given SNR and all MCS modes.
 
         Parameters
         ----------
@@ -85,3 +86,7 @@ class IEEE_802_11_ax(BaseEnv):
     @observation(observation_type=gym.spaces.Box(0.0, 1.0, (1,)))
     def collision_probability(self, n_wifi: int, *args, **kwargs) -> float:
         return 0.154887 * np.log(1.03102 * n_wifi)
+
+    @observation(observation_type=gym.spaces.Box(0.0, 1.0, (len(_wifi_modes_rates),)))
+    def success_probability(self, snr: float, *args, **kwargs) -> np.ndarray:
+        return 0.5 * (1 + erf(2 * (snr - self._wifi_modes_snrs + 0.5)))
