@@ -4,7 +4,7 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 
 import gym.spaces
 
-from reinforced_lib.envs.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete
+from reinforced_lib.envs.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete, test_space
 from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpacesError
 
 
@@ -77,7 +77,8 @@ class BaseEnv(ABC):
             gym.spaces.Box: test_box,
             gym.spaces.Discrete: test_discrete,
             gym.spaces.MultiBinary: test_multi_binary,
-            gym.spaces.MultiDiscrete: test_multi_discrete
+            gym.spaces.MultiDiscrete: test_multi_discrete,
+            gym.spaces.Space: test_space
         }
 
         if type(out_space) in simple_types:
@@ -108,7 +109,7 @@ class BaseEnv(ABC):
                     elif simple_types[type(space)](in_space[name], space):
                         observations[name] = partial(lambda inner_name, *args, **kwargs: kwargs[inner_name], name)
                     else:
-                        raise IncompatibleSpacesError(space, in_space)
+                        raise IncompatibleSpacesError(in_space, space)
                 elif name in self._observation_functions:
                     func_space = self._observation_functions[name].function_info.observation_type
 
@@ -119,9 +120,9 @@ class BaseEnv(ABC):
                             self._observation_functions[name], name, accessor
                         )
                     else:
-                        raise IncompatibleSpacesError(space, func_space)
+                        raise IncompatibleSpacesError(func_space, space)
                 else:
-                    raise IncompatibleSpacesError(space, in_space)
+                    raise IncompatibleSpacesError(in_space, space)
 
             return partial(self._dict_transform, observations, accessor)
 

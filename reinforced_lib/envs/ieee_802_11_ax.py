@@ -7,7 +7,11 @@ from reinforced_lib.envs.utils import observation
 
 
 class IEEE_802_11_ax(BaseEnv):
-    def __init__(self, agent_update_space: gym.spaces.Space, agent_sample_space: gym.spaces.Space) -> None:
+    def __init__(
+            self,
+            agent_update_space: gym.spaces.Space = None,
+            agent_sample_space: gym.spaces.Space = None
+    ) -> None:
         """
         IEEE 802.11ax [1] environment. Provides data rates (in Mb/s) for consecutive MCS (modulation and coding scheme)
         modes, minimal SNR (signal-to-noise ratio) for each MCS, approximated collision probability for a given number

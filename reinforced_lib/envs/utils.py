@@ -132,3 +132,24 @@ def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> boo
     return isinstance(a, gym.spaces.MultiDiscrete) and \
            np.array_equal(a.nvec, b.nvec) and \
            a.dtype == b.dtype
+
+
+def test_space(a: gym.spaces.Space, b: gym.spaces.Space) -> bool:
+    """
+    Tests if space 'a' is identical to space 'b'.
+
+    Parameters
+    ----------
+    a : gym.spaces.Space
+        Space 'a'.
+    b : gym.spaces.Space
+        Space 'b'.
+
+    Returns
+    -------
+    out: bool
+        Result of the comparison.
+    """
+
+    return a.shape == b.shape and \
+           a.dtype == b.dtype

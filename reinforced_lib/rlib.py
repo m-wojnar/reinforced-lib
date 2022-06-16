@@ -137,6 +137,7 @@ class RLib:
 
         raise NotImplementedError()
 
+    @property
     def observation_space(self) -> gym.spaces.Space:
         """
         Returns observation space of selected environment or agent (if 'no_env_mode' is enabled).
@@ -161,6 +162,7 @@ class RLib:
             else:
                 return self._env.observation_space
 
+    @property
     def action_space(self) -> gym.spaces.Space:
         """
         Returns action space of selected agent.
