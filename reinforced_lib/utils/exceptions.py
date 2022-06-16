@@ -5,7 +5,7 @@ import gym.spaces
 
 class NoAgentError(Exception):
     """
-    Exception is thrown when no agent is specified.
+    Exception is raised when no agent is specified.
     """
 
     def __str__(self) -> str:
@@ -14,7 +14,7 @@ class NoAgentError(Exception):
 
 class NoEnvironmentError(Exception):
     """
-    Exception is thrown when no environment is specified.
+    Exception is raised when no environment is specified.
     """
 
     def __str__(self) -> str:
@@ -23,7 +23,7 @@ class NoEnvironmentError(Exception):
 
 class IncorrectTypeError(Exception):
     """
-    Exception in thrown when provided class type is incorrect.
+    Exception is raised when provided class type is incorrect.
     """
 
     def __init__(self, provided_type: type = None, expected: str = None) -> None:
@@ -34,22 +34,58 @@ class IncorrectTypeError(Exception):
         return f'{self._provided_type} is not a valid {self._expected} type.'
 
 
-class IncorrectAgentError(IncorrectTypeError):
+class IncorrectAgentTypeError(IncorrectTypeError):
     """
-    Exception in thrown when provided agent is not an agent class.
+    Exception is raised when provided agent is not an agent class.
     """
 
     def __init__(self, provided_type: Any) -> None:
         super(provided_type, 'agent')
 
 
-class IncorrectEnvironmentError(IncorrectTypeError):
+class IncorrectEnvironmentTypeError(IncorrectTypeError):
     """
-    Exception in thrown when provided environment is not an environment class.
+    Exception is raised when provided environment is not an environment class.
     """
 
     def __init__(self, provided_type: Any) -> None:
         super(provided_type, 'environment')
+        
+        
+class ForbiddenOperationError(Exception):
+    """
+    Exception is raised when user is trying to perform forbidden operation.
+    """
+
+    def __str__(self) -> str:
+        return 'Forbidden operation.'
+
+
+class ForbiddenAgentChangeError(ForbiddenOperationError):
+    """
+    Exception is raised when user is trying to change agent type after agents initialization.
+    """
+
+    def __str__(self) -> str:
+        return 'Cannot change agent type after agents initialization.'
+
+
+class ForbiddenEnvironmentChangeError(ForbiddenOperationError):
+    """
+    Exception is raised when user is trying to change environment type after agents initialization.
+    """
+
+    def __str__(self) -> str:
+        return 'Cannot change environment type after agents initialization.'
+
+
+class ForbiddenEnvironmentSetError(ForbiddenOperationError):
+    """
+    Exception is raised when user is trying to set environment type when 'no_env_mode' is enabled.
+    """
+
+    def __str__(self) -> str:
+        return 'Cannot set environment type when \'no_env_mode\' is enabled.'
 
 
 class IncorrectSpaceError(Exception):
