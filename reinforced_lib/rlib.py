@@ -8,6 +8,27 @@ from reinforced_lib.utils.exceptions import *
 
 
 class RLib:
+    """
+    Main class of the library. Exposes a simple and intuitive interface to use the library.
+
+    Parameters
+    ----------
+    agent_type : type
+        Type of selected agent. Must inherit from the BaseAgent class.
+    agent_params : Dict
+        Parameters of selected agent.
+    env_type : type
+        Type of selected environment. Must inherit from the BaseEnv class.
+    env_params : Dict
+        Parameters of selected environment.
+    log_type : Union[type, List[type]]
+        Types of selected logging modules.
+    log_params : Union[Dict, List[Dict]]
+        Parameters of selected logging modules.
+    no_env_mode : bool
+        Pass observations directly to agent (don't use envs module).
+    """
+
     def __init__(
             self, *,
             agent_type: type = None,
@@ -18,27 +39,6 @@ class RLib:
             log_params: Union[Dict, List[Dict]] = None,
             no_env_mode: bool = False
     ) -> None:
-        """
-        Main class of the library. Exposes a simple and intuitive interface to use the library.
-
-        Parameters
-        ----------
-        agent_type : type
-            Type of selected agent. Must inherit from the BaseAgent class.
-        agent_params : Dict
-            Parameters of selected agent.
-        env_type : type
-            Type of selected environment. Must inherit from the BaseEnv class.
-        env_params : Dict
-            Parameters of selected environment.
-        log_type : Union[type, List[type]]
-            Types of selected logging modules.
-        log_params : Union[Dict, List[Dict]]
-            Parameters of selected logging modules.
-        no_env_mode : bool
-            Pass observations directly to agent (don't use envs module).
-        """
-
         self._no_env_mode = no_env_mode
 
         self._agent = None
@@ -194,7 +194,7 @@ class RLib:
         """
 
         agent_id = len(self._agents_states)
-        seed = seed if seed else 0
+        seed = seed if seed else 42
 
         self._agents_states.append(self._agent.init())
         self._agents_keys.append(jax.random.PRNGKey(seed))

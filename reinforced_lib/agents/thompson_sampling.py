@@ -196,18 +196,18 @@ def decay_all(
 
 
 class ThompsonSampling(BaseAgent):
+    """
+    Contextual Thompson Sampling agent with exponential smoothing.
+
+    Parameters
+    ----------
+    context : chex.Array
+        One-dimensional array of arms values.
+    decay : float
+        Smoothing factor (decay = 0.0 means no smoothing).
+    """
+
     def __init__(self, context: chex.Array, decay: chex.Scalar = 1.0):
-        """
-        Contextual Thompson Sampling agent with exponential smoothing.
-
-        Parameters
-        ----------
-        context : chex.Array
-            One-dimensional array of arms values.
-        decay : float
-            Smoothing factor (decay = 0.0 means no smoothing).
-        """
-
         self.context_len = len(context)
 
         self.init = jax.jit(partial(init, context=context))
