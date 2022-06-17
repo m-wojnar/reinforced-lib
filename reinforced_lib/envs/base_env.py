@@ -9,23 +9,23 @@ from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpa
 
 
 class BaseEnv(ABC):
+    """
+    Container for domain-specific knowledge and functions for a given environment. Provides transformation
+    from environment functions and observation space to agents observation and sample spaces.
+
+    Parameters
+    ----------
+    agent_update_space : gym.spaces.Space
+        Observations required by the agents 'update' function in OpenAI Gym format.
+    agent_sample_space : gym.spaces.Space
+        Observations required by the agents 'sample' function in OpenAI Gym format.
+    """
+
     def __init__(
             self,
             agent_update_space: gym.spaces.Space = None,
             agent_sample_space: gym.spaces.Space = None
     ) -> None:
-        """
-        Container for domain-specific knowledge and functions for a given environment. Provides transformation
-        from environment functions and observation space to agents observation and sample spaces.
-
-        Parameters
-        ----------
-        agent_update_space : gym.spaces.Space
-            Observations required by the agents 'update' function in OpenAI Gym format.
-        agent_sample_space : gym.spaces.Space
-            Observations required by the agents 'sample' function in OpenAI Gym format.
-        """
-
         self._observation_functions: Dict[str, Callable] = {}
 
         for name in dir(self):
