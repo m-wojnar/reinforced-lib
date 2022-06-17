@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import jax.random
 
@@ -10,7 +10,7 @@ from reinforced_lib.utils.exceptions import *
 class RLib:
     def __init__(
             self, *,
-            agent_type: Callable = None,
+            agent_type: type = None,
             agent_params: Dict = None,
             env_type: type = None,
             env_params: Dict = None,
@@ -23,8 +23,8 @@ class RLib:
 
         Parameters
         ----------
-        agent_type : Callable
-            Function that creates selected agent. Must return agent that inherits from the BaseAgent class.
+        agent_type : type
+            Type of selected agent. Must inherit from the BaseAgent class.
         agent_params : Dict
             Parameters of selected agent.
         env_type : type
@@ -60,15 +60,15 @@ class RLib:
         if log_type:
             self.set_log(log_type, log_params)
 
-    def set_agent(self, agent_type: Callable, agent_params: Dict = None) -> None:
+    def set_agent(self, agent_type: type, agent_params: Dict = None) -> None:
         """
         Initializes agent of type 'agent_type' with parameters 'agent_params'. The agent type must inherit from
         the BaseAgent class. The agent type cannot be changed after the first agent instance is initialized.
 
         Parameters
         ----------
-        agent_type : Callable
-            Function that creates selected agent. It must return agent that inherits from the BaseAgent class.
+        agent_type : type
+            Type of selected agent. Must inherit from the BaseAgent class.
         agent_params : Dict
             Parameters of selected agent.
         """
@@ -76,11 +76,11 @@ class RLib:
         if len(self._agents_states) > 0:
             raise ForbiddenAgentChangeError()
 
+        if not issubclass(agent_type, BaseAgent):
+            raise IncorrectAgentTypeError(agent_type)
+
         agent_params = agent_params if agent_params else {}
         self._agent = agent_type(**agent_params)
-
-        if not isinstance(self._agent, BaseAgent):
-            raise IncorrectAgentTypeError(agent_type)
 
         if not self._no_env_mode and self._env:
             self.set_env(self._env_type, self._env_params)
@@ -252,16 +252,16 @@ class RLib:
             update_observations, sample_observations = self._env.transform(*args, **kwargs)
 
         if isinstance(update_observations, dict):
-            state = self._agent(state, **update_observations)
+            state = self._agent.update(state, **update_observations)
         elif isinstance(update_observations, tuple):
-            state = self._agent(state, *update_observations)
+            state = self._agent.update(state, *update_observations)
         else:
-            state = self._agent(state, update_observations)
+            state = self._agent.update(state, update_observations)
 
         if isinstance(sample_observations, dict):
-            state, action = self._agent(state, key, **sample_observations)
+            state, action = self._agent.sample(state, key, **sample_observations)
         elif isinstance(sample_observations, tuple):
-            state, action = self._agent(state, key, *sample_observations)
+            state, action = self._agent.sample(state, key, *sample_observations)
         else:
             state, action = self._agent(state, key, sample_observations)
 
