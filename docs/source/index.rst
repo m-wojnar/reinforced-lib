@@ -6,10 +6,18 @@
 Welcome to reinforced-lib's documentation!
 ==========================================
 
+**reinforced-lib** is a Python library designed to support research and prototyping using Reinforced Learning
+algorithms.
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: Table of Contents
 
+   Getting started <getting_started>
+   API module <api_module>
+   Environment module <env_module>
+   Agents module <agents_module>
+   Logging module <log_module>
 
 
 Indices and tables
