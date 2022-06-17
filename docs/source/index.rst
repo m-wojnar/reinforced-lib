@@ -3,6 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. _reinforced-lib:
+
 Welcome to reinforced-lib's documentation!
 ==========================================
 
@@ -15,7 +17,7 @@ algorithms.
 
    Getting started <getting_started>
    API module <api_module>
-   Environment module <env_module>
+   Environments module <env_module>
    Agents module <agents_module>
    Logging module <log_module>
 
