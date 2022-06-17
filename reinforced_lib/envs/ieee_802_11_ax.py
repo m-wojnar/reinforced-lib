@@ -1,34 +1,39 @@
 import gym.spaces
 import numpy as np
+from scipy.special import erf
 
 from reinforced_lib.envs.base_env import BaseEnv
 from reinforced_lib.envs.utils import observation
 
 
 class IEEE_802_11_ax(BaseEnv):
-    def __init__(self, agent_update_space: gym.spaces.Space, agent_sample_space: gym.spaces.Space) -> None:
-        """
-        IEEE 802.11ax [1] environment. Provides data rates (in Mb/s) for consecutive MCS (modulation and coding
-        scheme) modes, minimal SNR (signal-to-noise ratio) for each mode and approximated collision probability
-        for given number of transmitting stations.
+    """
+    IEEE 802.11ax [1] environment. Provides data rates (in Mb/s) for consecutive MCS (modulation and coding scheme)
+    modes, minimal SNR (signal-to-noise ratio) for each MCS, approximated collision probability for a given number
+    of transmitting stations, and approximated transmission success probability for a given SNR and all MCS modes.
 
-        Parameters
-        ----------
-        agent_update_space : gym.spaces.Space
-            Parameters required by the agents 'update' function in OpenAI Gym format.
-        agent_sample_space : gym.spaces.Space
-            Parameters required by the agents 'sample' function in OpenAI Gym format.
+    Parameters
+    ----------
+    agent_update_space : gym.spaces.Space
+        Parameters required by the agents 'update' function in OpenAI Gym format.
+    agent_sample_space : gym.spaces.Space
+        Parameters required by the agents 'sample' function in OpenAI Gym format.
 
-        References
-        ----------
-        .. [1] "IEEE Standard for Information Technology--Telecommunications and Information Exchange between Systems
-            Local and Metropolitan Area Networks--Specific Requirements Part 11: Wireless LAN Medium Access Control
-            (MAC) and Physical Layer (PHY) Specifications Amendment 1: Enhancements for High-Efficiency WLAN,"
-            in IEEE Std 802.11ax-2021 (Amendment to IEEE Std 802.11-2020) , vol., no., pp.1-767,
-            19 May 2021, doi: 10.1109/IEEESTD.2021.9442429.
+    References
+    ----------
+        [1] "IEEE Standard for Information Technology--Telecommunications and Information Exchange between Systems
+        Local and Metropolitan Area Networks--Specific Requirements Part 11: Wireless LAN Medium Access Control
+        (MAC) and Physical Layer (PHY) Specifications Amendment 1: Enhancements for High-Efficiency WLAN,"
+        in IEEE Std 802.11ax-2021 (Amendment to IEEE Std 802.11-2020) , vol., no., pp.1-767,
+        19 May 2021, doi: 10.1109/IEEESTD.2021.9442429.
 
-        """
+    """
 
+    def __init__(
+            self,
+            agent_update_space: gym.spaces.Space = None,
+            agent_sample_space: gym.spaces.Space = None
+    ) -> None:
         super().__init__(agent_update_space, agent_sample_space)
 
     observation_space = gym.spaces.Dict({
@@ -85,3 +90,7 @@ class IEEE_802_11_ax(BaseEnv):
     @observation(observation_type=gym.spaces.Box(0.0, 1.0, (1,)))
     def collision_probability(self, n_wifi: int, *args, **kwargs) -> float:
         return 0.154887 * np.log(1.03102 * n_wifi)
+
+    @observation(observation_type=gym.spaces.Box(0.0, 1.0, (len(_wifi_modes_rates),)))
+    def success_probability(self, snr: float, *args, **kwargs) -> np.ndarray:
+        return 0.5 * (1 + erf(2 * (snr - self._wifi_modes_snrs + 0.5)))
