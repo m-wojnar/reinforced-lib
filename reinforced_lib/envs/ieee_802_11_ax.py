@@ -42,7 +42,8 @@ class IEEE_802_11_ax(BaseEnv):
         'n_failed': gym.spaces.Box(0, np.inf, (1,), np.int32),
         'n_wifi': gym.spaces.Box(1, np.inf, (1,), np.int32),
         'power': gym.spaces.Box(-np.inf, np.inf, (1,)),
-        'cw': gym.spaces.Discrete(32767)
+        'cw': gym.spaces.Discrete(32767),
+        'mcs': gym.spaces.Discrete(12)
     })
 
     _wifi_modes_rates = np.array([
@@ -94,3 +95,7 @@ class IEEE_802_11_ax(BaseEnv):
     @observation(observation_type=gym.spaces.Box(0.0, 1.0, (len(_wifi_modes_rates),)))
     def success_probability(self, snr: float, *args, **kwargs) -> np.ndarray:
         return 0.5 * (1 + erf(2 * (snr - self._wifi_modes_snrs + 0.5)))
+
+    @observation(observation_type=gym.spaces.Discrete(len(_wifi_modes_rates)))
+    def action(self, mcs: int, *args, **kwargs) -> int:
+        return mcs
