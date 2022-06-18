@@ -2,7 +2,7 @@ import gym.spaces
 import numpy as np
 from numpy import ndarray
 
-from reinforced_lib.exts.base_ext import BaseExt
+from reinforced_lib.exts import BaseExt
 from reinforced_lib.exts.utils import observation
 
 
