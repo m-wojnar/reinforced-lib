@@ -12,13 +12,13 @@ class NoAgentError(Exception):
         return 'No agent is specified.'
 
 
-class NoEnvironmentError(Exception):
+class NoExtensionError(Exception):
     """
-    Raised when no environment is specified.
+    Raised when no extension is specified.
     """
 
     def __str__(self) -> str:
-        return 'No environment is specified.'
+        return 'No extension is specified.'
 
 
 class IncorrectTypeError(Exception):
@@ -43,13 +43,13 @@ class IncorrectAgentTypeError(IncorrectTypeError):
         super(provided_type, 'agent')
 
 
-class IncorrectEnvironmentTypeError(IncorrectTypeError):
+class IncorrectExtensionTypeError(IncorrectTypeError):
     """
-    Raised when provided environment is not an environment class.
+    Raised when provided extension is not an extension class.
     """
 
     def __init__(self, provided_type: Any) -> None:
-        super(provided_type, 'environment')
+        super(provided_type, 'extension')
         
         
 class ForbiddenOperationError(Exception):
@@ -70,22 +70,22 @@ class ForbiddenAgentChangeError(ForbiddenOperationError):
         return 'Cannot change agent type after the first agent instance is initialized.'
 
 
-class ForbiddenEnvironmentChangeError(ForbiddenOperationError):
+class ForbiddenExtensionChangeError(ForbiddenOperationError):
     """
-    Raised when user is trying to change the environment type after the first agent instance is initialized.
-    """
-
-    def __str__(self) -> str:
-        return 'Cannot change environment type after the first agent instance is initialized.'
-
-
-class ForbiddenEnvironmentSetError(ForbiddenOperationError):
-    """
-    Raised when user is trying to set environment type when 'no_env_mode' is enabled.
+    Raised when user is trying to change the extension type after the first agent instance is initialized.
     """
 
     def __str__(self) -> str:
-        return 'Cannot set environment type when \'no_env_mode\' is enabled.'
+        return 'Cannot change extension type after the first agent instance is initialized.'
+
+
+class ForbiddenExtensionSetError(ForbiddenOperationError):
+    """
+    Raised when user is trying to set extension type when 'no_ext_mode' is enabled.
+    """
+
+    def __str__(self) -> str:
+        return 'Cannot set extension type when \'no_ext_mode\' is enabled.'
 
 
 class IncorrectSpaceError(Exception):
@@ -102,10 +102,10 @@ class IncompatibleSpacesError(Exception):
     Raised when observation spaces of two different modules are not compatible.
     """
 
-    def __init__(self, env_space: gym.spaces.Space, agent_space: gym.spaces.Space) -> None:
-        self._env_space = env_space
+    def __init__(self, ext_space: gym.spaces.Space, agent_space: gym.spaces.Space) -> None:
+        self._ext_space = ext_space
         self._agent_space = agent_space
 
     def __str__(self) -> str:
         return f'Agents space of type {self._agent_space} is not compatible ' \
-               f'with environment space of type {self._env_space}.'
+               f'with extension space of type {self._ext_space}.'

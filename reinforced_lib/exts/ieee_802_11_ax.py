@@ -2,13 +2,13 @@ import gym.spaces
 import numpy as np
 from scipy.special import erf
 
-from reinforced_lib.envs.base_env import BaseEnv
-from reinforced_lib.envs.utils import observation
+from reinforced_lib.exts.base_ext import BaseExt
+from reinforced_lib.exts.utils import observation
 
 
-class IEEE_802_11_ax(BaseEnv):
+class IEEE_802_11_ax(BaseExt):
     """
-    IEEE 802.11ax [1] environment. Provides data rates (in Mb/s) for consecutive MCS (modulation and coding scheme)
+    IEEE 802.11ax [1] extension. Provides data rates (in Mb/s) for consecutive MCS (modulation and coding scheme)
     modes, minimal SNR (signal-to-noise ratio) for each MCS, approximated collision probability for a given number
     of transmitting stations, and approximated transmission success probability for a given SNR and all MCS modes.
 

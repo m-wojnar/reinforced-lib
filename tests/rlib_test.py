@@ -1,10 +1,8 @@
 from reinforced_lib import RLib
 from reinforced_lib.agents import ParticleFilter
-from reinforced_lib.envs import IEEE_802_11_ax
+from reinforced_lib.exts import IEEE_802_11_ax
 
 if __name__ == '__main__':
-    env = IEEE_802_11_ax()
-
     rl = RLib(
         agent_type=ParticleFilter,
         agent_params={
@@ -13,7 +11,7 @@ if __name__ == '__main__':
             'particles_num': 500,
             'n_mcs': 12
         },
-        env_type=IEEE_802_11_ax
+        ext_type=IEEE_802_11_ax
     )
 
     print(rl.observation_space)
