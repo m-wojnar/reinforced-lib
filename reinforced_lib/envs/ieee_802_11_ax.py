@@ -80,7 +80,7 @@ class IEEE_802_11_ax(BaseEnv):
     def rates(self, *args, **kwargs) -> np.ndarray:
         return self._wifi_modes_rates
 
-    @observation(observation_type=gym.spaces.Box(0.0, np.inf, (len(_wifi_modes_snrs),)))
+    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (len(_wifi_modes_snrs),)))
     def min_snr(self, *args, **kwargs) -> np.ndarray:
         return self._wifi_modes_snrs
 
