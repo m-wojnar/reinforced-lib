@@ -245,27 +245,29 @@ class RLib:
         if len(self._agents_states) == 0:
             self.init()
 
-        self._agents_keys[agent_id], key = jax.random.split(self._agents_keys[agent_id])
+        key, update_key, sample_key = jax.random.split(self._agents_keys[agent_id], 3)
         state = self._agents_states[agent_id]
 
         if not self._no_env_mode:
             update_observations, sample_observations = self._env.transform(*args, **kwargs)
 
         if isinstance(update_observations, dict):
-            state = self._agent.update(state, **update_observations)
+            state = self._agent.update(state, update_key, **update_observations)
         elif isinstance(update_observations, tuple):
-            state = self._agent.update(state, *update_observations)
+            state = self._agent.update(state, update_key, *update_observations)
         else:
-            state = self._agent.update(state, update_observations)
+            state = self._agent.update(state, update_key, update_observations)
 
         if isinstance(sample_observations, dict):
-            state, action = self._agent.sample(state, key, **sample_observations)
+            state, action = self._agent.sample(state, sample_key, **sample_observations)
         elif isinstance(sample_observations, tuple):
-            state, action = self._agent.sample(state, key, *sample_observations)
+            state, action = self._agent.sample(state, sample_key, *sample_observations)
         else:
-            state, action = self._agent(state, key, sample_observations)
+            state, action = self._agent(state, sample_key, sample_observations)
 
         self._agents_states[agent_id] = state
+        self._agents_keys[agent_id] = key
+
         return action
 
     def fit(self, agent_id: int = 0) -> None:

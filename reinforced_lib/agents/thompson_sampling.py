@@ -54,6 +54,7 @@ def init(context: chex.Array) -> ThompsonSamplingState:
 
 def update(
         state: ThompsonSamplingState,
+        key: chex.PRNGKey,
         action: jnp.int32,
         n_successful: jnp.int32,
         n_failed: jnp.int32,
@@ -67,6 +68,8 @@ def update(
     ----------
     state : ThompsonSamplingState
         Current state of agent.
+    key : chex.PRNGKey
+        A PRNG key used as the random key.
     action : int
         Previously selected action.
     n_successful : int
@@ -207,7 +210,7 @@ class ThompsonSampling(BaseAgent):
         Smoothing factor (decay = 0.0 means no smoothing).
     """
 
-    def __init__(self, context: chex.Array, decay: chex.Scalar = 1.0):
+    def __init__(self, context: chex.Array, decay: chex.Scalar = 1.0) -> None:
         self.context_len = len(context)
 
         self.init = jax.jit(partial(init, context=context))
