@@ -1,5 +1,3 @@
-from typing import Any
-
 import gym.spaces
 
 
@@ -24,31 +22,48 @@ class NoExtensionError(Exception):
 class IncorrectTypeError(Exception):
     """
     Raised when provided class type is incorrect.
+
+    Parameters
+    ----------
+    provided_type : type, optional
+        Type provided by user.
+    expected_module : str, optional
+        Name of the module that provided type should match.
     """
 
-    def __init__(self, provided_type: type = None, expected: str = None) -> None:
+    def __init__(self, provided_type: type = None, expected_module: str = None) -> None:
         self._provided_type = provided_type.__name__ if provided_type else 'Provided type'
-        self._expected = expected if expected else ''
+        self._expected_module = expected_module if expected_module else ''
 
     def __str__(self) -> str:
-        return f'{self._provided_type} is not a valid {self._expected} type.'
+        return f'{self._provided_type} is not a valid {self._expected_module} type.'
 
 
 class IncorrectAgentTypeError(IncorrectTypeError):
     """
     Raised when provided agent is not an agent class.
+
+    Parameters
+    ----------
+    provided_type : type
+        Type provided by user.
     """
 
-    def __init__(self, provided_type: Any) -> None:
+    def __init__(self, provided_type: type) -> None:
         super(provided_type, 'agent')
 
 
 class IncorrectExtensionTypeError(IncorrectTypeError):
     """
     Raised when provided extension is not an extension class.
+
+    Parameters
+    ----------
+    provided_type : type
+        Type provided by user.
     """
 
-    def __init__(self, provided_type: Any) -> None:
+    def __init__(self, provided_type: type) -> None:
         super(provided_type, 'extension')
         
         
@@ -100,6 +115,13 @@ class IncorrectSpaceError(Exception):
 class IncompatibleSpacesError(Exception):
     """
     Raised when observation spaces of two different modules are not compatible.
+
+    Parameters
+    ----------
+    ext_space : gym.spaces.Space
+        Observation space of the extension.
+    agent_space : gym.spaces.Space
+        Observation space of the agent.
     """
 
     def __init__(self, ext_space: gym.spaces.Space, agent_space: gym.spaces.Space) -> None:

@@ -8,8 +8,8 @@ class FunctionInfo(NamedTuple):
     """
     Description of the function that provides one of the parameters of the observation space.
 
-    Fields
-    ------
+    Attributes
+    ----------
     parameter_name : str
         Name of the provided parameter.
     space_type : gym.spaces.Space
@@ -26,14 +26,14 @@ def observation(observation_name: str = None, observation_type: gym.spaces.Space
 
     Parameters
     ----------
-    observation_name : str
+    observation_name : str, optional
         Name of the provided parameter.
-    observation_type : gym.spaces.Space
+    observation_type : gym.spaces.Space, optional
         Type of the provided parameter in OpenAI Gym format.
 
     Returns
     -------
-    out: Callable
+    func : Callable
         Function that returns provided parameter.
     """
 
@@ -58,7 +58,7 @@ def test_box(a: gym.spaces.Space, b: gym.spaces.Box) -> bool:
 
     Returns
     -------
-    out: bool
+    identical : bool
         Result of the comparison.
     """
 
@@ -82,7 +82,7 @@ def test_discrete(a: gym.spaces.Space, b: gym.spaces.Discrete) -> bool:
 
     Returns
     -------
-    out: bool
+    identical : bool
         Result of the comparison.
     """
 
@@ -104,7 +104,7 @@ def test_multi_binary(a: gym.spaces.Space, b: gym.spaces.MultiBinary) -> bool:
 
     Returns
     -------
-    out: bool
+    identical : bool
         Result of the comparison.
     """
 
@@ -125,7 +125,7 @@ def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> boo
 
     Returns
     -------
-    out: bool
+    identical : bool
         Result of the comparison.
     """
 
@@ -147,7 +147,7 @@ def test_space(a: gym.spaces.Space, b: gym.spaces.Space) -> bool:
 
     Returns
     -------
-    out: bool
+    identical : bool
         Result of the comparison.
     """
 

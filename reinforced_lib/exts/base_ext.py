@@ -15,9 +15,9 @@ class BaseExt(ABC):
 
     Parameters
     ----------
-    agent_update_space : gym.spaces.Space
+    agent_update_space : gym.spaces.Space, optional
         Observations required by the agents 'update' function in OpenAI Gym format.
-    agent_sample_space : gym.spaces.Space
+    agent_sample_space : gym.spaces.Space, optional
         Observations required by the agents 'sample' function in OpenAI Gym format.
     """
 
@@ -61,12 +61,12 @@ class BaseExt(ABC):
             Source space.
         out_space : gym.spaces.Space
             Target space.
-        accessor : Union[str, int]
+        accessor : str or int, optional
             Path to nested observations.
 
         Returns
         -------
-        out : Callable
+        func : Callable
             Function that transforms extension functions values and in_space to out_space.
         """
 
@@ -151,16 +151,16 @@ class BaseExt(ABC):
 
         Parameters
         ----------
-        accessor : Union[str, int]
+        accessor : str or int
             Path to nested observations.
-        args : Tuple
+        *args : tuple
             Extension observations.
-        kwargs : Dict
+        **kwargs : dict
             Extension observations.
 
         Returns
         -------
-        out : Tuple[Tuple, Dict]
+        tuple[tuple, dict]
             Args and kwargs.
         """
 
@@ -183,16 +183,16 @@ class BaseExt(ABC):
 
         Parameters
         ----------
-        accessor : Union[str, int]
+        accessor : str or int
             Path to nested observations.
-        args : Tuple
+        *args : tuple
             Extension observations.
-        kwargs : Dict
+        **kwargs : dict
             Extension observations.
 
         Returns
         -------
-        out : Any
+        observation : any
             Selected observation from extension observation space.
         """
 
@@ -214,16 +214,16 @@ class BaseExt(ABC):
             Function that returns selected observation.
         name : str
             Name of selected observation.
-        accessor : Union[str, int]
+        accessor : str or int
             Path to nested observations.
-        args : Tuple
+        *args : tuple
             Extension observations.
-        kwargs : Dict
+        **kwargs : dict
             Extension observations.
 
         Returns
         -------
-        out : Any
+        observation : any
             Selected observation from extension functions.
         """
 
@@ -240,18 +240,18 @@ class BaseExt(ABC):
         
         Parameters
         ----------
-        observations : Dict[str, Callable]
+        observations : dict[str, Callable]
             Dictionary with observation names and functions that provide selected observations.
-        accessor : Union[str, int]
+        accessor : str or int
             Path to nested observations.
-        args : Tuple
+        *args : tuple
             Extension observations.
-        kwargs : Dict
+        **kwargs : dict
             Extension observations.
 
         Returns
         -------
-        out : Dict
+        observations : dict
             Dictionary with selected observations.
         """
         
@@ -264,18 +264,18 @@ class BaseExt(ABC):
 
         Parameters
         ----------
-        observations : List[Callable]
+        observations : list[Callable]
             List with functions that provide selected observations.
-        accessor : Union[str, int]
+        accessor : str or int
             Path to nested observations.
-        args : Tuple
+        *args : tuple
             Extension observations.
-        kwargs : Dict
+        **kwargs : dict
             Extension observations.
 
         Returns
         -------
-        out : Tuple
+        observations : tuple
             Tuple with selected observations.
         """
 
@@ -288,14 +288,14 @@ class BaseExt(ABC):
 
         Parameters
         ----------
-        args : Tuple
+        *args : tuple
             Extension observations.
-        kwargs : Dict
+        **kwargs : dict
             Extension observations.
 
         Returns
         -------
-        out : Tuple[Any, Any]
+        observations : tuple[any, any]
             Agents observation and sample spaces.
         """
 
