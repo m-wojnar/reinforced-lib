@@ -4,14 +4,14 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 
 import gym.spaces
 
-from reinforced_lib.envs.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete, test_space
+from reinforced_lib.exts.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete, test_space
 from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpacesError
 
 
-class BaseEnv(ABC):
+class BaseExt(ABC):
     """
-    Container for domain-specific knowledge and functions for a given environment. Provides transformation
-    from environment functions and observation space to agents observation and sample spaces.
+    Container for domain-specific knowledge and functions for a given extension. Provides transformation
+    from extension functions and observation space to agents observation and sample spaces.
 
     Parameters
     ----------
@@ -53,7 +53,7 @@ class BaseEnv(ABC):
             accessor: Union[str, int] = None
     ) -> Callable:
         """
-        Creates function that transforms environment functions values and observation space to a given space.
+        Creates function that transforms extension functions values and observation space to a given space.
 
         Parameters
         ----------
@@ -67,7 +67,7 @@ class BaseEnv(ABC):
         Returns
         -------
         out : Callable
-            Function that transforms environment functions values and in_space to out_space.
+            Function that transforms extension functions values and in_space to out_space.
         """
 
         if out_space is None:
@@ -132,10 +132,10 @@ class BaseEnv(ABC):
 
             observations: List[Callable] = []
 
-            for i, (agent_space, env_space) in enumerate(zip(in_space.spaces, out_space.spaces)):
+            for i, (agent_space, ext_space) in enumerate(zip(in_space.spaces, out_space.spaces)):
                 if type(agent_space) not in simple_types:
-                    observations.append(self._transform_spaces(env_space, agent_space, i))
-                elif simple_types[type(agent_space)](env_space, agent_space):
+                    observations.append(self._transform_spaces(ext_space, agent_space, i))
+                elif simple_types[type(agent_space)](ext_space, agent_space):
                     observations.append(partial(lambda inner_i, *args, **kwargs: args[inner_i], i))
                 else:
                     raise IncompatibleSpacesError(agent_space, in_space)
@@ -154,9 +154,9 @@ class BaseEnv(ABC):
         accessor : Union[str, int]
             Path to nested observations.
         args : Tuple
-            Environment observations.
+            Extension observations.
         kwargs : Dict
-            Environment observations.
+            Extension observations.
 
         Returns
         -------
@@ -179,21 +179,21 @@ class BaseEnv(ABC):
 
     def _simple_transform(self, accessor: Union[str, int], *args, **kwargs) -> Any:
         """
-        Returns the appropriate observation from environment observations.
+        Returns the appropriate observation from Extension observations.
 
         Parameters
         ----------
         accessor : Union[str, int]
             Path to nested observations.
         args : Tuple
-            Environment observations.
+            Extension observations.
         kwargs : Dict
-            Environment observations.
+            Extension observations.
 
         Returns
         -------
         out : Any
-            Selected observation from environment observation space.
+            Selected observation from extension observation space.
         """
 
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
@@ -206,7 +206,7 @@ class BaseEnv(ABC):
 
     def _function_transform(self, func: Callable, name: str, accessor: Union[str, int], *args, **kwargs) -> Any:
         """
-        Returns the appropriate observation from environment functions (or from observations if present).
+        Returns the appropriate observation from extension functions (or from observations if present).
 
         Parameters
         ----------
@@ -217,14 +217,14 @@ class BaseEnv(ABC):
         accessor : Union[str, int]
             Path to nested observations.
         args : Tuple
-            Environment observations.
+            Extension observations.
         kwargs : Dict
-            Environment observations.
+            Extension observations.
 
         Returns
         -------
         out : Any
-            Selected observation from environment functions.
+            Selected observation from extension functions.
         """
 
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
@@ -236,7 +236,7 @@ class BaseEnv(ABC):
 
     def _dict_transform(self, observations: Dict[str, Callable], accessor: Union[str, int], *args, **kwargs) -> Dict:
         """
-        Returns a dictionary filled with appropriate observations from environment functions and observations.
+        Returns a dictionary filled with appropriate observations from extension functions and observations.
         
         Parameters
         ----------
@@ -245,9 +245,9 @@ class BaseEnv(ABC):
         accessor : Union[str, int]
             Path to nested observations.
         args : Tuple
-            Environment observations.
+            Extension observations.
         kwargs : Dict
-            Environment observations.
+            Extension observations.
 
         Returns
         -------
@@ -260,7 +260,7 @@ class BaseEnv(ABC):
 
     def _tuple_transform(self, observations: List[Callable], accessor: Union[str, int], *args, **kwargs) -> Tuple:
         """
-        Returns a tuple filled with appropriate observations from environment functions and observations.
+        Returns a tuple filled with appropriate observations from extension functions and observations.
 
         Parameters
         ----------
@@ -269,9 +269,9 @@ class BaseEnv(ABC):
         accessor : Union[str, int]
             Path to nested observations.
         args : Tuple
-            Environment observations.
+            Extension observations.
         kwargs : Dict
-            Environment observations.
+            Extension observations.
 
         Returns
         -------
@@ -284,14 +284,14 @@ class BaseEnv(ABC):
 
     def transform(self, *args, **kwargs) -> Tuple[Any, Any]:
         """
-        Transforms environment functions and observations to agent observation and sample spaces.
+        Transforms extension functions and observations to agent observation and sample spaces.
 
         Parameters
         ----------
         args : Tuple
-            Environment observations.
+            Extension observations.
         kwargs : Dict
-            Environment observations.
+            Extension observations.
 
         Returns
         -------
