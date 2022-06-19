@@ -39,7 +39,8 @@ def run(
         memblock_key: int,
         mem_size: int,
         scenario: str,
-        ns3_path: str
+        ns3_path: str,
+        seed: int
 ) -> None:
     """
     Run example simulation in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
@@ -58,6 +59,8 @@ def run(
         Name of the selected simulation.
     ns3_path : str
         Path to the ns-3 simulator location.
+    seed : int
+        A number used to initialize the JAX and the ns-3 pseudo-random number generator.
 
     References
     ----------
@@ -85,7 +88,7 @@ def run(
                     break
 
                 if data.env.type == 0:
-                    data.act.station_id = rl.init()
+                    data.act.station_id = rl.init(seed)
 
                 elif data.env.type == 1:
                     observation = {
@@ -111,15 +114,16 @@ if __name__ == '__main__':
 
     args.add_argument('--channel_width', default=20, type=int)
     args.add_argument('--csv_path', default='', type=str)
-    args.add_argument('--data_rate', default=125.0, type=float)
-    args.add_argument('--seed', default=42, type=int)
+    args.add_argument('--data_rate', default=125, type=int)
+    args.add_argument('--initial_position', default=0.0, type=float)
+    args.add_argument('--log_every', default=1.0, type=float)
     args.add_argument('--memblock_key', default=2333, type=int)
     args.add_argument('--mempool_key', default=1234, type=int)
     args.add_argument('--min_gi', default=3200, type=int)
     args.add_argument('--ns3_path', default=f'{pathlib.Path.home()}/ns-3-dev/', type=str)
     args.add_argument('--n_wifi', default=1, type=int)
     args.add_argument('--pcap', default=False, action='store_true')
-    args.add_argument('--position', default=0, type=float)
+    args.add_argument('--seed', default=42, type=int)
     args.add_argument('--simulation_time', default=20.0, type=float)
     args.add_argument('--velocity', default=0.0, type=float)
     args.add_argument('--warmup_time', default=2.0, type=float)
@@ -132,16 +136,18 @@ if __name__ == '__main__':
         'channelWidth': args.channel_width,
         'csvPath': args.csv_path,
         'dataRate': args.data_rate,
+        'initialPosition': args.initial_position,
+        'logEvery': args.log_every,
         'memblockKey': args.memblock_key,
         'minGI': args.min_gi,
         'nWifi': args.n_wifi,
         'pcap': args.pcap,
-        'position': args.position,
         'simulationTime': args.simulation_time,
         'velocity': args.velocity,
         'warmupTime': args.warmup_time,
         'wifiManager': args.wifi_manager,
-        'wifiManagerName': args.wifi_manager_name
+        'wifiManagerName': args.wifi_manager_name,
+        'RngRun': args.seed,
     }
 
-    run(ns3_args, args.mempool_key, args.memblock_key, 64, 'rlib-sim', args.ns3_path)
+    run(ns3_args, args.mempool_key, args.memblock_key, 64, 'rlib-sim', args.ns3_path, args.seed)
