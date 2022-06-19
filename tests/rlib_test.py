@@ -1,5 +1,5 @@
 from reinforced_lib import RLib
-from reinforced_lib.agents import ParticleFilter
+from reinforced_lib.agents.wifi import ParticleFilter
 from reinforced_lib.exts import IEEE_802_11_ax
 
 if __name__ == '__main__':

@@ -17,11 +17,11 @@ class ParticleFilterState(AgentState):
     """
     Container for the state of the Particle Filter agent.
 
-    Fields
-    ------
-    positions : chex.Array
+    Attributes
+    ----------
+    positions : array_like
         Positions of filter particles.
-    weights : chex.Array
+    weights : array_like
         Weights of filter particles.
     last_sample : float
         Time of the last sampling.
@@ -51,7 +51,7 @@ def init(
 
     Returns
     -------
-    out : ParticleFilterState
+    state : ParticleFilterState
         Initial state of the Particle Filter agent.
     """
 
@@ -95,14 +95,14 @@ def update(
         Power used during the transmission.
     cw : int
         Contention Window used during the transmission.
-    min_snr : chex.Array
+    min_snr : array_like
         Minimal SNR value that is required for a successful transmission for each MCS.
     scale : float
         Velocity of the random movement of particles.
 
     Returns
     -------
-    out : ParticleFilterState
+    state : ParticleFilterState
         Updated agent state.
     """
 
@@ -175,14 +175,14 @@ def sample(
         Current time.
     power : float
         Power used during the transmission.
-    rates : chex.Array
+    rates : array_like
         Transmission data rates corresponding to each MCS.
-    min_snr : chex.Array
+    min_snr : array_like
         Minimal SNR value that is required for a successful transmission for each MCS.
 
     Returns
     -------
-    out : Tuple[ParticleFilterState, int]
+    tuple[ParticleFilterState, int]
         Tuple containing updated agent state and selected action.
     """
     
@@ -213,7 +213,7 @@ def success_probability(min_snr: chex.Scalar, observed_snr: chex.Scalar) -> chex
 
     Returns
     -------
-    out : float
+    prob : float
         Probability of a successful transmission.
     """
 
@@ -222,7 +222,7 @@ def success_probability(min_snr: chex.Scalar, observed_snr: chex.Scalar) -> chex
 
 class ParticleFilter(BaseAgent):
     """
-    Particle Filter agent designed for IEEE 802.11 environments. Implementation based on [1].
+    Particle Filter agent designed for IEEE 802.11 environments. Implementation based on [1]_.
 
     Parameters
     ----------
@@ -234,13 +234,13 @@ class ParticleFilter(BaseAgent):
         Maximum position of a particle.
     particles_num : int
         Number of created particles.
-    scale : float
+    scale : float, default=10.0
         Velocity of the random movement of particles.
 
     References
     ----------
-        [1] Krotov, Alexander & Kiryanov, Anton & Khorov, Evgeny. (2020). Rate Control With Spatial Reuse
-        for Wi-Fi 6 Dense Deployments. IEEE Access. 8. 168898-168909. 10.1109/ACCESS.2020.3023552.
+    .. [1] Krotov, Alexander & Kiryanov, Anton & Khorov, Evgeny. (2020). Rate Control With Spatial Reuse
+       for Wi-Fi 6 Dense Deployments. IEEE Access. 8. 168898-168909. 10.1109/ACCESS.2020.3023552.
     """
 
     def __init__(

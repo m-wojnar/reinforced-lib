@@ -8,7 +8,7 @@ from reinforced_lib.exts.utils import observation
 
 class IEEE_802_11_ax(BaseExt):
     """
-    IEEE 802.11ax [1] extension. Provides data rates (in Mb/s) for consecutive MCS (modulation and coding scheme)
+    IEEE 802.11ax [1]_ extension. Provides data rates (in Mb/s) for consecutive MCS (modulation and coding scheme)
     modes, minimal SNR (signal-to-noise ratio) for each MCS, approximated collision probability for a given number
     of transmitting stations, and approximated transmission success probability for a given SNR and all MCS modes.
 
@@ -21,11 +21,11 @@ class IEEE_802_11_ax(BaseExt):
 
     References
     ----------
-        [1] "IEEE Standard for Information Technology--Telecommunications and Information Exchange between Systems
-        Local and Metropolitan Area Networks--Specific Requirements Part 11: Wireless LAN Medium Access Control
-        (MAC) and Physical Layer (PHY) Specifications Amendment 1: Enhancements for High-Efficiency WLAN,"
-        in IEEE Std 802.11ax-2021 (Amendment to IEEE Std 802.11-2020) , vol., no., pp.1-767,
-        19 May 2021, doi: 10.1109/IEEESTD.2021.9442429.
+    .. [1] "IEEE Standard for Information Technology--Telecommunications and Information Exchange between Systems
+       Local and Metropolitan Area Networks--Specific Requirements Part 11: Wireless LAN Medium Access Control
+       (MAC) and Physical Layer (PHY) Specifications Amendment 1: Enhancements for High-Efficiency WLAN,"
+       in IEEE Std 802.11ax-2021 (Amendment to IEEE Std 802.11-2020) , vol., no., pp.1-767,
+       19 May 2021, doi: 10.1109/IEEESTD.2021.9442429.
 
     """
 

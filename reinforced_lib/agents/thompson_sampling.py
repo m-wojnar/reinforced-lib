@@ -15,13 +15,13 @@ class ThompsonSamplingState(AgentState):
     """
     Container for the state of the Thompson Sampling agent.
 
-    Fields
-    ------
-    alpha : chex.Array
+    Attributes
+    ----------
+    alpha : array_like
         Number of successful tries for each arm.
-    beta : chex.Array
+    beta : array_like
         Number of failed tries for each arm.
-    last_decay : chex.Array
+    last_decay : array_like
         Time of the last decay for each arm.
     """
 
@@ -30,25 +30,25 @@ class ThompsonSamplingState(AgentState):
     last_decay: chex.Array
 
 
-def init(context: chex.Array) -> ThompsonSamplingState:
+def init(n_arms: jnp.int32) -> ThompsonSamplingState:
     """
     Creates and initializes instance of the Thompson Sampling agent.
 
     Parameters
     ----------
-    context : chex.Array
-        One-dimensional array of features of each arm.
+    n_arms : int
+        Number of contextual bandit arms.
 
     Returns
     -------
-    out : ThompsonSamplingState
+    state : ThompsonSamplingState
         Initial state of the Thompson Sampling agent.
     """
 
     return ThompsonSamplingState(
-        alpha=jnp.zeros_like(context),
-        beta=jnp.zeros_like(context),
-        last_decay=jnp.zeros_like(context)
+        alpha=jnp.zeros(n_arms),
+        beta=jnp.zeros(n_arms),
+        last_decay=jnp.zeros(n_arms)
     )
 
 
@@ -79,11 +79,11 @@ def update(
     time : float
         Current time.
     decay : float
-        Smoothing factor (decay = 0.0 means no smoothing).
+        Smoothing factor.
 
     Returns
     -------
-    out : ThompsonSamplingState
+    state : ThompsonSamplingState
         Updated agent state.
     """
 
@@ -114,14 +114,14 @@ def sample(
         A PRNG key used as the random key.
     time : float
         Current time.
-    context : chex.Array
+    context : array_like
         One-dimensional array of features of each arm.
     decay : float
-        Smoothing factor (decay = 0.0 means no smoothing).
+        Smoothing factor.
 
     Returns
     -------
-    out : Tuple[ThompsonSamplingState, int]
+    tuple[ThompsonSamplingState, int]
         Tuple containing updated agent state and selected action.
     """
 
@@ -138,7 +138,7 @@ def decay_one(
         decay: chex.Scalar
 ) -> ThompsonSamplingState:
     """
-    Applies exponential smoothing for parameters related to action 'a'.
+    Applies exponential smoothing for parameters related to a given action.
 
     Parameters
     ----------
@@ -149,11 +149,11 @@ def decay_one(
     time : float
         Current time.
     decay : float
-        Smoothing factor (decay = 0.0 means no smoothing).
+        Smoothing factor.
 
     Returns
     -------
-    out : ThompsonSamplingState
+    state : ThompsonSamplingState
         Updated agent state.
     """
 
@@ -172,7 +172,7 @@ def decay_all(
         decay: chex.Scalar
 ) -> ThompsonSamplingState:
     """
-    Applies exponential smoothing for all parameters.
+    Applies exponential smoothing for parameters of all arms.
 
     Parameters
     ----------
@@ -181,11 +181,11 @@ def decay_all(
     time : float
         Current time.
     decay : float
-        Smoothing factor (decay = 0.0 means no smoothing).
+        Smoothing factor.
 
     Returns
     -------
-    out : ThompsonSamplingState
+    state : ThompsonSamplingState
         Updated agent state.
     """
 
@@ -204,16 +204,16 @@ class ThompsonSampling(BaseAgent):
 
     Parameters
     ----------
-    context : chex.Array
+    context : array_like
         One-dimensional array of arms values.
-    decay : float
+    decay : float, default=1.0
         Smoothing factor (decay = 0.0 means no smoothing).
     """
 
     def __init__(self, context: chex.Array, decay: chex.Scalar = 1.0) -> None:
         self.context_len = len(context)
 
-        self.init = jax.jit(partial(init, context=context))
+        self.init = jax.jit(partial(init, n_arms=self.context_len))
         self.update = jax.jit(partial(update, decay=decay))
         self.sample = jax.jit(partial(sample, context=context, decay=decay))
 
