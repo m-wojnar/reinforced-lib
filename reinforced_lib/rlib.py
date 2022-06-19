@@ -211,7 +211,7 @@ class RLib:
     ) -> Any:
         """
         Takes the extension state as input, updates the agent state, and returns the next action selected by 
-        the agent. If 'no_ext_mode' is disabled, observations are passed by *args and **kwargs (observations must
+        the agent. If 'no_ext_mode' is disabled, observations are passed by args and kwargs (observations must
         match selected extension observation space). If 'no_ext_mode' is enabled, observations must be passed 
         by 'update_observations' and 'sample_observations' parameters (observations must match agents 
         'update_observation_space' and 'sample_observation_space'). If there are no agent instance initialized,
