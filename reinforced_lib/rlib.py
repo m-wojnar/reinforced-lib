@@ -1,9 +1,10 @@
-from typing import Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
+import gym
 import jax.random
 
 from reinforced_lib.agents.base_agent import BaseAgent
-from reinforced_lib.envs.base_env import BaseEnv
+from reinforced_lib.exts.base_ext import BaseExt
 from reinforced_lib.utils.exceptions import *
 
 
@@ -13,49 +14,49 @@ class RLib:
 
     Parameters
     ----------
-    agent_type : type
+    agent_type : type, optional
         Type of selected agent. Must inherit from the BaseAgent class.
-    agent_params : Dict
+    agent_params : dict, optional
         Parameters of selected agent.
-    env_type : type
-        Type of selected environment. Must inherit from the BaseEnv class.
-    env_params : Dict
-        Parameters of selected environment.
-    log_type : Union[type, List[type]]
+    ext_type : type, optional
+        Type of selected extension. Must inherit from the BaseExt class.
+    ext_params : dict, optional
+        Parameters of selected extension.
+    log_type : type or list[type], optional
         Types of selected logging modules.
-    log_params : Union[Dict, List[Dict]]
+    log_params : dict or list[dict], optional
         Parameters of selected logging modules.
-    no_env_mode : bool
-        Pass observations directly to agent (don't use envs module).
+    no_ext_mode : bool, default=False
+        Pass observations directly to the agent (don't use the Extensions module).
     """
 
     def __init__(
             self, *,
             agent_type: type = None,
             agent_params: Dict = None,
-            env_type: type = None,
-            env_params: Dict = None,
+            ext_type: type = None,
+            ext_params: Dict = None,
             log_type: Union[type, List[type]] = None,
             log_params: Union[Dict, List[Dict]] = None,
-            no_env_mode: bool = False
+            no_ext_mode: bool = False
     ) -> None:
-        self._no_env_mode = no_env_mode
+        self._no_ext_mode = no_ext_mode
 
         self._agent = None
         self._agents_states = []
         self._agents_keys = []
 
-        self._env = None
-        self._env_type = None
-        self._env_params = None
+        self._ext = None
+        self._ext_type = None
+        self._ext_params = None
 
         self._log = []
 
         if agent_type:
             self.set_agent(agent_type, agent_params)
 
-        if env_type:
-            self.set_env(env_type, env_params)
+        if ext_type:
+            self.set_ext(ext_type, ext_params)
 
         if log_type:
             self.set_log(log_type, log_params)
@@ -69,7 +70,7 @@ class RLib:
         ----------
         agent_type : type
             Type of selected agent. Must inherit from the BaseAgent class.
-        agent_params : Dict
+        agent_params : dict, optional
             Parameters of selected agent.
         """
 
@@ -82,39 +83,39 @@ class RLib:
         agent_params = agent_params if agent_params else {}
         self._agent = agent_type(**agent_params)
 
-        if not self._no_env_mode and self._env:
-            self.set_env(self._env_type, self._env_params)
+        if not self._no_ext_mode and self._ext:
+            self.set_ext(self._ext_type, self._ext_params)
 
-    def set_env(self, env_type: type, env_params: Dict = None) -> None:
+    def set_ext(self, ext_type: type, ext_params: Dict = None) -> None:
         """
-        Initializes environment of type 'env_type' with parameters 'env_params'. The environment type must inherit from
-        the BaseEnv class. The environment type cannot be changed after the first agent instance is initialized.
+        Initializes extension of type 'ext_type' with parameters 'ext_params'. The extension type must inherit from
+        the BaseExt class. The extension type cannot be changed after the first agent instance is initialized.
 
         Parameters
         ----------
-        env_type : type
-            Type of selected environment. Must inherit from the BaseEnv class.
-        env_params : Dict
-            Parameters of selected environment.
+        ext_type : type
+            Type of selected extension. Must inherit from the BaseExt class.
+        ext_params : dict, optional
+            Parameters of selected extension.
         """
 
-        if self._no_env_mode:
-            raise ForbiddenEnvironmentSetError()
+        if self._no_ext_mode:
+            raise ForbiddenExtensionSetError()
 
         if not self._agent:
             raise NoAgentError()
 
         if len(self._agents_states) > 0:
-            raise ForbiddenEnvironmentChangeError()
+            raise ForbiddenExtensionChangeError()
 
-        if not issubclass(env_type, BaseEnv):
-            raise IncorrectEnvironmentTypeError(env_type)
+        if not issubclass(ext_type, BaseExt):
+            raise IncorrectExtensionTypeError(ext_type)
 
-        env_params = env_params if env_params else {}
-        self._env = env_type(self._agent.update_observation_space, self._agent.sample_observation_space, **env_params)
+        ext_params = ext_params if ext_params else {}
+        self._ext = ext_type(self._agent.update_observation_space, self._agent.sample_observation_space, **ext_params)
 
-        self._env_type = env_type
-        self._env_params = env_params
+        self._ext_type = ext_type
+        self._ext_params = ext_params
 
     def set_log(self, log_type: Union[type, List[type]], log_params: Union[Dict, List[Dict]] = None) -> None:
         """
@@ -122,9 +123,9 @@ class RLib:
 
         Parameters
         ----------
-        log_type : Union[type, List[type]]
+        log_type : type or list[type]
             Types of selected logging modules.
-        log_params : Union[Dict, List[Dict]]
+        log_params : dict or list[dict], optional
             Parameters of selected logging modules.
         """
 
@@ -140,15 +141,15 @@ class RLib:
     @property
     def observation_space(self) -> gym.spaces.Space:
         """
-        Returns observation space of selected environment or agent (if 'no_env_mode' is enabled).
+        Returns observation space of selected extension or agent (if 'no_ext_mode' is enabled).
 
         Returns
         -------
-        out : gym.spaces.Space
-            Observation space of selected environment or agent (if 'no_env_mode' is enabled).
+        space : gym.spaces.Space
+            Observation space of selected extension or agent (if 'no_ext_mode' is enabled).
         """
 
-        if self._no_env_mode:
+        if self._no_ext_mode:
             if not self._agent:
                 raise NoAgentError()
             else:
@@ -157,10 +158,10 @@ class RLib:
                     'sample_observation_space': self._agent.sample_observation_space
                 })
         else:
-            if not self._env:
-                raise NoEnvironmentError()
+            if not self._ext:
+                raise NoExtensionError()
             else:
-                return self._env.observation_space
+                return self._ext.observation_space
 
     @property
     def action_space(self) -> gym.spaces.Space:
@@ -169,7 +170,7 @@ class RLib:
 
         Returns
         -------
-        out : gym.spaces.Space
+        space : gym.spaces.Space
             Action space of selected agent.
         """
 
@@ -178,26 +179,25 @@ class RLib:
 
         return self._agent.action_space()
 
-    def init(self, seed: int = None) -> int:
+    def init(self, jax_seed: int = 42) -> int:
         """
         Initializes new instance of the agent.
 
         Parameters
         ----------
-        seed : int
+        jax_seed : int, default=42
             A number used to initialize the JAX pseudo-random number generator.
 
         Returns
         -------
-        out : int
+        id : int
             The identifier of created instance.
         """
 
         agent_id = len(self._agents_states)
-        seed = seed if seed else 42
 
         self._agents_states.append(self._agent.init())
-        self._agents_keys.append(jax.random.PRNGKey(seed))
+        self._agents_keys.append(jax.random.PRNGKey(jax_seed))
 
         return agent_id
 
@@ -210,62 +210,64 @@ class RLib:
             **kwargs
     ) -> Any:
         """
-        Takes the environment state as input, updates the agent state, and returns the next action selected by 
-        the agent. If 'no_env_mode' is disabled, observations are passed by *args and **kwargs (observations must
-        match selected environment observation space). If 'no_env_mode' is enabled, observations must be passed 
+        Takes the extension state as input, updates the agent state, and returns the next action selected by 
+        the agent. If 'no_ext_mode' is disabled, observations are passed by *args and **kwargs (observations must
+        match selected extension observation space). If 'no_ext_mode' is enabled, observations must be passed 
         by 'update_observations' and 'sample_observations' parameters (observations must match agents 
         'update_observation_space' and 'sample_observation_space'). If there are no agent instance initialized,
         the method automatically initializes the first instance.
 
         Parameters
         ----------
-        agent_id : int
+        agent_id : int, default=0
             The identifier of agent instance.
-        args : Tuple
-            Environment observations.
-        update_observations : Union[Dict, Tuple, Any]
-            Observations used when 'no_env_mode' is enabled (must match agents 'update_observation_space').
-        sample_observations : Union[Dict, Tuple, Any]
-            Observations used when 'no_env_mode' is enabled (must match agents 'sample_observation_space').
-        kwargs : Dict
-            Environment observations.
+        *args : tuple
+            Extension observations.
+        update_observations : dict or tuple or any, optional
+            Observations used when 'no_ext_mode' is enabled (must match agents 'update_observation_space').
+        sample_observations : dict or tuple or any, optional
+            Observations used when 'no_ext_mode' is enabled (must match agents 'sample_observation_space').
+        **kwargs : dict
+            Extension observations.
 
         Returns
         -------
-        out : Any
+        action : Any
             Action selected by the agent.
         """
 
         if not self._agent:
             raise NoAgentError()
 
-        if not self._no_env_mode and not self._env:
-            raise NoEnvironmentError()
+        if not self._no_ext_mode and not self._ext:
+            raise NoExtensionError()
 
         if len(self._agents_states) == 0:
             self.init()
 
-        self._agents_keys[agent_id], key = jax.random.split(self._agents_keys[agent_id])
+        key, update_key, sample_key = jax.random.split(self._agents_keys[agent_id], 3)
         state = self._agents_states[agent_id]
 
-        if not self._no_env_mode:
-            update_observations, sample_observations = self._env.transform(*args, **kwargs)
+        if not self._no_ext_mode:
+            update_observations, sample_observations = self._ext.transform(*args, **kwargs)
 
         if isinstance(update_observations, dict):
-            state = self._agent.update(state, **update_observations)
+            state = self._agent.update(state, update_key, **update_observations)
         elif isinstance(update_observations, tuple):
-            state = self._agent.update(state, *update_observations)
+            state = self._agent.update(state, update_key, *update_observations)
         else:
-            state = self._agent.update(state, update_observations)
+            state = self._agent.update(state, update_key, update_observations)
 
         if isinstance(sample_observations, dict):
-            state, action = self._agent.sample(state, key, **sample_observations)
+            state, action = self._agent.sample(state, sample_key, **sample_observations)
         elif isinstance(sample_observations, tuple):
-            state, action = self._agent.sample(state, key, *sample_observations)
+            state, action = self._agent.sample(state, sample_key, *sample_observations)
         else:
-            state, action = self._agent(state, key, sample_observations)
+            state, action = self._agent(state, sample_key, sample_observations)
 
         self._agents_states[agent_id] = state
+        self._agents_keys[agent_id] = key
+
         return action
 
     def fit(self, agent_id: int = 0) -> None:
@@ -274,15 +276,15 @@ class RLib:
 
         Parameters
         ----------
-        agent_id : int
+        agent_id : int, default=0
             The identifier of agent instance.
         """
 
         if not self._agent:
             raise NoAgentError()
 
-        if not self._no_env_mode and not self._env:
-            raise NoEnvironmentError()
+        if not self._no_ext_mode and not self._ext:
+            raise NoExtensionError()
 
         if len(self._agents_states) == 0:
             self.init()
@@ -299,7 +301,7 @@ class RLib:
 
         Parameters
         ----------
-        agent_id : int
+        agent_id : int, default=0
             The identifier of agent instance.
         path : str
             Path to the output file.
@@ -328,7 +330,7 @@ class RLib:
 
         Returns
         -------
-        out : int
+        id : int
             The identifier of loaded instance.
         """
 

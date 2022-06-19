@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
-from reinforced_lib.agents.thompson_sampling import thompson_sampling
+from reinforced_lib.agents import ThompsonSampling
 
 
 if __name__ == '__main__':
@@ -12,17 +12,13 @@ if __name__ == '__main__':
 
     # agent setup
     decay = 1.0
-    agent = thompson_sampling(context, decay)
-    agent = agent._replace(
-        sample=jax.jit(agent.sample),
-        update=jax.jit(agent.update)
-    )
+    agent = ThompsonSampling(context, decay)
     state = agent.init()
 
     # print observation and action spaces
-    print(agent.update_observation_space())
-    print(agent.sample_observation_space())
-    print(agent.action_space())
+    print(agent.update_observation_space)
+    print(agent.sample_observation_space)
+    print(agent.action_space)
 
     # helper variables
     key = jax.random.PRNGKey(42)
@@ -32,11 +28,11 @@ if __name__ == '__main__':
 
     for t in time:
         # pull selected arm
-        key, random_key, sample_key = jax.random.split(key, 3)
+        key, random_key, update_key, sample_key = jax.random.split(key, 4)
         r = jax.random.uniform(random_key) < arms_probs[a]
 
         # update state and sample
-        state = agent.update(state, a, r, t)
+        state = agent.update(state, update_key, a, r, 1 - r, t)
         state, a = agent.sample(state, sample_key, t)
 
         # save selected action

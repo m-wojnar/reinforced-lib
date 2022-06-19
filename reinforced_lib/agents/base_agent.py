@@ -21,7 +21,7 @@ class BaseAgent(ABC):
         pass
 
     @staticmethod
-    def update(state: AgentState, *args, **kwargs) -> AgentState:
+    def update(state: AgentState, key: chex.PRNGKey, *args, **kwargs) -> AgentState:
         """
         Updates the state of the agent after performing some action and receiving a reward.
         """

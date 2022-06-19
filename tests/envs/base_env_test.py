@@ -2,8 +2,8 @@ import gym.spaces
 import numpy as np
 from numpy import ndarray
 
-from reinforced_lib.envs.base_env import BaseEnv
-from reinforced_lib.envs.utils import observation
+from reinforced_lib.exts import BaseExt
+from reinforced_lib.exts.utils import observation
 
 
 class DummyAgent:
@@ -26,7 +26,7 @@ class DummyAgent:
     action_space = gym.spaces.Discrete(10)
 
 
-class DummyEnv(BaseEnv):
+class DummyExt(BaseExt):
     def __init__(self, agent_update_space: gym.spaces.Space, agent_sample_space: gym.spaces.Space) -> None:
         super().__init__(agent_update_space, agent_sample_space)
 
@@ -54,7 +54,7 @@ class DummyEnv(BaseEnv):
 
 if __name__ == '__main__':
     agent = DummyAgent()
-    env = DummyEnv(agent.update_observation_space, agent.sample_observation_space)
+    ext = DummyExt(agent.update_observation_space, agent.sample_observation_space)
 
-    print(env._update_space_transform(0.5, time=123, n=5, params=(10, 15, {'test': 20})))
-    print(env._sample_space_transform(0.5, n=5, params=(10, 15, {'test': 20})))
+    print(ext._update_space_transform(0.5, time=123, n=5, params=(10, 15, {'test': 20})))
+    print(ext._sample_space_transform(0.5, n=5, params=(10, 15, {'test': 20})))
