@@ -209,7 +209,7 @@ class RLib:
             sample_observations: Union[Dict, Tuple, Any] = None,
             **kwargs
     ) -> Any:
-        """
+        r"""
         Takes the extension state as input, updates the agent state, and returns the next action selected by 
         the agent. If 'no_ext_mode' is disabled, observations are passed by args and kwargs (observations must
         match selected extension observation space). If 'no_ext_mode' is enabled, observations must be passed 
