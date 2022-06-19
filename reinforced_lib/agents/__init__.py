@@ -1,2 +1,1 @@
 from reinforced_lib.agents.thompson_sampling import ThompsonSampling
-from reinforced_lib.agents.particle_filter import ParticleFilter

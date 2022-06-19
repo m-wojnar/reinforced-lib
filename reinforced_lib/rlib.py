@@ -1,5 +1,6 @@
-from typing import Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
+import gym
 import jax.random
 
 from reinforced_lib.agents.base_agent import BaseAgent
@@ -13,20 +14,20 @@ class RLib:
 
     Parameters
     ----------
-    agent_type : type
+    agent_type : type, optional
         Type of selected agent. Must inherit from the BaseAgent class.
-    agent_params : Dict
+    agent_params : dict, optional
         Parameters of selected agent.
-    ext_type : type
+    ext_type : type, optional
         Type of selected extension. Must inherit from the BaseExt class.
-    ext_params : Dict
+    ext_params : dict, optional
         Parameters of selected extension.
-    log_type : Union[type, List[type]]
+    log_type : type or list[type], optional
         Types of selected logging modules.
-    log_params : Union[Dict, List[Dict]]
+    log_params : dict or list[dict], optional
         Parameters of selected logging modules.
-    no_ext_mode : bool
-        Pass observations directly to agent (don't use exts module).
+    no_ext_mode : bool, default=False
+        Pass observations directly to the agent (don't use the Extensions module).
     """
 
     def __init__(
@@ -69,7 +70,7 @@ class RLib:
         ----------
         agent_type : type
             Type of selected agent. Must inherit from the BaseAgent class.
-        agent_params : Dict
+        agent_params : dict, optional
             Parameters of selected agent.
         """
 
@@ -94,7 +95,7 @@ class RLib:
         ----------
         ext_type : type
             Type of selected extension. Must inherit from the BaseExt class.
-        ext_params : Dict
+        ext_params : dict, optional
             Parameters of selected extension.
         """
 
@@ -122,9 +123,9 @@ class RLib:
 
         Parameters
         ----------
-        log_type : Union[type, List[type]]
+        log_type : type or list[type]
             Types of selected logging modules.
-        log_params : Union[Dict, List[Dict]]
+        log_params : dict or list[dict], optional
             Parameters of selected logging modules.
         """
 
@@ -144,7 +145,7 @@ class RLib:
 
         Returns
         -------
-        out : gym.spaces.Space
+        space : gym.spaces.Space
             Observation space of selected extension or agent (if 'no_ext_mode' is enabled).
         """
 
@@ -169,7 +170,7 @@ class RLib:
 
         Returns
         -------
-        out : gym.spaces.Space
+        space : gym.spaces.Space
             Action space of selected agent.
         """
 
@@ -178,26 +179,25 @@ class RLib:
 
         return self._agent.action_space()
 
-    def init(self, seed: int = None) -> int:
+    def init(self, jax_seed: int = 42) -> int:
         """
         Initializes new instance of the agent.
 
         Parameters
         ----------
-        seed : int
+        jax_seed : int, default=42
             A number used to initialize the JAX pseudo-random number generator.
 
         Returns
         -------
-        out : int
+        id : int
             The identifier of created instance.
         """
 
         agent_id = len(self._agents_states)
-        seed = seed if seed else 42
 
         self._agents_states.append(self._agent.init())
-        self._agents_keys.append(jax.random.PRNGKey(seed))
+        self._agents_keys.append(jax.random.PRNGKey(jax_seed))
 
         return agent_id
 
@@ -219,20 +219,20 @@ class RLib:
 
         Parameters
         ----------
-        agent_id : int
+        agent_id : int, default=0
             The identifier of agent instance.
-        args : Tuple
+        *args : tuple
             Extension observations.
-        update_observations : Union[Dict, Tuple, Any]
+        update_observations : dict or tuple or any, optional
             Observations used when 'no_ext_mode' is enabled (must match agents 'update_observation_space').
-        sample_observations : Union[Dict, Tuple, Any]
+        sample_observations : dict or tuple or any, optional
             Observations used when 'no_ext_mode' is enabled (must match agents 'sample_observation_space').
-        kwargs : Dict
+        **kwargs : dict
             Extension observations.
 
         Returns
         -------
-        out : Any
+        action : Any
             Action selected by the agent.
         """
 
@@ -276,7 +276,7 @@ class RLib:
 
         Parameters
         ----------
-        agent_id : int
+        agent_id : int, default=0
             The identifier of agent instance.
         """
 
@@ -301,7 +301,7 @@ class RLib:
 
         Parameters
         ----------
-        agent_id : int
+        agent_id : int, default=0
             The identifier of agent instance.
         path : str
             Path to the output file.
@@ -330,7 +330,7 @@ class RLib:
 
         Returns
         -------
-        out : int
+        id : int
             The identifier of loaded instance.
         """
 
