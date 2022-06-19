@@ -131,9 +131,7 @@ main (int argc, char *argv[])
   // Setup rate adaptation algorithm
   if (wifiManager == "ns3::RLibWifiManager")
     {
-      wifi.SetRemoteStationManager (wifiManager,
-                                    "MemblockKey", UintegerValue (memblockKey),
-                                    "nWifi", UintegerValue (nWifi));
+      wifi.SetRemoteStationManager (wifiManager, "nWifi", UintegerValue (nWifi));
     }
   else
     {

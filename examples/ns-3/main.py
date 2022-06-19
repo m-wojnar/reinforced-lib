@@ -113,16 +113,15 @@ if __name__ == '__main__':
     args = ArgumentParser()
 
     args.add_argument('--channel_width', default=20, type=int)
-    args.add_argument('--csv_path', default='', type=str)
+    args.add_argument('--csv_path', type=str)
     args.add_argument('--data_rate', default=125, type=int)
     args.add_argument('--initial_position', default=0.0, type=float)
     args.add_argument('--log_every', default=1.0, type=float)
-    args.add_argument('--memblock_key', default=2333, type=int)
     args.add_argument('--mempool_key', default=1234, type=int)
     args.add_argument('--min_gi', default=3200, type=int)
     args.add_argument('--ns3_path', default=f'{pathlib.Path.home()}/ns-3-dev/', type=str)
     args.add_argument('--n_wifi', default=1, type=int)
-    args.add_argument('--pcap', default=False, action='store_true')
+    args.add_argument('--pcap_path', type=str)
     args.add_argument('--seed', default=42, type=int)
     args.add_argument('--simulation_time', default=20.0, type=float)
     args.add_argument('--velocity', default=0.0, type=float)
@@ -134,14 +133,11 @@ if __name__ == '__main__':
 
     ns3_args = {
         'channelWidth': args.channel_width,
-        'csvPath': args.csv_path,
         'dataRate': args.data_rate,
         'initialPosition': args.initial_position,
         'logEvery': args.log_every,
-        'memblockKey': args.memblock_key,
         'minGI': args.min_gi,
         'nWifi': args.n_wifi,
-        'pcap': args.pcap,
         'simulationTime': args.simulation_time,
         'velocity': args.velocity,
         'warmupTime': args.warmup_time,
@@ -150,4 +146,14 @@ if __name__ == '__main__':
         'RngRun': args.seed,
     }
 
-    run(ns3_args, args.mempool_key, args.memblock_key, 64, 'rlib-sim', args.ns3_path, args.seed)
+    if args.csv_path:
+        ns3_args['csvPath'] = args.csv_path
+
+    if args.pcap_path:
+        ns3_args['pcapPath'] = args.pcap_path
+
+    memblock_key = 2333
+    memory_size = 128
+    scenario = 'rlib-sim'
+
+    run(ns3_args, args.mempool_key, memblock_key, memory_size, scenario, args.ns3_path, args.seed)
