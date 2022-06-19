@@ -1,5 +1,0 @@
-API module
-==========
-
-Overview
---------

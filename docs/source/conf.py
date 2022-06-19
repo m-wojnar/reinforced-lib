@@ -15,7 +15,6 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Imports -----------------------------------------------------------------
-import sphinx_rtd_theme
 
 
 # -- Project information -----------------------------------------------------
@@ -47,6 +46,9 @@ templates_path = ['_templates']
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = []
+
+# My configurations
+autodoc_member_order = 'groupwise'   # 'alphabetical' | 'bysource' | 'groupwise'
 
 
 # -- Options for HTML output -------------------------------------------------

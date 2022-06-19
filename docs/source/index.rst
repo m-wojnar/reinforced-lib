@@ -18,9 +18,9 @@ we can provide full acces to JAX's jit functionality, which boosts the agents pe
    import reinforced_lib as rfl
 
    # TODO add some simple example presenting the beuty of our reinforced-lib
-   rl = rfl.RLib(
+   rlib = rfl.RLib(
       agent_type=SomeAgent
-      env_type=SomeEnv
+      ext_type=SomeEnv
    )
 
 Integrated 802.11ax support
@@ -36,10 +36,11 @@ extension.
    :hidden:
 
    Getting started <getting_started>
-   API module <api_module>
-   Environments module <env_module>
-   Agents module <agents_module>
-   Logging module <log_module>
+   API <api>
+   Agents <agents>
+   Environments <environments>
+   Environment extensions <extensions>
+   Logging <logging>
 
 
 Indices and tables
