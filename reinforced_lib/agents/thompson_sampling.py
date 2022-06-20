@@ -31,7 +31,7 @@ class ThompsonSamplingState(AgentState):
 
 class ThompsonSampling(BaseAgent):
     """
-    Contextual Thompson Sampling agent with exponential smoothing.
+    Contextual Thompson Sampling agent with exponential smoothing. Implementation inspired by [1]_.
 
     Parameters
     ----------
@@ -39,6 +39,11 @@ class ThompsonSampling(BaseAgent):
         Number of bandit arms.
     decay : float, default=1.0
         Smoothing factor (decay = 0.0 means no smoothing).
+
+    References
+    ----------
+    .. [1] Krotov, Alexander & Kiryanov, Anton & Khorov, Evgeny. (2020). Rate Control With Spatial Reuse
+       for Wi-Fi 6 Dense Deployments. IEEE Access. 8. 168898-168909. 10.1109/ACCESS.2020.3023552.
     """
 
     def __init__(self, n_arms: jnp.int32, decay: chex.Scalar = 1.0) -> None:
