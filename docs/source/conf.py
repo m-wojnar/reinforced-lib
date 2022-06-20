@@ -49,7 +49,7 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 # My configurations
-autodoc_member_order = 'groupwise'   # 'alphabetical' | 'bysource' | 'groupwise'
+autodoc_member_order = 'bysource'   # 'alphabetical' | 'bysource' | 'groupwise'
 add_module_names = False
 
 

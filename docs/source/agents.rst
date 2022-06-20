@@ -22,6 +22,7 @@ BaseAgent
 .. currentmodule:: reinforced_lib.agents.base_agent
 
 .. autoclass:: AgentState
+    :members:
 
 .. autoclass:: BaseAgent
     :members:
@@ -36,15 +37,11 @@ Thompson Sampling
 
 .. autoclass:: ThompsonSamplingState
     :show-inheritance:
+    :members:
 
 .. autoclass:: ThompsonSampling
     :show-inheritance:
-
-.. autofunction:: init
-
-.. autofunction:: update
-
-.. autofunction:: sample
+    :members:
 
 Particle Filter
 ~~~~~~~~~~~~~~~
@@ -53,13 +50,8 @@ Particle Filter
 
 .. autoclass:: ParticleFilterState
     :show-inheritance:
+    :members:
 
 .. autoclass:: ParticleFilter
     :show-inheritance:
-
-.. autofunction:: init
-
-.. autofunction:: update
-
-.. autofunction:: sample
-
+    :members:

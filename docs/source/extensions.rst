@@ -23,7 +23,7 @@ BaseExt
 .. currentmodule:: reinforced_lib.exts.base_ext
 
 .. autoclass:: BaseExt
-    :members: transform
+    :members:
 
 List of extensions
 ------------------
@@ -35,3 +35,4 @@ IEEE 802.11ax
 
 .. autoclass:: IEEE_802_11_ax
     :show-inheritance:
+    :members:
