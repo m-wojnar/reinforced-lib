@@ -1,41 +1,40 @@
 from abc import ABC, abstractmethod
 from functools import partial
+import inspect
 from typing import Any, Callable, Dict, List, Tuple, Union
 
 import gym.spaces
 
 from reinforced_lib.exts.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete, test_space
-from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpacesError
+from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpacesError, NoDefaultParameterError
 
 
 class BaseExt(ABC):
     """
     Container for domain-specific knowledge and functions for a given extension. Provides transformation
     from extension functions and observation space to agents observation and sample spaces.
-
-    Parameters
-    ----------
-    agent_update_space : gym.spaces.Space, optional
-        Observations required by the agents 'update' function in OpenAI Gym format.
-    agent_sample_space : gym.spaces.Space, optional
-        Observations required by the agents 'sample' function in OpenAI Gym format.
     """
 
-    def __init__(
-            self,
-            agent_update_space: gym.spaces.Space = None,
-            agent_sample_space: gym.spaces.Space = None
-    ) -> None:
+    _simple_types = {
+        gym.spaces.Box: test_box,
+        gym.spaces.Discrete: test_discrete,
+        gym.spaces.MultiBinary: test_multi_binary,
+        gym.spaces.MultiDiscrete: test_multi_discrete,
+        gym.spaces.Space: test_space
+    }
+
+    def __init__(self) -> None:
         self._observation_functions: Dict[str, Callable] = {}
+        self._parameter_functions: Dict[str, Callable] = {}
 
         for name in dir(self):
             obj = getattr(self, name)
 
-            if hasattr(obj, 'function_info'):
-                self._observation_functions[obj.function_info.observation_name] = obj
+            if hasattr(obj, 'observation_info'):
+                self._observation_functions[obj.observation_info.name] = obj
 
-        self._update_space_transform = self._transform_spaces(self.observation_space, agent_update_space)
-        self._sample_space_transform = self._transform_spaces(self.observation_space, agent_sample_space)
+            if hasattr(obj, 'parameter_info'):
+                self._parameter_functions[obj.parameter_info.name] = obj
 
     @property
     @abstractmethod
@@ -45,6 +44,82 @@ class BaseExt(ABC):
         """
 
         pass
+
+    def get_agent_params(
+            self,
+            agent_type: type = None,
+            agent_init_space: gym.spaces.Dict = None,
+            user_parameters: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """
+        Get initialization parameters for the agent from extension parameter functions.
+
+        Parameters
+        ----------
+        agent_type : type, optional
+            Type of selected agent.
+        agent_init_space : gym.spaces.Dict, optional
+            Observations required by the agents 'init' function in OpenAI Gym format.
+        user_parameters : dict, optional
+            Agent parameters provided by user.
+
+        Returns
+        -------
+        parameters : dict
+            Dictionary with initialization parameters for the agent.
+        """
+
+        if agent_init_space is None:
+            return {}
+
+        default_parameters = set()
+
+        if agent_type is not None:
+            for key, value in inspect.signature(agent_type.__init__).parameters.items():
+                if value.default != inspect._empty:
+                    default_parameters.add(key)
+
+        parameters = user_parameters if user_parameters else {}
+
+        for name, space in agent_init_space.spaces.items():
+            if name in parameters:
+                continue
+
+            if name not in self._parameter_functions:
+                if name in default_parameters:
+                    continue
+
+                raise NoDefaultParameterError(type(self), name, type)
+
+            func = self._parameter_functions[name]
+            func_space = func.parameter_info.type
+
+            if space is None or type(space) == type(func_space):
+                parameters[name] = func()
+            else:
+                raise IncompatibleSpacesError(func_space, space)
+
+        return parameters
+
+    def setup_transformations(
+            self,
+            agent_update_space: gym.spaces.Space = None,
+            agent_sample_space: gym.spaces.Space = None
+    ) -> None:
+        """
+        Create functions that transform extension functions and observation
+        space to agents observation and sample spaces.
+
+        Parameters
+        ----------
+        agent_update_space : gym.spaces.Space, optional
+            Observations required by the agents 'update' function in OpenAI Gym format.
+        agent_sample_space : gym.spaces.Space, optional
+            Observations required by the agents 'sample' function in OpenAI Gym format.
+        """
+
+        self._update_space_transform = self._transform_spaces(self.observation_space, agent_update_space)
+        self._sample_space_transform = self._transform_spaces(self.observation_space, agent_sample_space)
 
     def _transform_spaces(
             self,
@@ -73,25 +148,17 @@ class BaseExt(ABC):
         if out_space is None:
             return lambda *args, **kwargs: None
 
-        simple_types = {
-            gym.spaces.Box: test_box,
-            gym.spaces.Discrete: test_discrete,
-            gym.spaces.MultiBinary: test_multi_binary,
-            gym.spaces.MultiDiscrete: test_multi_discrete,
-            gym.spaces.Space: test_space
-        }
-
-        if type(out_space) in simple_types:
-            if type(in_space) not in simple_types:
+        if type(out_space) in self._simple_types:
+            if type(in_space) not in self._simple_types:
                 raise IncompatibleSpacesError(in_space, out_space)
 
-            test_function = simple_types[type(out_space)]
+            test_function = self._simple_types[type(out_space)]
 
             if test_function(in_space, out_space):
                 return partial(self._simple_transform, accessor)
 
             for observation_function in self._observation_functions.values():
-                func_space = observation_function.function_info.observation_type
+                func_space = observation_function.observation_info.type
 
                 if func_space is None or test_function(func_space, out_space):
                     return observation_function
@@ -104,16 +171,16 @@ class BaseExt(ABC):
 
             for name, space in out_space.spaces.items():
                 if name in in_space.spaces:
-                    if type(space) not in simple_types:
+                    if type(space) not in self._simple_types:
                         observations[name] = self._transform_spaces(in_space[name], space, name)
-                    elif simple_types[type(space)](in_space[name], space):
+                    elif self._simple_types[type(space)](in_space[name], space):
                         observations[name] = partial(lambda inner_name, *args, **kwargs: kwargs[inner_name], name)
                     else:
                         raise IncompatibleSpacesError(in_space, space)
                 elif name in self._observation_functions:
-                    func_space = self._observation_functions[name].function_info.observation_type
+                    func_space = self._observation_functions[name].observation_info.type
 
-                    if func_space is None or simple_types[type(space)](func_space, space):
+                    if func_space is None or self._simple_types[type(space)](func_space, space):
                         observations[name] = partial(
                             lambda func, inner_name, inner_accessor, *args, **kwargs:
                             self._function_transform(func, inner_name, inner_accessor, *args, **kwargs),
@@ -133,9 +200,9 @@ class BaseExt(ABC):
             observations: List[Callable] = []
 
             for i, (agent_space, ext_space) in enumerate(zip(in_space.spaces, out_space.spaces)):
-                if type(agent_space) not in simple_types:
+                if type(agent_space) not in self._simple_types:
                     observations.append(self._transform_spaces(ext_space, agent_space, i))
-                elif simple_types[type(agent_space)](ext_space, agent_space):
+                elif self._simple_types[type(agent_space)](ext_space, agent_space):
                     observations.append(partial(lambda inner_i, *args, **kwargs: args[inner_i], i))
                 else:
                     raise IncompatibleSpacesError(agent_space, in_space)
@@ -254,7 +321,7 @@ class BaseExt(ABC):
         observations : dict
             Dictionary with selected observations.
         """
-        
+
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
         return {name: func(*args, **kwargs) for name, func in observations.items()}
 

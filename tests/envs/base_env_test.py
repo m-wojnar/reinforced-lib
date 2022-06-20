@@ -27,9 +27,6 @@ class DummyAgent:
 
 
 class DummyExt(BaseExt):
-    def __init__(self, agent_update_space: gym.spaces.Space, agent_sample_space: gym.spaces.Space) -> None:
-        super().__init__(agent_update_space, agent_sample_space)
-
     observation_space = gym.spaces.Dict({
         'n': gym.spaces.Discrete(10),
         'params': gym.spaces.Tuple([
@@ -54,7 +51,9 @@ class DummyExt(BaseExt):
 
 if __name__ == '__main__':
     agent = DummyAgent()
-    ext = DummyExt(agent.update_observation_space, agent.sample_observation_space)
+
+    ext = DummyExt()
+    ext.setup_transformations(agent.update_observation_space, agent.sample_observation_space)
 
     print(ext._update_space_transform(0.5, time=123, n=5, params=(10, 15, {'test': 20})))
     print(ext._sample_space_transform(0.5, n=5, params=(10, 15, {'test': 20})))

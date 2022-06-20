@@ -13,7 +13,8 @@ class BaseAgent(ABC):
     """
 
     @staticmethod
-    def init() -> AgentState:
+    @abstractmethod
+    def init(*args, **kwargs) -> AgentState:
         """
         Creates and initializes instance of the agent.
         """
@@ -21,6 +22,7 @@ class BaseAgent(ABC):
         pass
 
     @staticmethod
+    @abstractmethod
     def update(state: AgentState, key: chex.PRNGKey, *args, **kwargs) -> AgentState:
         """
         Updates the state of the agent after performing some action and receiving a reward.
@@ -29,9 +31,20 @@ class BaseAgent(ABC):
         pass
 
     @staticmethod
+    @abstractmethod
     def sample(state: AgentState, key: chex.PRNGKey, *args, **kwargs) -> Tuple[AgentState, Any]:
         """
         Selects next action based on current agent state.
+        """
+
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def init_observation_space() -> gym.spaces.Dict:
+        """
+        Parameters required by the 'init' method in OpenAI Gym format.
+        Type of returned value is required to be gym.spaces.Dict.
         """
 
         pass

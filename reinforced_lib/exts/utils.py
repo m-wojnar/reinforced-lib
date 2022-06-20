@@ -4,31 +4,72 @@ import gym.spaces
 import numpy as np
 
 
-class FunctionInfo(NamedTuple):
+class ObservationInfo(NamedTuple):
     """
-    Description of the function that provides one of the parameters of the observation space.
+    Description of the function that provides one of the values from the observation space.
 
     Attributes
     ----------
-    parameter_name : str
+    name : str
+        Name of the provided value.
+    type : gym.spaces.Space
+        Type of the provided value in OpenAI Gym format.
+    """
+
+    name: str
+    type: gym.spaces.Space
+
+
+class ParameterInfo(NamedTuple):
+    """
+    Description of the function that provides one of the parameters of the agent constructor.
+
+    Attributes
+    ----------
+    name : str
         Name of the provided parameter.
-    space_type : gym.spaces.Space
+    type : gym.spaces.Space
         Type of the provided parameter in OpenAI Gym format.
     """
 
-    observation_name: str
-    observation_type: gym.spaces.Space
+    name: str
+    type: gym.spaces.Space
 
 
 def observation(observation_name: str = None, observation_type: gym.spaces.Space = None) -> Callable:
     """
-    Decorator used to annotate functions that provide one of the parameters of the observation space.
+    Decorator used to annotate functions that provide one of the values from the observation space.
 
     Parameters
     ----------
     observation_name : str, optional
-        Name of the provided parameter.
+        Name of the provided value.
     observation_type : gym.spaces.Space, optional
+        Type of the provided value in OpenAI Gym format.
+
+    Returns
+    -------
+    func : Callable
+        Function that returns provided value.
+    """
+
+    def decorator(function):
+        name = observation_name if observation_name is not None else function.__name__
+        function.observation_info = ObservationInfo(name, observation_type)
+        return function
+
+    return decorator
+
+
+def parameter(parameter_name: str = None, parameter_type: gym.spaces.Space = None) -> Callable:
+    """
+    Decorator used to annotate functions that provide one of the parameters of the agent constructor.
+
+    Parameters
+    ----------
+    parameter_name : str, optional
+        Name of the provided parameter.
+    parameter_type : gym.spaces.Space, optional
         Type of the provided parameter in OpenAI Gym format.
 
     Returns
@@ -38,8 +79,8 @@ def observation(observation_name: str = None, observation_type: gym.spaces.Space
     """
 
     def decorator(function):
-        name = observation_name if observation_name is not None else function.__name__
-        function.function_info = FunctionInfo(name, observation_type)
+        name = parameter_name if parameter_name is not None else function.__name__
+        function.parameter_info = ParameterInfo(name, parameter_type)
         return function
 
     return decorator

@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
     # agent setup
     decay = 1.0
-    agent = ThompsonSampling(context, decay)
+    agent = ThompsonSampling(len(context), decay)
     state = agent.init()
 
     # print observation and action spaces
@@ -33,7 +33,7 @@ if __name__ == '__main__':
 
         # update state and sample
         state = agent.update(state, update_key, a, r, 1 - r, t)
-        state, a = agent.sample(state, sample_key, t)
+        state, a = agent.sample(state, sample_key, t, context)
 
         # save selected action
         actions.append(a)
