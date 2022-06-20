@@ -6,7 +6,7 @@ Agents
 This module is a set of RL agents. You can either choose one of our built-in agents or implemet
 your agent with the help of this short guide.
 
-.. _custom-agents:
+.. _custom_agents:
 
 Custom agents
 -------------

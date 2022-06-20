@@ -44,8 +44,8 @@ Advanced Concepts
 
 .. note::
 
-    * If you are looking for adding custom **environment** than check out :ref:`custom-envs` section!
-    * If you are looking for adding custom **agent** than check out :ref:`custom-agents` section!
+    * If you are looking for adding custom **environment** than check out :ref:`custom_exts` section!
+    * If you are looking for adding custom **agent** than check out :ref:`custom_agents` section!
 
 Modular architecture
 ~~~~~~~~~~~~~~~~~~~~

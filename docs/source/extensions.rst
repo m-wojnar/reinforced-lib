@@ -7,7 +7,7 @@ The environment extension is our fuctionality that allows agent to infer latent 
 not originally supported by the environment. You can either choose one of our built-in extensions or
 implemet your own with the help of this short guide.
 
-.. _custom-exts:
+.. _custom_exts:
 
 Custom extensions
 -----------------
