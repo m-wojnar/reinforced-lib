@@ -32,7 +32,7 @@ extension.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents
+   :caption: Table of contents
    :hidden:
 
    Getting started <getting_started>

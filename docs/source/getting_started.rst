@@ -56,7 +56,7 @@ The whole library has a modular architecture, which enables you to
     :width: 500
     :alt: reinforced-lib architecture schema
 
-Environments Extensions
-~~~~~~~~~~~~~~~~~~~~~~~
+Extending the environment
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 

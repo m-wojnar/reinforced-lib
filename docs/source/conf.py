@@ -50,6 +50,7 @@ exclude_patterns = []
 
 # My configurations
 autodoc_member_order = 'groupwise'   # 'alphabetical' | 'bysource' | 'groupwise'
+add_module_names = False
 
 
 # -- Options for HTML output -------------------------------------------------
