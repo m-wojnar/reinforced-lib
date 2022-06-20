@@ -44,21 +44,21 @@ class BaseExt(ABC):
             user_parameters: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
-        Get initialization parameters for the agent from extension parameter functions.
+        Get agents constructor parameters from extension parameter functions.
 
         Parameters
         ----------
         agent_type : type, optional
             Type of selected agent.
         agent_parameters_space : gym.spaces.Dict, optional
-            Observations required by the agents 'init' function in OpenAI Gym format.
+            Parameters required by the agents' constructor in OpenAI Gym format.
         user_parameters : dict, optional
             Agent parameters provided by user.
 
         Returns
         -------
         parameters : dict
-            Dictionary with initialization parameters for the agent.
+            Dictionary with constructor parameters for the agent.
         """
 
         if agent_parameters_space is None:

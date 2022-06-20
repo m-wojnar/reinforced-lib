@@ -43,7 +43,7 @@ class BaseAgent(ABC):
     @abstractmethod
     def parameters_space() -> gym.spaces.Dict:
         """
-        Parameters required by the 'init' method in OpenAI Gym format.
+        Parameters required by the constructor in OpenAI Gym format.
         Type of returned value is required to be gym.spaces.Dict.
         """
 
