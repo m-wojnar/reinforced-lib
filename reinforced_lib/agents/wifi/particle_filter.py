@@ -80,7 +80,7 @@ class ParticleFilter(BaseAgent):
         self.sample = jax.jit(self.sample)
 
     @staticmethod
-    def init_observation_space() -> gym.spaces.Dict:
+    def parameters_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'n_mcs': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'min_snr': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),

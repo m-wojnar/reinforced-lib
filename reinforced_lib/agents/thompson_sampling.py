@@ -50,7 +50,7 @@ class ThompsonSampling(BaseAgent):
         self.sample = jax.jit(partial(self.sample, decay=decay))
 
     @staticmethod
-    def init_observation_space() -> gym.spaces.Dict:
+    def parameters_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'decay': gym.spaces.Box(0.0, jnp.inf, (1,))

@@ -83,7 +83,7 @@ class RLib:
         self._agent_params = agent_params
 
         if not self._no_ext_mode and self._ext:
-            agent_params = self._ext.get_agent_params(agent_type, agent_type.init_observation_space(), agent_params)
+            agent_params = self._ext.get_agent_params(agent_type, agent_type.parameters_space(), agent_params)
             self._agent = agent_type(**agent_params)
             self._ext.setup_transformations(self._agent.update_observation_space, self._agent.sample_observation_space)
         else:

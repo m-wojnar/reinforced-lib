@@ -48,7 +48,7 @@ class BaseExt(ABC):
     def get_agent_params(
             self,
             agent_type: type = None,
-            agent_init_space: gym.spaces.Dict = None,
+            agent_parameters_space: gym.spaces.Dict = None,
             user_parameters: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
@@ -58,7 +58,7 @@ class BaseExt(ABC):
         ----------
         agent_type : type, optional
             Type of selected agent.
-        agent_init_space : gym.spaces.Dict, optional
+        agent_parameters_space : gym.spaces.Dict, optional
             Observations required by the agents 'init' function in OpenAI Gym format.
         user_parameters : dict, optional
             Agent parameters provided by user.
@@ -69,7 +69,7 @@ class BaseExt(ABC):
             Dictionary with initialization parameters for the agent.
         """
 
-        if agent_init_space is None:
+        if agent_parameters_space is None:
             return {}
 
         default_parameters = set()
@@ -81,7 +81,7 @@ class BaseExt(ABC):
 
         parameters = user_parameters if user_parameters else {}
 
-        for name, space in agent_init_space.spaces.items():
+        for name, space in agent_parameters_space.spaces.items():
             if name in parameters:
                 continue
 
