@@ -55,3 +55,16 @@ Particle Filter
 .. autoclass:: ParticleFilter
     :show-inheritance:
     :members:
+
+Epsilon-greedy
+~~~~~~~~~~~~~~
+
+.. currentmodule:: reinforced_lib.agents.e_greedy
+
+.. autoclass:: EGreedyState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: EGreedy
+    :show-inheritance:
+    :members:

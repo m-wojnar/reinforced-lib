@@ -1,1 +1,2 @@
 from reinforced_lib.agents.thompson_sampling import ThompsonSampling
+from reinforced_lib.agents.e_greedy import EGreedy
