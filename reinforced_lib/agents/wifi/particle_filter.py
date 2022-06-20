@@ -33,7 +33,7 @@ class ParticleFilterState(AgentState):
 
 class ParticleFilter(BaseAgent):
     """
-    Particle Filter agent designed for IEEE 802.11 environments. Implementation based on [1]_.
+    Particle Filter agent designed for IEEE 802.11 environments. Implementation based on [2]_.
 
     Parameters
     ----------
@@ -52,7 +52,7 @@ class ParticleFilter(BaseAgent):
 
     References
     ----------
-    .. [1] Krotov, Alexander & Kiryanov, Anton & Khorov, Evgeny. (2020). Rate Control With Spatial Reuse
+    .. [2] Krotov, Alexander & Kiryanov, Anton & Khorov, Evgeny. (2020). Rate Control With Spatial Reuse
        for Wi-Fi 6 Dense Deployments. IEEE Access. 8. 168898-168909. 10.1109/ACCESS.2020.3023552.
     """
 
