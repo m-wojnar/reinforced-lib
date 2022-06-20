@@ -40,7 +40,7 @@ if __name__ == '__main__':
         # print('\n', state)
         actions.append(a)
     
-    print(f"Best arm so far -> {jnp.argmax(state.q)}")
+    print(f"Best arm so far -> {jnp.argmax(state.Q)}")
 
     # action vs time plot
     plt.figure(figsize=(8, 5), dpi=200)

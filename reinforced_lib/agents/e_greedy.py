@@ -18,14 +18,14 @@ class EGreedyState(AgentState):
     ----------
     e : float
         The experiment rate
-    q : array_like
+    Q : array_like
         Quality values for each arm
-    n : array_like
+    N : array_like
         Number of tries for each arm
     """
     e: jnp.float32
-    q: chex.Array
-    n: chex.Array
+    Q: chex.Array
+    N: chex.Array
 
 class EGreedy(BaseAgent):
     """
@@ -36,7 +36,7 @@ class EGreedy(BaseAgent):
     n_arms : int
         Number of bandit arms.
     e : float
-        Experiment rate (epsilon)
+        Experiment rate (epsilon).
     optimistic_start : float, default=0.0
         If non zero than it is interpreted as the optimistic start to encourage
         exploration, by default 0.0.
@@ -83,6 +83,8 @@ class EGreedy(BaseAgent):
         ----------
         n_arms : int
             Number of contextual bandit arms.
+        e : float
+            Experiment rate (epsilon).
         optimistic_start : float, default=0.0
             If non zero than it is interpreted as the optimistic start to encourage
             exploration, by default 0.0.
@@ -95,8 +97,8 @@ class EGreedy(BaseAgent):
 
         return EGreedyState(
             e=e,
-            q=(optimistic_start * jnp.ones(n_arms)),
-            n=jnp.ones(n_arms, dtype=jnp.int32)
+            Q=(optimistic_start * jnp.ones(n_arms)),
+            N=jnp.ones(n_arms, dtype=jnp.int32)
         )
 
     @staticmethod
@@ -128,8 +130,8 @@ class EGreedy(BaseAgent):
         
         return EGreedyState(
             e=state.e,
-            q=state.q.at[action].add((1.0 / state.n[action]) * (reward - state.q[action])),
-            n=state.n.at[action].add(1)
+            Q=state.Q.at[action].add((1.0 / state.N[action]) * (reward - state.Q[action])),
+            N=state.N.at[action].add(1)
         )
 
     @staticmethod
@@ -155,6 +157,6 @@ class EGreedy(BaseAgent):
 
         return jax.lax.cond(
             jax.random.uniform(key) < state.e,
-            lambda: (state, jax.random.choice(key, state.q.size)),
-            lambda: (state, jnp.argmax(state.q))
+            lambda: (state, jax.random.choice(key, state.Q.size)),
+            lambda: (state, jnp.argmax(state.Q))
         )
