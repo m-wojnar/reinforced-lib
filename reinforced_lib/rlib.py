@@ -33,30 +33,29 @@ class RLib:
     def __init__(
             self, *,
             agent_type: type = None,
-            agent_params: Dict = None,
+            agent_params: Dict[str, Any] = None,
             ext_type: type = None,
-            ext_params: Dict = None,
+            ext_params: Dict[str, Any] = None,
             log_type: Union[type, List[type]] = None,
-            log_params: Union[Dict, List[Dict]] = None,
+            log_params: Union[Dict[str, Any], List[Dict[str, Any]]] = None,
             no_ext_mode: bool = False
     ) -> None:
         self._no_ext_mode = no_ext_mode
 
         self._agent = None
+        self._agent_type = agent_type
+        self._agent_params = agent_params
         self._agents_states = []
         self._agents_keys = []
 
         self._ext = None
-        self._ext_type = None
-        self._ext_params = None
-
         self._log = []
-
-        if agent_type:
-            self.set_agent(agent_type, agent_params)
 
         if ext_type:
             self.set_ext(ext_type, ext_params)
+
+        if agent_type:
+            self.set_agent(agent_type, agent_params)
 
         if log_type:
             self.set_log(log_type, log_params)
@@ -80,11 +79,16 @@ class RLib:
         if not issubclass(agent_type, BaseAgent):
             raise IncorrectAgentTypeError(agent_type)
 
-        agent_params = agent_params if agent_params else {}
-        self._agent = agent_type(**agent_params)
+        self._agent_type = agent_type
+        self._agent_params = agent_params
 
         if not self._no_ext_mode and self._ext:
-            self.set_ext(self._ext_type, self._ext_params)
+            agent_params = self._ext.get_agent_params(agent_type, agent_type.parameters_space(), agent_params)
+            self._agent = agent_type(**agent_params)
+            self._ext.setup_transformations(self._agent.update_observation_space, self._agent.sample_observation_space)
+        else:
+            agent_params = agent_params if agent_params else {}
+            self._agent = agent_type(**agent_params)
 
     def set_ext(self, ext_type: type, ext_params: Dict = None) -> None:
         """
@@ -102,9 +106,6 @@ class RLib:
         if self._no_ext_mode:
             raise ForbiddenExtensionSetError()
 
-        if not self._agent:
-            raise NoAgentError()
-
         if len(self._agents_states) > 0:
             raise ForbiddenExtensionChangeError()
 
@@ -112,10 +113,16 @@ class RLib:
             raise IncorrectExtensionTypeError(ext_type)
 
         ext_params = ext_params if ext_params else {}
-        self._ext = ext_type(self._agent.update_observation_space, self._agent.sample_observation_space, **ext_params)
+        self._ext = ext_type(**ext_params)
 
-        self._ext_type = ext_type
-        self._ext_params = ext_params
+        if self._agent:
+            agent_params = self._ext.get_agent_params(
+                self._agent_type,
+                self._agent_type.init_observation_space(),
+                self._agent_params
+            )
+            self._agent = self._agent_type(**agent_params)
+            self._ext.setup_transformations(self._agent.update_observation_space, self._agent.sample_observation_space)
 
     def set_log(self, log_type: Union[type, List[type]], log_params: Union[Dict, List[Dict]] = None) -> None:
         """

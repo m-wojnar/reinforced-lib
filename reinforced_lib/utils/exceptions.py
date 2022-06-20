@@ -65,8 +65,8 @@ class IncorrectExtensionTypeError(IncorrectTypeError):
 
     def __init__(self, provided_type: type) -> None:
         super(provided_type, 'extension')
-        
-        
+
+
 class ForbiddenOperationError(Exception):
     """
     Raised when user is trying to perform forbidden operation.
@@ -131,3 +131,27 @@ class IncompatibleSpacesError(Exception):
     def __str__(self) -> str:
         return f'Agents space of type {self._agent_space} is not compatible ' \
                f'with extension space of type {self._ext_space}.'
+
+
+class NoDefaultParameterError(Exception):
+    """
+    Raised when extension does not define default parameter value for the agent.
+
+    Parameters
+    ----------
+    extension_type : type
+        Type of the used extension.
+    parameter_name : str
+        Name of the missing parameter.
+    parameter_type : gym.spaces.Space
+        Type of the missing parameter.
+    """
+
+    def __init__(self, extension_type: type, parameter_name: str, parameter_type: gym.spaces.Space) -> None:
+        self._extension_name = extension_type.__name__
+        self._parameter_name = parameter_name
+        self._parameter_type = parameter_type
+
+    def __str__(self) -> str:
+        return f'Extension {self._extension_name} does not provide parameter ' \
+               f'{self._parameter_name} of type {self._parameter_type}.'

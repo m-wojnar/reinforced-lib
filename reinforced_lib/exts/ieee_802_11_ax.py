@@ -3,7 +3,7 @@ import numpy as np
 from scipy.special import erf
 
 from reinforced_lib.exts.base_ext import BaseExt
-from reinforced_lib.exts.utils import observation
+from reinforced_lib.exts.utils import observation, parameter
 
 
 class IEEE_802_11_ax(BaseExt):
@@ -11,13 +11,6 @@ class IEEE_802_11_ax(BaseExt):
     IEEE 802.11ax [1]_ extension. Provides data rates (in Mb/s) for consecutive MCS (modulation and coding scheme)
     modes, minimal SNR (signal-to-noise ratio) for each MCS, approximated collision probability for a given number
     of transmitting stations, and approximated transmission success probability for a given SNR and all MCS modes.
-
-    Parameters
-    ----------
-    agent_update_space : gym.spaces.Space
-        Parameters required by the agents 'update' function in OpenAI Gym format.
-    agent_sample_space : gym.spaces.Space
-        Parameters required by the agents 'sample' function in OpenAI Gym format.
 
     References
     ----------
@@ -28,13 +21,6 @@ class IEEE_802_11_ax(BaseExt):
        19 May 2021, doi: 10.1109/IEEESTD.2021.9442429.
 
     """
-
-    def __init__(
-            self,
-            agent_update_space: gym.spaces.Space = None,
-            agent_sample_space: gym.spaces.Space = None
-    ) -> None:
-        super().__init__(agent_update_space, agent_sample_space)
 
     observation_space = gym.spaces.Dict({
         'time': gym.spaces.Box(0.0, np.inf, (1,)),
@@ -80,11 +66,11 @@ class IEEE_802_11_ax(BaseExt):
     def rates(self, *args, **kwargs) -> np.ndarray:
         return self._wifi_modes_rates
 
-    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (len(_wifi_modes_snrs),)))
-    def min_snr(self, *args, **kwargs) -> np.ndarray:
+    @observation(observation_name='min_snr', observation_type=gym.spaces.Box(-np.inf, np.inf, (len(_wifi_modes_snrs),)))
+    def min_required_snr(self, *args, **kwargs) -> np.ndarray:
         return self._wifi_modes_snrs
 
-    @observation(observation_type=gym.spaces.Box(0.0, np.inf, (len(_wifi_modes_rates),)))
+    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (len(_wifi_modes_rates),)))
     def context(self, *args, **kwargs) -> np.ndarray:
         return self._wifi_modes_rates
 
@@ -99,3 +85,23 @@ class IEEE_802_11_ax(BaseExt):
     @observation(observation_type=gym.spaces.Discrete(len(_wifi_modes_rates)))
     def action(self, mcs: int, *args, **kwargs) -> int:
         return mcs
+
+    @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
+    def n_arms(self, *args, **kwargs) -> int:
+        return len(self._wifi_modes_rates)
+
+    @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
+    def n_mcs(self, *args, **kwargs) -> int:
+        return len(self._wifi_modes_rates)
+
+    @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    def min_snr(self, *args, **kwargs) -> float:
+        return 0.0
+
+    @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    def max_snr(self, *args, **kwargs) -> float:
+        return 40.0
+
+    @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    def initial_power(self, *args, **kwargs) -> float:
+        return 16.0206

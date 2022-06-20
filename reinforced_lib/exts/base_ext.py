@@ -1,40 +1,32 @@
 from abc import ABC, abstractmethod
 from functools import partial
+import inspect
 from typing import Any, Callable, Dict, List, Tuple, Union
 
 import gym.spaces
 
 from reinforced_lib.exts.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete, test_space
-from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpacesError
+from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpacesError, NoDefaultParameterError
 
 
 class BaseExt(ABC):
     """
     Container for domain-specific knowledge and functions for a given extension. Provides transformation
     from extension functions and observation space to agents observation and sample spaces.
-
-    Parameters
-    ----------
-    agent_update_space : gym.spaces.Space, optional
-        Observations required by the agents 'update' function in OpenAI Gym format.
-    agent_sample_space : gym.spaces.Space, optional
-        Observations required by the agents 'sample' function in OpenAI Gym format.
     """
-    def __init__(
-            self,
-            agent_update_space: gym.spaces.Space = None,
-            agent_sample_space: gym.spaces.Space = None
-    ) -> None:
+
+    def __init__(self) -> None:
         self._observation_functions: Dict[str, Callable] = {}
+        self._parameter_functions: Dict[str, Callable] = {}
 
         for name in dir(self):
             obj = getattr(self, name)
 
-            if hasattr(obj, 'function_info'):
-                self._observation_functions[obj.function_info.observation_name] = obj
+            if hasattr(obj, 'observation_info'):
+                self._observation_functions[obj.observation_info.name] = obj
 
-        self._update_space_transform = self._transform_spaces(self.observation_space, agent_update_space)
-        self._sample_space_transform = self._transform_spaces(self.observation_space, agent_sample_space)
+            if hasattr(obj, 'parameter_info'):
+                self._parameter_functions[obj.parameter_info.name] = obj
 
     @property
     @abstractmethod
@@ -44,6 +36,82 @@ class BaseExt(ABC):
         """
 
         pass
+
+    def get_agent_params(
+            self,
+            agent_type: type = None,
+            agent_parameters_space: gym.spaces.Dict = None,
+            user_parameters: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """
+        Get agents constructor parameters from extension parameter functions.
+
+        Parameters
+        ----------
+        agent_type : type, optional
+            Type of selected agent.
+        agent_parameters_space : gym.spaces.Dict, optional
+            Parameters required by the agents' constructor in OpenAI Gym format.
+        user_parameters : dict, optional
+            Agent parameters provided by user.
+
+        Returns
+        -------
+        parameters : dict
+            Dictionary with constructor parameters for the agent.
+        """
+
+        if agent_parameters_space is None:
+            return {}
+
+        default_parameters = set()
+
+        if agent_type is not None:
+            for key, value in inspect.signature(agent_type.__init__).parameters.items():
+                if value.default != inspect._empty:
+                    default_parameters.add(key)
+
+        parameters = user_parameters if user_parameters else {}
+
+        for name, space in agent_parameters_space.spaces.items():
+            if name in parameters:
+                continue
+
+            if name not in self._parameter_functions:
+                if name in default_parameters:
+                    continue
+
+                raise NoDefaultParameterError(type(self), name, type)
+
+            func = self._parameter_functions[name]
+            func_space = func.parameter_info.type
+
+            if space is None or type(space) == type(func_space):
+                parameters[name] = func()
+            else:
+                raise IncompatibleSpacesError(func_space, space)
+
+        return parameters
+
+    def setup_transformations(
+            self,
+            agent_update_space: gym.spaces.Space = None,
+            agent_sample_space: gym.spaces.Space = None
+    ) -> None:
+        """
+        Create functions that transform extension functions and observation
+        space to agents observation and sample spaces.
+
+        Parameters
+        ----------
+        agent_update_space : gym.spaces.Space, optional
+            Observations required by the agents 'update' function in OpenAI Gym format.
+        agent_sample_space : gym.spaces.Space, optional
+            Observations required by the agents 'sample' function in OpenAI Gym format.
+        """
+
+        self._update_space_transform = self._transform_spaces(self.observation_space, agent_update_space)
+        self._sample_space_transform = self._transform_spaces(self.observation_space, agent_sample_space)
 
     def _transform_spaces(
             self,
@@ -90,7 +158,7 @@ class BaseExt(ABC):
                 return partial(self._simple_transform, accessor)
 
             for observation_function in self._observation_functions.values():
-                func_space = observation_function.function_info.observation_type
+                func_space = observation_function.observation_info.type
 
                 if func_space is None or test_function(func_space, out_space):
                     return observation_function
@@ -110,7 +178,7 @@ class BaseExt(ABC):
                     else:
                         raise IncompatibleSpacesError(in_space, space)
                 elif name in self._observation_functions:
-                    func_space = self._observation_functions[name].function_info.observation_type
+                    func_space = self._observation_functions[name].observation_info.type
 
                     if func_space is None or simple_types[type(space)](func_space, space):
                         observations[name] = partial(
@@ -253,7 +321,7 @@ class BaseExt(ABC):
         observations : dict
             Dictionary with selected observations.
         """
-        
+
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
         return {name: func(*args, **kwargs) for name, func in observations.items()}
 
