@@ -12,7 +12,7 @@ Custom agents
 -------------
 
 To fully benefit from the reinforced-lib features, including the JAX jit optimization, your agent
-should inherit from the :ref:`class <base_agent>` ``BaseAgent``. We will present adding new agent 
+should inherit from the :ref:`abstract class <base_agent>` ``BaseAgent``. We will present adding new agent 
 
 .. _base_agent:
 
