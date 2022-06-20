@@ -20,7 +20,6 @@ class BaseExt(ABC):
     agent_sample_space : gym.spaces.Space, optional
         Observations required by the agents 'sample' function in OpenAI Gym format.
     """
-
     def __init__(
             self,
             agent_update_space: gym.spaces.Space = None,
