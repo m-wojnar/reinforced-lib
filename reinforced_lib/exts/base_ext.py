@@ -15,14 +15,6 @@ class BaseExt(ABC):
     from extension functions and observation space to agents observation and sample spaces.
     """
 
-    _simple_types = {
-        gym.spaces.Box: test_box,
-        gym.spaces.Discrete: test_discrete,
-        gym.spaces.MultiBinary: test_multi_binary,
-        gym.spaces.MultiDiscrete: test_multi_discrete,
-        gym.spaces.Space: test_space
-    }
-
     def __init__(self) -> None:
         self._observation_functions: Dict[str, Callable] = {}
         self._parameter_functions: Dict[str, Callable] = {}
@@ -148,11 +140,19 @@ class BaseExt(ABC):
         if out_space is None:
             return lambda *args, **kwargs: None
 
-        if type(out_space) in self._simple_types:
-            if type(in_space) not in self._simple_types:
+        simple_types = {
+            gym.spaces.Box: test_box,
+            gym.spaces.Discrete: test_discrete,
+            gym.spaces.MultiBinary: test_multi_binary,
+            gym.spaces.MultiDiscrete: test_multi_discrete,
+            gym.spaces.Space: test_space
+        }
+
+        if type(out_space) in simple_types:
+            if type(in_space) not in simple_types:
                 raise IncompatibleSpacesError(in_space, out_space)
 
-            test_function = self._simple_types[type(out_space)]
+            test_function = simple_types[type(out_space)]
 
             if test_function(in_space, out_space):
                 return partial(self._simple_transform, accessor)
@@ -171,16 +171,16 @@ class BaseExt(ABC):
 
             for name, space in out_space.spaces.items():
                 if name in in_space.spaces:
-                    if type(space) not in self._simple_types:
+                    if type(space) not in simple_types:
                         observations[name] = self._transform_spaces(in_space[name], space, name)
-                    elif self._simple_types[type(space)](in_space[name], space):
+                    elif simple_types[type(space)](in_space[name], space):
                         observations[name] = partial(lambda inner_name, *args, **kwargs: kwargs[inner_name], name)
                     else:
                         raise IncompatibleSpacesError(in_space, space)
                 elif name in self._observation_functions:
                     func_space = self._observation_functions[name].observation_info.type
 
-                    if func_space is None or self._simple_types[type(space)](func_space, space):
+                    if func_space is None or simple_types[type(space)](func_space, space):
                         observations[name] = partial(
                             lambda func, inner_name, inner_accessor, *args, **kwargs:
                             self._function_transform(func, inner_name, inner_accessor, *args, **kwargs),
@@ -200,9 +200,9 @@ class BaseExt(ABC):
             observations: List[Callable] = []
 
             for i, (agent_space, ext_space) in enumerate(zip(in_space.spaces, out_space.spaces)):
-                if type(agent_space) not in self._simple_types:
+                if type(agent_space) not in simple_types:
                     observations.append(self._transform_spaces(ext_space, agent_space, i))
-                elif self._simple_types[type(agent_space)](ext_space, agent_space):
+                elif simple_types[type(agent_space)](ext_space, agent_space):
                     observations.append(partial(lambda inner_i, *args, **kwargs: args[inner_i], i))
                 else:
                     raise IncompatibleSpacesError(agent_space, in_space)
