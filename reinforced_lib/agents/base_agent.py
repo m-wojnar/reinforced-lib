@@ -4,7 +4,12 @@ from typing import Any, Tuple
 import chex
 import gym.spaces
 
-from reinforced_lib.agents.agent_state import AgentState
+
+@chex.dataclass
+class AgentState:
+    """
+    Base class of a container for the state of agents.
+    """
 
 
 class BaseAgent(ABC):

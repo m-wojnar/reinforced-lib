@@ -8,8 +8,7 @@ import jax
 import jax.numpy as jnp
 from jax.scipy.special import erf
 
-from reinforced_lib.agents.agent_state import AgentState
-from reinforced_lib.agents.base_agent import BaseAgent
+from reinforced_lib.agents.base_agent import BaseAgent, AgentState
 
 
 @chex.dataclass
