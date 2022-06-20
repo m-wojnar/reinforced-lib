@@ -30,14 +30,32 @@ Thompson Sampling
 
 .. currentmodule:: reinforced_lib.agents.thompson_sampling
 
+.. autoclass:: ThompsonSamplingState
+    :show-inheritance:
+
 .. autoclass:: ThompsonSampling
     :show-inheritance:
+
+.. autofunction:: init
+
+.. autofunction:: update
+
+.. autofunction:: sample
 
 Particle Filter
 ~~~~~~~~~~~~~~~
 
 .. currentmodule:: reinforced_lib.agents.wifi.particle_filter
 
+.. autoclass:: ParticleFilterState
+    :show-inheritance:
+
 .. autoclass:: ParticleFilter
     :show-inheritance:
+
+.. autofunction:: init
+
+.. autofunction:: update
+
+.. autofunction:: sample
 
