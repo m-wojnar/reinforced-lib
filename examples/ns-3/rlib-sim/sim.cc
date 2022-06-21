@@ -31,11 +31,13 @@ struct FlowState
 
 void CwCallback (std::string path, u_int32_t oldValue, u_int32_t newValue);
 void InstallTrafficGenerator (Ptr<ns3::Node> sourceNode, Ptr<ns3::Node> sinkNode, uint32_t port,
-                              DataRate offeredLoad, uint32_t packetSize, double simulationTime);
-void Measurement (Ptr<FlowMonitor> monitor, Ptr<Node> sinkNode, std::ostringstream *ostream);
+                              DataRate offeredLoad, uint32_t packetSize, double simulationTime,
+                              double warmupTime);
+void Measurement (Ptr<FlowMonitor> monitor, Ptr<Node> sinkNode, std::ostringstream *ostream,
+                  double warmupTime, std::string csvPrefix);
 void PhyRxOkCallback (Ptr<const Packet> packet, double snr, WifiMode mode, WifiPreamble preamble);
 void PowerCallback (std::string path, Ptr<const Packet> packet, double txPowerW);
-void StartMovement (Ptr<ns3::Node> node);
+void StartMovement (Ptr<ns3::Node> node, double velocity);
 void WarmupMeasurement (Ptr<FlowMonitor> monitor);
 
 /***** Global variables *****/
@@ -49,11 +51,7 @@ double rateSum;
 
 uint32_t channelWidth;
 uint32_t minGI;
-uint32_t nWifi;
 uint32_t nss;
-double velocity;
-double warmupTime;
-std::string wifiManagerName;
 
 /***** Main with scenario definition *****/
 
@@ -72,14 +70,14 @@ main (int argc, char *argv[])
   double logEvery = 1.0;
   uint16_t memblockKey = 2333;
   minGI = 3200;
-  nWifi = 1;
+  uint32_t nWifi = 1;
   nss = 1;
   std::string pcapPath = "";
   double simulationTime = 20.0;
-  velocity = 0.0;
-  warmupTime = 2.0;
+  double velocity = 0.0;
+  double warmupTime = 2.0;
   std::string wifiManager = "ns3::RLibWifiManager";
-  wifiManagerName = "RLib";
+  std::string wifiManagerName = "RLib";
 
   // Parse command line arguments
   CommandLine cmd;
@@ -92,7 +90,7 @@ main (int argc, char *argv[])
   cmd.AddValue ("minGI", "Shortest guard interval (ns)", minGI);
   cmd.AddValue ("nWifi", "Number of transmitting stations", nWifi);
   cmd.AddValue ("pcapPath", "Save a PCAP file from the AP; relative path", pcapPath);
-  cmd.AddValue ("simulationTime", "Duration of the simulation; excluding warmup stage (s)",simulationTime);
+  cmd.AddValue ("simulationTime", "Duration of the simulation; excluding warmup stage (s)", simulationTime);
   cmd.AddValue ("velocity", "Velocity of the AP on X axis (m/s)", velocity);
   cmd.AddValue ("warmupTime", "Duration of the warmup stage (s)", warmupTime);
   cmd.AddValue ("wifiManager", "Rate adaptation manager", wifiManager);
@@ -167,7 +165,7 @@ main (int argc, char *argv[])
       ->GetObject<ConstantVelocityMobilityModel> ()
       ->SetPosition (Vector3D (initialPosition, 0.0, 0.0));
 
-  Simulator::Schedule (Seconds (warmupTime), &StartMovement, wifiApNode.Get (0));
+  Simulator::Schedule (Seconds (warmupTime), &StartMovement, wifiApNode.Get (0), velocity);
 
   // Install an Internet stack and configure IP addressing
   InternetStackHelper stack;
@@ -185,7 +183,7 @@ main (int argc, char *argv[])
   for (uint32_t j = 0; j < nWifi; ++j)
     {
       InstallTrafficGenerator (wifiStaNodes.Get (j), wifiApNode.Get (0), portNumber++,
-                               applicationsDataRate, packetSize, simulationTime);
+                               applicationsDataRate, packetSize, simulationTime, warmupTime);
     }
 
   //Install FlowMonitor
@@ -219,9 +217,14 @@ main (int argc, char *argv[])
   ostream << "wifiManager,seed,nWifi,channelWidth,minGI,velocity,position,time,meanMcs,meanRate,throughput"
           << std::endl;
 
+  std::ostringstream csvPrefix;
+  csvPrefix << wifiManagerName << ',' << RngSeedManager::GetRun () << ',' << nWifi << ','
+            << channelWidth << ',' << minGI << ',' << velocity;
+
   for (double time = warmupTime + logEvery; time <= warmupTime + simulationTime; time += logEvery)
     {
-      Simulator::Schedule (Seconds (time), &Measurement, monitor, wifiApNode.Get (0), &ostream);
+      Simulator::Schedule (Seconds (time), &Measurement, monitor, wifiApNode.Get (0), &ostream,
+                           warmupTime, csvPrefix.str ());
     }
 
   // Define simulation stop time
@@ -309,7 +312,8 @@ CwCallback (std::string path, u_int32_t oldValue, u_int32_t newValue)
 
 void
 InstallTrafficGenerator (Ptr<ns3::Node> sourceNode, Ptr<ns3::Node> sinkNode, uint32_t port,
-                         DataRate offeredLoad, uint32_t packetSize, double simulationTime)
+                         DataRate offeredLoad, uint32_t packetSize, double simulationTime,
+                         double warmupTime)
 {
   // Get sink address
   Ptr<Ipv4> ipv4 = sinkNode->GetObject<Ipv4> ();
@@ -343,7 +347,8 @@ InstallTrafficGenerator (Ptr<ns3::Node> sourceNode, Ptr<ns3::Node> sinkNode, uin
 }
 
 void
-Measurement (Ptr<FlowMonitor> monitor, Ptr<Node> sinkNode, std::ostringstream *ostream)
+Measurement (Ptr<FlowMonitor> monitor, Ptr<Node> sinkNode, std::ostringstream *ostream,
+             double warmupTime, std::string csvPrefix)
 {
   // Initial metrics values
   static double lastTime = warmupTime;
@@ -387,10 +392,8 @@ Measurement (Ptr<FlowMonitor> monitor, Ptr<Node> sinkNode, std::ostringstream *o
   double position = sinkNode->GetObject<MobilityModel> ()->GetPosition ().x;
 
   // Add current state to CSV
-  (*ostream) << wifiManagerName << ',' << RngSeedManager::GetRun () << ',' << nWifi << ','
-             << channelWidth << ',' << minGI << ',' << velocity << ',' << position << ','
-             << currentTime - warmupTime << ',' << meanMcs << ',' << meanRate << ',' << throughput
-             << std::endl;
+  (*ostream) << csvPrefix << ',' << position << ',' << currentTime - warmupTime << ',' << meanMcs
+             << ',' << meanRate << ',' << throughput << std::endl;
 }
 
 void
@@ -418,7 +421,7 @@ PowerCallback (std::string path, Ptr<const Packet> packet, double txPowerW)
 }
 
 void
-StartMovement (Ptr<Node> node)
+StartMovement (Ptr<Node> node, double velocity)
 {
   node->GetObject<ConstantVelocityMobilityModel> ()->SetVelocity (Vector3D (velocity, 0.0, 0.0));
 }

@@ -72,7 +72,6 @@ def run(
 
     rl = RLib(
         agent_type=ThompsonSampling,
-        agent_params={'context': IEEE_802_11_ax().context()},
         ext_type=IEEE_802_11_ax
     )
 
