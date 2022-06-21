@@ -363,7 +363,7 @@ class BaseExt(ABC):
         Returns
         -------
         observations : tuple[any, any]
-            Agents observation and sample spaces.
+            Agents update and sample observations.
         """
 
         return self._update_space_transform(*args, **kwargs), self._sample_space_transform(*args, **kwargs)

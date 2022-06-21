@@ -15,19 +15,32 @@ we can provide full acces to JAX's jit functionality, which boosts the agents pe
 
 .. code-block:: python
 
-   import reinforced_lib as rfl
+   import gym
 
-   # TODO add some simple example presenting the beuty of our reinforced-lib
+   import reinforced_lib as rfl
+   from reinforced_lib.agents import ThompsonSampling
+   from reinforced_lib.exts import IEEE_802_11_ax
+
    rlib = rfl.RLib(
-      agent_type=SomeAgent
-      ext_type=SomeEnv
+       agent_type=ThompsonSampling,
+       ext_type=IEEE_802_11_ax
    )
 
-Integrated 802.11ax support
----------------------------
+   env = gym.make('WifiSimulator-v1')
+
+   state = env.reset()
+   done = False
+
+   while not done:
+       action = rlib.sample(**state)
+       state, reward, done, info = env.step(action)
+
+
+Integrated IEEE 802.11ax support
+--------------------------------
 
 Library design is distinctly influenced by the desire to support research in Wi-Fi. It can be a tool for
-researchers to optimize the Wi-Fi protocols with built-in RL algorithms and provided 802.11ax environment
+researchers to optimize the Wi-Fi protocols with built-in RL algorithms and provided IEEE 802.11ax environment
 extension.
 
 .. toctree::

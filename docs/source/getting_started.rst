@@ -17,26 +17,25 @@ appropiate agent with the environmet related to your problem domain and the lib 
 
 .. code-block:: python
 
-    import reinforced_lib as rfl
-    from reinforced_lib.agents import Qlearning
-    from reinforced_lib.exts import GymExt
-
     import gym
 
+    import reinforced_lib as rfl
+    from reinforced_lib.agents import ThompsonSampling
+    from reinforced_lib.exts import IEEE_802_11_ax
+
     rlib = rfl.RLib(
-        agent_type=Qlearning
-        ext_type=GymExt
+        agent_type=ThompsonSampling,
+        ext_type=IEEE_802_11_ax
     )
 
-    env = gym.make('CartPole-v1')
+    env = gym.make('WifiSimulator-v1')
 
     state = env.reset()
     done = False
+
     while not done:
-        action = rlib.sample(*state)
+        action = rlib.sample(**state)
         state, reward, done, info = env.step(action)
-
-
 
 
 Advanced Concepts
