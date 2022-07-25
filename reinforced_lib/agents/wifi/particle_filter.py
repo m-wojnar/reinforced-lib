@@ -10,12 +10,12 @@ from jax.scipy.special import erf
 
 from reinforced_lib.agents.base_agent import BaseAgent
 from reinforced_lib.agents.core.particle_filter import ParticleFilter as ParticleFilterBase
-from reinforced_lib.agents.core.particle_filter import ParticleFilterState
+from reinforced_lib.agents.core.particle_filter import ParticleFilterState, linear_transition
 
 
 class ParticleFilter(BaseAgent):
     """
-    Particle Filter agent designed for IEEE 802.11 environments. Implementation based on [1]_.
+    Particle Filter agent designed for IEEE 802.11 environments. Implementation based on [2]_.
 
     Parameters
     ----------
@@ -34,7 +34,7 @@ class ParticleFilter(BaseAgent):
 
     References
     ----------
-    .. [1] Krotov, Alexander & Kiryanov, Anton & Khorov, Evgeny. (2020). Rate Control With Spatial Reuse
+    .. [2] Krotov, Alexander & Kiryanov, Anton & Khorov, Evgeny. (2020). Rate Control With Spatial Reuse
        for Wi-Fi 6 Dense Deployments. IEEE Access. 8. 168898-168909. 10.1109/ACCESS.2020.3023552.
     """
 
@@ -54,7 +54,8 @@ class ParticleFilter(BaseAgent):
             positions_shape=(particles_num,),
             weights_shape=(particles_num,),
             scale=scale,
-            observation_fn=jax.jit(self._observation_fn)
+            observation_fn=jax.jit(self._observation_fn),
+            transition_fn=linear_transition
         )
 
         self.update = partial(self.update, scale=scale)
