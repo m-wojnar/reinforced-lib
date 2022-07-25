@@ -1,15 +1,15 @@
 from functools import partial
 from typing import Tuple
 
-import chex
 import gym.spaces
 import jax
 import jax.numpy as jnp
+from chex import dataclass, Array, PRNGKey, Scalar
 
 from reinforced_lib.agents.base_agent import BaseAgent, AgentState
 
 
-@chex.dataclass
+@dataclass
 class ThompsonSamplingState(AgentState):
     """
     Container for the state of the Thompson Sampling agent.
@@ -24,9 +24,9 @@ class ThompsonSamplingState(AgentState):
         Time of the last decay for each arm.
     """
 
-    alpha: chex.Array
-    beta: chex.Array
-    last_decay: chex.Array
+    alpha: Array
+    beta: Array
+    last_decay: Array
 
 
 class ThompsonSampling(BaseAgent):
@@ -46,7 +46,7 @@ class ThompsonSampling(BaseAgent):
        for Wi-Fi 6 Dense Deployments. IEEE Access. 8. 168898-168909. 10.1109/ACCESS.2020.3023552.
     """
 
-    def __init__(self, n_arms: jnp.int32, decay: chex.Scalar = 1.0) -> None:
+    def __init__(self, n_arms: jnp.int32, decay: Scalar = 1.0) -> None:
         self.n_arms = n_arms
 
         self.init = jax.jit(partial(self.init, n_arms=self.n_arms))
@@ -81,12 +81,14 @@ class ThompsonSampling(BaseAgent):
         return gym.spaces.Discrete(self.n_arms)
 
     @staticmethod
-    def init(n_arms: jnp.int32) -> ThompsonSamplingState:
+    def init(key: PRNGKey, n_arms: jnp.int32) -> ThompsonSamplingState:
         """
         Creates and initializes instance of the Thompson Sampling agent.
 
         Parameters
         ----------
+        key : PRNGKey
+            A PRNG key used as the random key.
         n_arms : int
             Number of bandit arms.
 
@@ -105,12 +107,12 @@ class ThompsonSampling(BaseAgent):
     @staticmethod
     def update(
             state: ThompsonSamplingState,
-            key: chex.PRNGKey,
+            key: PRNGKey,
             action: jnp.int32,
             n_successful: jnp.int32,
             n_failed: jnp.int32,
-            time: chex.Scalar,
-            decay: chex.Scalar
+            time: Scalar,
+            decay: Scalar
     ) -> ThompsonSamplingState:
         """
         Updates the state of the agent after performing some action and receiving a reward.
@@ -119,7 +121,7 @@ class ThompsonSampling(BaseAgent):
         ----------
         state : ThompsonSamplingState
             Current state of agent.
-        key : chex.PRNGKey
+        key : PRNGKey
             A PRNG key used as the random key.
         action : int
             Previously selected action.
@@ -149,10 +151,10 @@ class ThompsonSampling(BaseAgent):
     @staticmethod
     def sample(
             state: ThompsonSamplingState,
-            key: chex.PRNGKey,
-            time: chex.Scalar,
-            context: chex.Array,
-            decay: chex.Scalar
+            key: PRNGKey,
+            time: Scalar,
+            context: Array,
+            decay: Scalar
     ) -> Tuple[ThompsonSamplingState, jnp.int32]:
         """
         Selects next action based on current agent state.
@@ -161,7 +163,7 @@ class ThompsonSampling(BaseAgent):
         ----------
         state : ThompsonSamplingState
             Current state of the agent.
-        key : chex.PRNGKey
+        key : PRNGKey
             A PRNG key used as the random key.
         time : float
             Current time.
@@ -185,8 +187,8 @@ class ThompsonSampling(BaseAgent):
     def _decay_one(
             state: ThompsonSamplingState,
             action: jnp.int32,
-            time: chex.Scalar,
-            decay: chex.Scalar
+            time: Scalar,
+            decay: Scalar
     ) -> ThompsonSamplingState:
         """
         Applies exponential smoothing for parameters related to a given action.
@@ -219,8 +221,8 @@ class ThompsonSampling(BaseAgent):
     @staticmethod
     def _decay_all(
             state: ThompsonSamplingState,
-            time: chex.Scalar,
-            decay: chex.Scalar
+            time: Scalar,
+            decay: Scalar
     ) -> ThompsonSamplingState:
         """
         Applies exponential smoothing for parameters of all arms.

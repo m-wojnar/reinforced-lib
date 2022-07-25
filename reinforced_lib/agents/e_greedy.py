@@ -1,15 +1,15 @@
 from functools import partial
 from typing import Tuple
 
-import chex
 import gym.spaces
 import jax
 import jax.numpy as jnp
+from chex import dataclass, Array, PRNGKey
 
 from reinforced_lib.agents.base_agent import BaseAgent, AgentState
 
 
-@chex.dataclass
+@dataclass
 class EGreedyState(AgentState):
     """
     Container for the state of the e-greedy agent.
@@ -24,8 +24,9 @@ class EGreedyState(AgentState):
         Number of tries for each arm
     """
     e: jnp.float32
-    Q: chex.Array
-    N: chex.Array
+    Q: Array
+    N: Array
+
 
 class EGreedy(BaseAgent):
     """
@@ -38,7 +39,7 @@ class EGreedy(BaseAgent):
     e : float
         Experiment rate (epsilon).
     optimistic_start : float, default=0.0
-        If non zero than it is interpreted as the optimistic start to encourage
+        If non-zero than it is interpreted as the optimistic start to encourage
         exploration, by default 0.0.
     """
 
@@ -47,7 +48,7 @@ class EGreedy(BaseAgent):
         self.e = e
         self.optimistic_start = optimistic_start
 
-        self.init = jax.jit(partial(self.init, n_arms=self.n_arms, e=self.e, optimistic_start=self.optimistic_start))
+        self.init = jax.jit(partial(self.init, n_arms=n_arms, e=e, optimistic_start=optimistic_start))
         self.update = jax.jit(partial(self.update))
         self.sample = jax.jit(partial(self.sample))
     
@@ -75,19 +76,25 @@ class EGreedy(BaseAgent):
         return gym.spaces.Discrete(self.n_arms)
 
     @staticmethod
-    def init(n_arms: jnp.int32, e: jnp.float32, optimistic_start: jnp.float32 = 0.0) -> EGreedyState:
+    def init(
+            key: PRNGKey,
+            n_arms: jnp.int32,
+            e: jnp.float32,
+            optimistic_start: jnp.float32
+    ) -> EGreedyState:
         """
         Creates and initializes instance of the e-greedy agent.
 
         Parameters
         ----------
+        key : PRNGKey
+            A PRNG key used as the random key.
         n_arms : int
             Number of contextual bandit arms.
         e : float
             Experiment rate (epsilon).
-        optimistic_start : float, default=0.0
-            If non zero than it is interpreted as the optimistic start to encourage
-            exploration, by default 0.0.
+        optimistic_start : float
+            If non zero than it is interpreted as the optimistic start to encourage exploration.
 
         Returns
         -------
@@ -104,7 +111,7 @@ class EGreedy(BaseAgent):
     @staticmethod
     def update(
         state: EGreedyState,
-        key: chex.PRNGKey,
+        key: PRNGKey,
         action: jnp.int32,
         reward: jnp.float32,
     ) -> EGreedyState:
@@ -115,7 +122,7 @@ class EGreedy(BaseAgent):
         ----------
         state : EGreedyState
             Current state of agent.
-        key : chex.PRNGKey
+        key : PRNGKey
             A PRNG key used as the random key.
         action : jnp.int32
             Previously selected action.
@@ -137,7 +144,7 @@ class EGreedy(BaseAgent):
     @staticmethod
     def sample(
         state: EGreedyState,
-        key: chex.PRNGKey
+        key: PRNGKey
     ) -> Tuple[EGreedyState, jnp.int32]:
         """
         Selects next action based on current agent state.
@@ -146,12 +153,12 @@ class EGreedy(BaseAgent):
         ----------
         state : EGreedyState
             Current state of the agent.
-        key : chex.PRNGKey
+        key : PRNGKey
             A PRNG key used as the random key.
 
         Returns
         -------
-        Tuple[EGreedyState, jnp.int32]
+        tuple[EGreedyState, jnp.int32]
             Tuple containing updated agent state and selected action.
         """
 

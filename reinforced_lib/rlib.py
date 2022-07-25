@@ -186,13 +186,13 @@ class RLib:
 
         return self._agent.action_space()
 
-    def init(self, jax_seed: int = 42) -> int:
+    def init(self, seed: int = 42) -> int:
         """
         Initializes new instance of the agent.
 
         Parameters
         ----------
-        jax_seed : int, default=42
+        seed : int, default=42
             A number used to initialize the JAX pseudo-random number generator.
 
         Returns
@@ -202,9 +202,10 @@ class RLib:
         """
 
         agent_id = len(self._agents_states)
+        init_key, key = jax.random.split(jax.random.PRNGKey(seed))
 
-        self._agents_states.append(self._agent.init())
-        self._agents_keys.append(jax.random.PRNGKey(jax_seed))
+        self._agents_states.append(self._agent.init(init_key))
+        self._agents_keys.append(key)
 
         return agent_id
 

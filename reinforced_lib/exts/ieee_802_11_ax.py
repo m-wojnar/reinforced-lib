@@ -45,7 +45,7 @@ class IEEE_802_11_ax(BaseExt):
         97.5,
         109.7,
         121.9
-    ])
+    ], dtype=np.float32)
 
     _wifi_modes_snrs = np.array([
         0.48949,
@@ -60,14 +60,14 @@ class IEEE_802_11_ax(BaseExt):
         25.8097,
         31.7291,
         33.6907,
-    ])
+    ], dtype=np.float32)
 
     @observation(observation_type=gym.spaces.Box(0.0, np.inf, (len(_wifi_modes_rates),)))
     def rates(self, *args, **kwargs) -> np.ndarray:
         return self._wifi_modes_rates
 
-    @observation(observation_name='min_snr', observation_type=gym.spaces.Box(-np.inf, np.inf, (len(_wifi_modes_snrs),)))
-    def min_required_snr(self, *args, **kwargs) -> np.ndarray:
+    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (len(_wifi_modes_snrs),)))
+    def min_snrs(self, *args, **kwargs) -> np.ndarray:
         return self._wifi_modes_snrs
 
     @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (len(_wifi_modes_rates),)))

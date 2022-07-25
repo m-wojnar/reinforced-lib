@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Any, Tuple
 
-import chex
 import gym.spaces
+from chex import dataclass, PRNGKey
 
 
-@chex.dataclass
+@dataclass
 class AgentState:
     """
     Base class of a container for the state of agents.
@@ -19,7 +19,7 @@ class BaseAgent(ABC):
 
     @staticmethod
     @abstractmethod
-    def init(*args, **kwargs) -> AgentState:
+    def init(key: PRNGKey, *args, **kwargs) -> AgentState:
         """
         Creates and initializes instance of the agent.
         """
@@ -28,7 +28,7 @@ class BaseAgent(ABC):
 
     @staticmethod
     @abstractmethod
-    def update(state: AgentState, key: chex.PRNGKey, *args, **kwargs) -> AgentState:
+    def update(state: AgentState, key: PRNGKey, *args, **kwargs) -> AgentState:
         """
         Updates the state of the agent after performing some action and receiving a reward.
         """
@@ -37,7 +37,7 @@ class BaseAgent(ABC):
 
     @staticmethod
     @abstractmethod
-    def sample(state: AgentState, key: chex.PRNGKey, *args, **kwargs) -> Tuple[AgentState, Any]:
+    def sample(state: AgentState, key: PRNGKey, *args, **kwargs) -> Tuple[AgentState, Any]:
         """
         Selects next action based on current agent state.
         """
