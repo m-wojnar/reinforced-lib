@@ -12,7 +12,7 @@ implement your own with the help of this short guide.
 Key concepts
 ------------
 
-The main axis of this module is the :ref:`abstract class <_base_ext>` ``BaseExt``, which provides the core
+The main axis of this module is the :ref:`abstract class <base_ext>` ``BaseExt``, which provides the core
 functionality of extensions. It implements important methods, such as:
 
 * ``get_agent_params`` - this method is responsible for providing default arguments specified by extension
@@ -28,7 +28,7 @@ Above methods are very useful, because they simplify the way we use this library
 of using extensions:
 
 #. Automatic initialization of agents - en extensions can provide default arguments that can be used to
-   initialize an agent. For example, if we would like to create the :ref:```wifi.ParticleFilter`` <_particle-filter_agent>`
+   initialize an agent. For example, if we would like to create the :ref:```wifi.ParticleFilter`` <particle-filter_agent>`
    agent without using any extension, we would probably do it in the following way:
 
    .. code-block:: python
@@ -43,7 +43,7 @@ of using extensions:
            }
        )
 
-   On the other hand, if we decide to use the :ref:`IEEE 802.11ax <_ieee_802_11_ax>` extension, this parameters can
+   On the other hand, if we decide to use the :ref:`IEEE 802.11ax <ieee_802_11_ax>` extension, this parameters can
    be automatically provided by the extension:
 
    .. code-block:: python
@@ -67,7 +67,7 @@ of using extensions:
 
 #. Filling missing parameters - some of the parameters required by the agent can be filled with known values or
    calculated based on a set of basic observations. For example, a ``sample`` method of the
-   :ref:```wifi.ParticleFilter`` <_particle-filter_agent>` agent requires transmission data rates and minimal SNR
+   :ref:```wifi.ParticleFilter`` <particle-filter_agent>` agent requires transmission data rates and minimal SNR
    values required for a successful transmission for each MCS. This values can be found in the IEEE 802.11ax standard
    documentation or precalculated empirically. Below is a sample code that could be used to sample from the agent
    without using any extension:
@@ -86,7 +86,7 @@ of using extensions:
        }
        action = rl.sample(**observations)
 
-   If we use the :ref:`IEEE 802.11ax <_ieee_802_11_ax>` extension, part of this parameters can be provided by the
+   If we use the :ref:`IEEE 802.11ax <ieee_802_11_ax>` extension, part of this parameters can be provided by the
    extension:
 
    .. code-block:: python
@@ -118,15 +118,15 @@ of using extensions:
 
 Default values or functions that calculates missing parameters can be defined using **observation functions**
 and **parameter functions**. These functions are decorated with the ``@observation`` and ``@parameter`` decorators
-accordingly. More detailed description of this decorator can be found in :ref:`the section <_custom_exts>` below.
+accordingly. More detailed description of this decorator can be found in :ref:`the section <custom_exts>` below.
 
 .. _custom_exts:
 
 Custom extensions
 -----------------
 
-To create your own extension, you should inherit from the :ref:`abstract class <_base_ext>` ``BaseExt``.
-We will present adding custom extension on an example of the :ref:`IEEE 802.11ax <_ieee_802_11_ax>` extension.
+To create your own extension, you should inherit from the :ref:`abstract class <base_ext>` ``BaseExt``.
+We will present adding custom extension on an example of the :ref:`IEEE 802.11ax <ieee_802_11_ax>` extension.
 
 .. code-block:: python
 
@@ -191,7 +191,7 @@ example observation function that provides approximated collision probability in
         return 0.154887 * np.log(1.03102 * n_wifi)
 
 Note that the observation function can take parameters that are specified in the observation space.
-:ref:`BaseExt <_base_ext>` methods will automatically pass the given observation to the function to allow
+:ref:`BaseExt <base_ext>` methods will automatically pass the given observation to the function to allow
 dynamic computation of the returned value. What is important, observation methods take ``*args`` and ``**kwargs``
 as the last parameters (this is required by the internal behaviour of the ``setup_transformations`` function).
 As previously, name of the function should match name of the filled parameter, but we can specify parameter name
@@ -221,9 +221,8 @@ However, there are some rules and limitations that programmers and users must ta
   to the observation space, implement appropriate observation function of use the agent without any extension,
 * missing parameters filling is supported only if the type of the extension observation space and the type of agent
   spaces can be matched - that means they both must be:
-    * a dict type - ``gym.spaces.Dict``,
-    * a "simple" type - ``gym.spaces.Box``, ``gym.spaces.Discrete``, ``gym.spaces.MultiBinary``,
-      ``gym.spaces.MultiDiscrete``, ``gym.spaces.Space``,
+  * a dict type - ``gym.spaces.Dict``,
+  * a "simple" type - ``gym.spaces.Box``, ``gym.spaces.Discrete``, ``gym.spaces.MultiBinary``, ``gym.spaces.MultiDiscrete``, ``gym.spaces.Space``,
 * missing parameters filling is not supported if spaces inherit from ``gym.spaces.Tuple`` - values would have
   to be matched based on the type and this can lead to ambiguities if there are multiple parameters with the same type,
 * if spaces do not inherit from ``gym.spaces.Dict``, missing values are matched based on the type of the value,
