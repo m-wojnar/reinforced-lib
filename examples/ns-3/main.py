@@ -115,12 +115,12 @@ if __name__ == '__main__':
     args.add_argument('--csv_path', type=str)
     args.add_argument('--data_rate', default=125, type=int)
     args.add_argument('--initial_position', default=0.0, type=float)
-    args.add_argument('--log_every', default=1.0, type=float)
     args.add_argument('--mempool_key', default=1234, type=int)
     args.add_argument('--min_gi', default=3200, type=int)
     args.add_argument('--ns3_path', default=f'{pathlib.Path.home()}/ns-3-dev/', type=str)
     args.add_argument('--n_wifi', default=1, type=int)
     args.add_argument('--pcap_path', type=str)
+    args.add_argument('--scenario', type=str)
     args.add_argument('--seed', default=42, type=int)
     args.add_argument('--simulation_time', default=20.0, type=float)
     args.add_argument('--velocity', default=0.0, type=float)
@@ -131,17 +131,14 @@ if __name__ == '__main__':
     args = args.parse_args()
 
     ns3_args = {
-        'channelWidth': args.channel_width,
-        'dataRate': args.data_rate,
-        'initialPosition': args.initial_position,
-        'logEvery': args.log_every,
-        'minGI': args.min_gi,
-        'nWifi': args.n_wifi,
-        'simulationTime': args.simulation_time,
-        'velocity': args.velocity,
+        'distance': args.initial_position,
+        'manager': args.wifi_manager,
+        'managerName': args.wifi_manager_name,
+        'nWifiInit': args.n_wifi,
+        'nWifiFinal': args.n_wifi,
+        'stepSize': args.n_wifi,
+        'stepTime': args.simulation_time,
         'warmupTime': args.warmup_time,
-        'wifiManager': args.wifi_manager,
-        'wifiManagerName': args.wifi_manager_name,
         'RngRun': args.seed,
     }
 
@@ -153,6 +150,5 @@ if __name__ == '__main__':
 
     memblock_key = 2333
     memory_size = 128
-    scenario = 'rlib-sim'
 
-    run(ns3_args, args.mempool_key, memblock_key, memory_size, scenario, args.ns3_path, args.seed)
+    run(ns3_args, args.mempool_key, memblock_key, memory_size, args.scenario, args.ns3_path, args.seed)
