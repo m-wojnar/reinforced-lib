@@ -87,21 +87,21 @@ class IEEE_802_11_ax(BaseExt):
         return mcs
 
     @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
-    def n_arms(self, *args, **kwargs) -> int:
+    def n_arms(self) -> int:
         return len(self._wifi_modes_rates)
 
     @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
-    def n_mcs(self, *args, **kwargs) -> int:
+    def n_mcs(self) -> int:
         return len(self._wifi_modes_rates)
 
     @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-    def min_snr(self, *args, **kwargs) -> float:
+    def min_snr(self) -> float:
         return 0.0
 
     @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-    def max_snr(self, *args, **kwargs) -> float:
+    def max_snr(self) -> float:
         return 40.0
 
     @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-    def initial_power(self, *args, **kwargs) -> float:
+    def initial_power(self) -> float:
         return 16.0206
