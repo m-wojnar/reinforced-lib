@@ -130,17 +130,29 @@ if __name__ == '__main__':
 
     args = args.parse_args()
 
-    ns3_args = {
-        'distance': args.initial_position,
-        'manager': args.wifi_manager,
-        'managerName': args.wifi_manager_name,
-        'nWifiInit': args.n_wifi,
-        'nWifiFinal': args.n_wifi,
-        'stepSize': args.n_wifi,
-        'stepTime': args.simulation_time,
-        'warmupTime': args.warmup_time,
-        'RngRun': args.seed,
-    }
+    if args.scenario == "stations":
+        ns3_args = {
+            'distance': args.initial_position,
+            'manager': args.wifi_manager,
+            'managerName': args.wifi_manager_name,
+            'nWifiInit': args.n_wifi,
+            'nWifiFinal': args.n_wifi,
+            'stepSize': args.n_wifi,
+            'stepTime': args.simulation_time,
+            'warmupTime': args.warmup_time,
+            'RngRun': args.seed,
+        }
+    elif args.scenario == "distance":
+        ns3_args = {
+            'manager': args.wifi_manager,
+            'managerName': args.wifi_manager_name,
+            'simulationTime': args.simulation_time,
+            'velocity': args.velocity,
+            'warmupTime': args.warmup_time,
+            'RngRun': args.seed,
+        }
+    else:
+        print("UnsupportedScenarioError! Choose from [stations, distance]!")
 
     if args.csv_path:
         ns3_args['csvPath'] = args.csv_path
