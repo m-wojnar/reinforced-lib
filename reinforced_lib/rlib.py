@@ -5,6 +5,7 @@ import jax.random
 
 from reinforced_lib.agents.base_agent import BaseAgent
 from reinforced_lib.exts.base_ext import BaseExt
+from reinforced_lib.logs.logs_observer import LogsObserver
 from reinforced_lib.utils.exceptions import *
 
 
@@ -22,10 +23,16 @@ class RLib:
         Type of selected extension. Must inherit from the BaseExt class.
     ext_params : dict, optional
         Parameters of selected extension.
-    log_type : type or list[type], optional
-        Types of selected logging modules.
-    log_params : dict or list[dict], optional
-        Parameters of selected logging modules.
+    obs_logger_type : type or list[type], optional
+        Types of selected logging modules for observations.
+    obs_name : dict or list[str], optional
+        Names of selected observations.
+    state_logger_type : type or list[type], optional
+        Types of selected logging modules for agents states.
+    state_name : dict or list[str], optional
+        Names of selected agents attributes.
+    logger_params : dict, optional
+        Parameters of selected loggers.
     no_ext_mode : bool, default=False
         Pass observations directly to the agent (don't use the Extensions module).
     """
@@ -36,10 +43,14 @@ class RLib:
             agent_params: Dict[str, Any] = None,
             ext_type: type = None,
             ext_params: Dict[str, Any] = None,
-            log_type: Union[type, List[type]] = None,
-            log_params: Union[Dict[str, Any], List[Dict[str, Any]]] = None,
+            obs_logger_type: Union[type, List[type]] = None,
+            obs_name: Union[str, List[str]] = None,
+            state_logger_type: Union[type, List[type]] = None,
+            state_name: Union[str, List[str]] = None,
+            logger_params: Dict[str, Any] = None,
             no_ext_mode: bool = False
     ) -> None:
+        self._ext = None
         self._no_ext_mode = no_ext_mode
 
         self._agent = None
@@ -48,8 +59,8 @@ class RLib:
         self._agents_states = []
         self._agents_keys = []
 
-        self._ext = None
-        self._log = []
+        self._logs_observer = LogsObserver()
+        self._loggers = {}
 
         if ext_type:
             self.set_ext(ext_type, ext_params)
@@ -57,8 +68,11 @@ class RLib:
         if agent_type:
             self.set_agent(agent_type, agent_params)
 
-        if log_type:
-            self.set_log(log_type, log_params)
+        if obs_logger_type and obs_name:
+            self.set_obs_logger(obs_logger_type, obs_name, logger_params)
+
+        if state_logger_type and state_name:
+            self.set_state_logger(state_logger_type, state_name, logger_params)
 
     def set_agent(self, agent_type: type, agent_params: Dict = None) -> None:
         """
@@ -118,32 +132,92 @@ class RLib:
         if self._agent:
             agent_params = self._ext.get_agent_params(
                 self._agent_type,
-                self._agent_type.init_observation_space(),
+                self._agent_type.parameters_space(),
                 self._agent_params
             )
             self._agent = self._agent_type(**agent_params)
             self._ext.setup_transformations(self._agent.update_observation_space, self._agent.sample_observation_space)
 
-    def set_log(self, log_type: Union[type, List[type]], log_params: Union[Dict, List[Dict]] = None) -> None:
+    def set_obs_logger(
+            self,
+            logger_types: Union[type, List[type]],
+            obs_names: Union[str, List[str]],
+            params: Dict[str, Any]
+    ) -> None:
         """
-        Initializes logging modules of types 'log_type' with parameters 'log_params'.
+        Initializes loggers that log environment observations. 'logger_types' and 'obs_names' arguments can be
+        objects of appropriate types or lists of object. If user passes two objects or lists of the same lengths,
+        function initializes modules with corresponding types and names. If user passes one object (or list with
+        only one object) and list of multiple objects, function broadcasts passed objects.
 
         Parameters
         ----------
-        log_type : type or list[type]
+        logger_types : type or list[type]
             Types of selected logging modules.
-        log_params : dict or list[dict], optional
+        obs_names : dict or list[dict], optional
+            Names of selected observations.
+        params : dict
             Parameters of selected logging modules.
         """
 
-        if isinstance(log_type, list):
-            log_params = log_params if log_params else [{} for _ in range(len(log_type))]
-        else:
-            log_params = log_params if log_params else {}
+        if len(self._agents_states) > 0:
+            raise ForbiddenLoggerSetError()
 
-        # TODO create and implement logging modules initialization
+        logger_types, obs_names = self._object_to_list(logger_types), self._object_to_list(obs_names)
+        logger_types, obs_names = self._broadcast(logger_types, obs_names)
 
-        raise NotImplementedError()
+        for logger_type, name in zip(logger_types, obs_names):
+            self._loggers[logger_type] = self._loggers.get(logger_type, logger_type(**params))
+            self._logs_observer.add_observation_logger(name, self._loggers[logger_type])
+
+    @staticmethod
+    def _object_to_list(obj: Union[Any, List[Any]]) -> List[Any]:
+        return obj if isinstance(obj, list) else [obj]
+
+    @staticmethod
+    def _broadcast(list_a: List[Any], list_b: List[Any]) -> Tuple[List[Any], List[Any]]:
+        if len(list_a) == len(list_b):
+            return list_a, list_b
+
+        if len(list_a) == 1:
+            return list_a * len(list_b), list_b
+
+        if len(list_b) == 1:
+            return list_a, list_b * len(list_a)
+
+        raise TypeError('Incompatible length of given lists.')
+
+    def set_state_logger(
+            self,
+            logger_types: Union[type, List[type]],
+            attr_names: Union[str, List[str]],
+            params: Dict[str, Any]
+    ) -> None:
+        """
+        Initializes loggers that log agent state. 'logger_types' and 'attr_names' arguments can be objects of
+        appropriate types or lists of object. If user passes two objects or lists of the same lengths, function
+        initializes modules with corresponding types and names. If user passes one object (or list with only one
+        object) and list of multiple objects, function broadcasts passed objects.
+
+        Parameters
+        ----------
+        logger_types : type or list[type]
+            Types of selected logging modules.
+        attr_names : dict or list[dict], optional
+            Names of selected state attributes.
+        params : dict
+            Parameters of selected logging modules.
+        """
+
+        if len(self._agents_states) > 0:
+            raise ForbiddenLoggerSetError()
+
+        logger_types, attr_names = self._object_to_list(logger_types), self._object_to_list(attr_names)
+        logger_types, attr_names = self._broadcast(logger_types, attr_names)
+
+        for logger_type, name in zip(logger_types, attr_names):
+            self._loggers[logger_type] = self._loggers.get(logger_type, logger_type(**params))
+            self._logs_observer.add_agent_state_logger(name, self._loggers[logger_type])
 
     @property
     def observation_space(self) -> gym.spaces.Space:
@@ -258,6 +332,9 @@ class RLib:
         if not self._no_ext_mode:
             update_observations, sample_observations = self._ext.transform(*args, **kwargs)
 
+        self._logs_observer.update_observations(update_observations)
+        self._logs_observer.update_observations(sample_observations)
+
         if isinstance(update_observations, dict):
             state = self._agent.update(state, update_key, **update_observations)
         elif isinstance(update_observations, tuple):
@@ -271,6 +348,8 @@ class RLib:
             state, action = self._agent.sample(state, sample_key, *sample_observations)
         else:
             state, action = self._agent(state, sample_key, sample_observations)
+
+        self._logs_observer.update_agent_state(state)
 
         self._agents_states[agent_id] = state
         self._agents_keys[agent_id] = key

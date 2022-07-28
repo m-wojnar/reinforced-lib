@@ -103,6 +103,15 @@ class ForbiddenExtensionSetError(ForbiddenOperationError):
         return 'Cannot set extension type when \'no_ext_mode\' is enabled.'
 
 
+class ForbiddenLoggerSetError(ForbiddenOperationError):
+    """
+    Raised when user is trying to add new logger after the first step has been made.
+    """
+
+    def __str__(self) -> str:
+        return 'Cannot add new loggers type after the first step has been made.'
+
+
 class IncorrectSpaceError(Exception):
     """
     Raised when unknown space is provided, for example custom OpenAI Gym space.
