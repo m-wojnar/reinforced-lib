@@ -12,7 +12,7 @@ from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpa
 class BaseExt(ABC):
     """
     Container for domain-specific knowledge and functions for a given environment. Provides transformation
-    from observation functions and observation space to agents observation and sample spaces. Stores default
+    from observation functions and observation space to agents update and sample spaces. Stores default
     argument values for agents initialization.
     """
 
@@ -45,8 +45,8 @@ class BaseExt(ABC):
             user_parameters: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
-        Get agent initialization parameters from the parameters passed by the user and default values defined
-        in parameter functions.
+        Composes agent initialization parameters from the parameters passed by the user and default values defined
+        in parameter functions. Returns dictionary with parameters fitting the agents parameters space.
 
         Parameters
         ----------
@@ -102,7 +102,7 @@ class BaseExt(ABC):
     ) -> None:
         """
         Create functions that transform environment observations and values provided by observation functions to agents
-        observation and sample spaces values.
+        update and sample spaces values.
 
         Parameters
         ----------

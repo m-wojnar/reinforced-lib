@@ -12,24 +12,12 @@ implement your own with the help of this short guide.
 Key concepts
 ------------
 
-The main axis of this module is the :ref:`abstract class <base_ext>` ``BaseExt``, which provides the core
-functionality of extensions. It implements important methods, such as:
-
-* ``get_agent_params`` - this method is responsible for providing default arguments specified by extension
-  while creating new agent,
-* ``transform`` - composes observations passed by the user with values calculated or defined by the extension
-  to create set of parameters required by agent functions. In other words, ``transform`` fills missing
-  values and returns full set of required parameters,
-* ``setup_transformations`` - based on the update and sample observation spaces of the agent, method creates
-  functions that combine observations passed by the user with values calculated by the extension which are
-  used by the ``transform`` method.
-
-Above methods are very useful, because they simplify the way we use this library. There are two main benefits
-of using extensions:
+There are two main benefits of using extensions:
 
 #. Automatic initialization of agents - en extensions can provide default arguments that can be used to
-   initialize an agent. For example, if we would like to create the :ref:```wifi.ParticleFilter`` <particle-filter_agent>`
-   agent without using any extension, we would probably do it in the following way:
+   initialize an agent. For example, if we would like to create the ``wifi.ParticleFilter``
+   :ref:`agent <particle-filter_agent>` without using any extension, we would probably do it in the
+   following way:
 
    .. code-block:: python
 
@@ -53,7 +41,7 @@ of using extensions:
            ext_type=IEEE_802_11_ax
        )
 
-   We can also overwrite all of only part of default values provided by the extension:
+   We can also overwrite all or only part of default values provided by the extension:
 
    .. code-block:: python
 
@@ -66,11 +54,11 @@ of using extensions:
        )
 
 #. Filling missing parameters - some of the parameters required by the agent can be filled with known values or
-   calculated based on a set of basic observations. For example, a ``sample`` method of the
-   :ref:```wifi.ParticleFilter`` <particle-filter_agent>` agent requires transmission data rates and minimal SNR
-   values required for a successful transmission for each MCS. This values can be found in the IEEE 802.11ax standard
-   documentation or precalculated empirically. Below is a sample code that could be used to sample from the agent
-   without using any extension:
+   calculated based on a set of basic observations. For example, a ``sample`` method of the ``wifi.ParticleFilter``
+   :ref:`agent <particle-filter_agent>` requires transmission data rates and minimal SNR values required for a
+   successful transmission for each MCS. This values can be found in the IEEE 802.11ax standard documentation or
+   precalculated empirically. Below is a sample code that could be used to sample from the agent without using
+   any extension:
 
    .. code-block:: python
 
@@ -116,9 +104,9 @@ of using extensions:
        }
        action = rl.sample(**observations)
 
-Default values or functions that calculates missing parameters can be defined using **observation functions**
-and **parameter functions**. These functions are decorated with the ``@observation`` and ``@parameter`` decorators
-accordingly. More detailed description of this decorator can be found in :ref:`the section <custom_exts>` below.
+Default values or functions that calculates missing parameters can be defined using *observation functions*
+and *parameter functions*. These functions are decorated with the ``@observation`` and ``@parameter`` decorators
+accordingly. More detailed description of this decorator can be found in :ref:`the section below <custom_exts>`.
 
 .. _custom_exts:
 
@@ -150,7 +138,7 @@ environment, the observation space can look like this:
         'mcs': gym.spaces.Discrete(12)
     })
 
-Next, we define the **parameter function** that will provide the initial power value for agents that require
+Next, we define the *parameter function* that will provide the initial power value for agents that require
 this parameter as a constructor argument. We can do this by creating an appropriate method and decorating it with
 the ``@parameter`` decorator. Parameter function are methods of the extension class and cannot take any additional
 arguments:
@@ -180,7 +168,7 @@ the decorator:
     def default_pow(self) -> float:
         return 16.0206
 
-We define the **observation functions** analogous to parameter functions. The only differences are that we use
+We define the *observation functions* analogous to parameter functions. The only differences are that we use
 the ``@observation`` decorator and that the implemented method takes additional parameters. Below is an
 example observation function that provides approximated collision probability in dense IEEE 802.11ax networks:
 
@@ -203,14 +191,14 @@ and returned type in the decorator:
     def collision_probability(self, n_wifi: int, *args, **kwargs) -> float:
         return 0.154887 * np.log(1.03102 * n_wifi)
 
-Full source code of the IEEE 802.11ax extension can be found :ref:`here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/exts/ieee_802_11_ax.py>`.
+Full source code of the IEEE 802.11ax extension can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/exts/ieee_802_11_ax.py>`_.
 
 Rules and limitations
 ---------------------
 
 Extensions are very powerful mechanism that makes the Reinforced-lib universal and easy to use. The ``BaseExt``
 methods can handle complex and nested observation spaces, such as the
-:ref:`example ones <https://github.com/m-wojnar/reinforced-lib/blob/main/tests/extqs/base_ext_test.py>`.
+`example ones <https://github.com/m-wojnar/reinforced-lib/blob/main/tests/exts/base_ext_test.py>`_.
 However, there are some rules and limitations that programmers and users must take into consideration:
 
 * arguments and parameters provided by the user have higher priority than default or calculated values provided
@@ -218,18 +206,29 @@ However, there are some rules and limitations that programmers and users must ta
 * parameter functions cannot take any arguments (except ``self``),
 * you cannot use extension with a given agent if the agent requires a parameter that is not listed in the
   extensions observation space or cannot be provided by an observation function - you have to add an observation
-  to the observation space, implement appropriate observation function of use the agent without any extension,
+  to the observation space, implement appropriate observation function or use the agent without any extension,
 * missing parameters filling is supported only if the type of the extension observation space and the type of agent
   spaces can be matched - that means they both must be:
+
   * a dict type - ``gym.spaces.Dict``,
   * a "simple" type - ``gym.spaces.Box``, ``gym.spaces.Discrete``, ``gym.spaces.MultiBinary``, ``gym.spaces.MultiDiscrete``, ``gym.spaces.Space``,
+
 * missing parameters filling is not supported if spaces inherit from ``gym.spaces.Tuple`` - values would have
   to be matched based on the type and this can lead to ambiguities if there are multiple parameters with the same type,
 * if spaces do not inherit from ``gym.spaces.Dict``, missing values are matched based on the type of the value,
-  not the name - first function that type matches the agent space is choosen,
+  not the name - first function that type matches the agent space is chosen,
 * if an observation function requires some parameter and it is not provided by a named argument, ``BaseExt`` will
   select the first (possibly nested) positional argument and pass it to the function, but if there will be no
   positional arguments, library will raise an exception.
+
+How do extensions work?
+-----------------------
+
+The main axis of this module is the :ref:`abstract class <base_ext>` ``BaseExt``, which provides the core
+functionality of extensions. It implements important methods, such as ``get_agent_params``, ``transform``,
+and ``setup_transformations``. The class internally makes use of these methods to provide simple
+and powerful API of the Reinforced-lib. You can read more about the ``BaseExt`` class :ref:`here <base_ext>`
+or check out `the source code <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/exts/base_ext.py>`_.
 
 .. _base_ext:
 

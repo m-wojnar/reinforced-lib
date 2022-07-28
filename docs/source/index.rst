@@ -5,7 +5,7 @@
 
 .. _reinforced-lib:
 
-Welcome to reinforced-lib's documentation!
+Welcome to Reinforced-lib's documentation!
 ==========================================
 
 **Reinforced-lib** is a Python library designed to support research and prototyping using Reinforced Learning
