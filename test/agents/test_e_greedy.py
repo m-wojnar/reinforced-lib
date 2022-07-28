@@ -39,7 +39,7 @@ if __name__ == '__main__':
         # save selected action
         # print('\n', state)
         actions.append(a)
-    
+
     print(f"Best arm so far -> {jnp.argmax(state.Q)}")
 
     # action vs time plot
@@ -50,4 +50,3 @@ if __name__ == '__main__':
     plt.xlabel('Time')
     plt.ylabel('Action')
     plt.show()
-    

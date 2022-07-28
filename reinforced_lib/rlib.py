@@ -217,11 +217,10 @@ class RLib:
             sample_observations: Union[Dict, Tuple, Any] = None,
             **kwargs
     ) -> Any:
-        r"""
-        Takes the extension state as input, updates the agent state, and returns the next action selected by 
+        """Takes the extension state as input, updates the agent state, and returns the next action selected by
         the agent. If 'no_ext_mode' is disabled, observations are passed by args and kwargs (observations must
-        match selected extension observation space). If 'no_ext_mode' is enabled, observations must be passed 
-        by 'update_observations' and 'sample_observations' parameters (observations must match agents 
+        match selected extension observation space). If 'no_ext_mode' is enabled, observations must be passed
+        by 'update_observations' and 'sample_observations' parameters (observations must match agents
         'update_observation_space' and 'sample_observation_space'). If there are no agent instance initialized,
         the method automatically initializes the first instance.
 
@@ -297,8 +296,6 @@ class RLib:
         if len(self._agents_states) == 0:
             self.init()
 
-        state = self._agents_states[agent_id]
-
         # TODO develop agents training
 
         raise NotImplementedError()
@@ -317,11 +314,6 @@ class RLib:
 
         if not path:
             raise ValueError('No path is specified.')
-
-        state = self._agents_states[agent_id]
-        key = self._agents_keys[agent_id]
-
-        obj_to_save = (state, key)
 
         # TODO implement objects saving and agree on a format
 
