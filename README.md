@@ -1,5 +1,6 @@
 # Reinforced-lib: Reinforcement learning library
 
+![build and test](https://github.com/m-wojnar/reinforced-lib/actions/workflows/python-package.yml/badge.svg)
 ![docs](https://readthedocs.org/projects/reinforced-lib/badge/?version=latest)
 
 ## Overview
