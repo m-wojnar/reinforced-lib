@@ -51,7 +51,7 @@ class EGreedy(BaseAgent):
         self.init = jax.jit(partial(self.init, n_arms=n_arms, e=e, optimistic_start=optimistic_start))
         self.update = jax.jit(partial(self.update))
         self.sample = jax.jit(partial(self.sample))
-    
+
     @staticmethod
     def parameters_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
@@ -59,18 +59,18 @@ class EGreedy(BaseAgent):
             'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32),
             'optimistic_start': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32)
         })
-    
+
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'action': gym.spaces.Discrete(self.n_arms),
             'reward': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32)
         })
-    
+
     @property
     def sample_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({})
-    
+
     @property
     def action_space(self) -> gym.spaces.Space:
         return gym.spaces.Discrete(self.n_arms)
@@ -134,7 +134,7 @@ class EGreedy(BaseAgent):
         EGreedyState
             Updated agent state.
         """
-        
+
         return EGreedyState(
             e=state.e,
             Q=state.Q.at[action].add((1.0 / state.N[action]) * (reward - state.Q[action])),

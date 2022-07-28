@@ -104,10 +104,10 @@ def test_box(a: gym.spaces.Space, b: gym.spaces.Box) -> bool:
     """
 
     return isinstance(a, gym.spaces.Box) and \
-           np.array_equal(a.low, b.low) and \
-           np.array_equal(a.high, b.high) and \
-           a.shape == b.shape and \
-           a.dtype == b.dtype
+        np.array_equal(a.low, b.low) and \
+        np.array_equal(a.high, b.high) and \
+        a.shape == b.shape and \
+        a.dtype == b.dtype
 
 
 def test_discrete(a: gym.spaces.Space, b: gym.spaces.Discrete) -> bool:
@@ -128,8 +128,8 @@ def test_discrete(a: gym.spaces.Space, b: gym.spaces.Discrete) -> bool:
     """
 
     return isinstance(a, gym.spaces.Discrete) and \
-           a.n == b.n and \
-           a.start == b.start
+        a.n == b.n and \
+        a.start == b.start
 
 
 def test_multi_binary(a: gym.spaces.Space, b: gym.spaces.MultiBinary) -> bool:
@@ -150,7 +150,7 @@ def test_multi_binary(a: gym.spaces.Space, b: gym.spaces.MultiBinary) -> bool:
     """
 
     return isinstance(a, gym.spaces.MultiBinary) and \
-           np.array_equal(a.n, b.n)
+        np.array_equal(a.n, b.n)
 
 
 def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> bool:
@@ -171,8 +171,8 @@ def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> boo
     """
 
     return isinstance(a, gym.spaces.MultiDiscrete) and \
-           np.array_equal(a.nvec, b.nvec) and \
-           a.dtype == b.dtype
+        np.array_equal(a.nvec, b.nvec) and \
+        a.dtype == b.dtype
 
 
 def test_space(a: gym.spaces.Space, b: gym.spaces.Space) -> bool:
@@ -193,4 +193,4 @@ def test_space(a: gym.spaces.Space, b: gym.spaces.Space) -> bool:
     """
 
     return a.shape == b.shape and \
-           a.dtype == b.dtype
+        a.dtype == b.dtype

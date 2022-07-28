@@ -309,7 +309,7 @@ class BaseExt(ABC):
         """
         Returns a dictionary filled with appropriate environment observations and values provided by
         observation functions.
-        
+
         Parameters
         ----------
         observations : dict[str, Callable]
