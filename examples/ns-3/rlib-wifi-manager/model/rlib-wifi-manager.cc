@@ -15,11 +15,6 @@ NS_LOG_COMPONENT_DEFINE ("RLibWifiManager");
 
 NS_OBJECT_ENSURE_REGISTERED (RLibWifiManager);
 
-struct RLibWifiRemoteStation : public WifiRemoteStation
-{
-  uint32_t m_station_id;
-};
-
 TypeId
 RLibWifiManager::GetTypeId (void)
 {
@@ -27,10 +22,6 @@ RLibWifiManager::GetTypeId (void)
     .SetParent<WifiRemoteStationManager> ()
     .SetGroupName ("Wifi")
     .AddConstructor<RLibWifiManager> ()
-    .AddAttribute ("DataMode", "The transmission mode to use for every data packet transmission",
-                   StringValue ("HeMcs0"),
-                   MakeWifiModeAccessor (&RLibWifiManager::m_dataMode),
-                   MakeWifiModeChecker ())
     .AddAttribute ("ControlMode", "The transmission mode to use for every RTS packet transmission.",
                    StringValue ("OfdmRate6Mbps"),
                    MakeWifiModeAccessor (&RLibWifiManager::m_ctlMode),
@@ -47,6 +38,10 @@ RLibWifiManager::GetTypeId (void)
                    DoubleValue (16.0206),
                    MakeDoubleAccessor (&RLibWifiManager::m_power),
                    MakeDoubleChecker<double_t> ())
+    .AddAttribute ("NSS", "Number of spatial streams",
+                   UintegerValue (1),
+                   MakeUintegerAccessor(&RLibWifiManager::m_nss),
+                   MakeUintegerChecker<uint32_t> ())
   ;
   return tid;
 }
@@ -71,9 +66,13 @@ RLibWifiManager::DoCreateStation (void) const
   NS_LOG_FUNCTION (this);
 
   RLibWifiRemoteStation *station = new RLibWifiRemoteStation ();
+  station->m_mcs = 0;
 
   // Initialize new station
   auto env = m_env->EnvSetterCond ();
+  env->mcs = 0;
+  env->power = GetPhy ()->GetPowerDbm (GetDefaultTxPowerLevel ());
+  env->time = Simulator::Now ().GetSeconds ();
   env->type = 0;
   m_env->SetCompleted ();
 
@@ -100,8 +99,8 @@ RLibWifiManager::DoReportAmpduTxStatus (WifiRemoteStation *st, uint16_t nSuccess
                         << dataChannelWidth << dataNss);
 
   auto station = static_cast<RLibWifiRemoteStation *> (st);
-  UpdateState (station->m_station_id, nSuccessfulMpdus, nFailedMpdus);
-  ExecuteAction (station->m_station_id);
+  UpdateState (station, nSuccessfulMpdus, nFailedMpdus);
+  ExecuteAction (station);
 }
 
 void
@@ -116,8 +115,8 @@ RLibWifiManager::DoReportDataFailed (WifiRemoteStation *st)
   NS_LOG_FUNCTION (this << st);
 
   auto station = static_cast<RLibWifiRemoteStation *> (st);
-  UpdateState (station->m_station_id, 0, 1);
-  ExecuteAction (station->m_station_id);
+  UpdateState (station, 0, 1);
+  ExecuteAction (station);
 }
 
 void
@@ -134,8 +133,8 @@ RLibWifiManager::DoReportDataOk (WifiRemoteStation *st, double ackSnr, WifiMode 
   NS_LOG_FUNCTION (this << st << ackSnr << ackMode << dataSnr << dataChannelWidth << +dataNss);
 
   auto station = static_cast<RLibWifiRemoteStation *> (st);
-  UpdateState (station->m_station_id, 1, 0);
-  ExecuteAction (station->m_station_id);
+  UpdateState (station, 1, 0);
+  ExecuteAction (station);
 }
 
 void
@@ -155,21 +154,18 @@ RLibWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
 {
   NS_LOG_FUNCTION (this << st);
 
-  uint8_t nss = Min (GetMaxNumberOfTransmitStreams (), GetNumberOfSupportedStreams (st));
-  if (m_dataMode.GetModulationClass () == WIFI_MOD_CLASS_HT)
-    {
-      nss = 1 + (m_dataMode.GetMcsValue () / 8);
-    }
+  auto station = static_cast<RLibWifiRemoteStation *> (st);
+  WifiMode dataMode ("HeMcs" + std::to_string (station->m_mcs));
 
   return WifiTxVector (
-      m_dataMode,
+      dataMode,
       GetDefaultTxPowerLevel (),
-      GetPreambleForTransmission (m_dataMode.GetModulationClass (), GetShortPreambleEnabled ()),
-      ConvertGuardIntervalToNanoSeconds (m_dataMode, GetShortGuardIntervalSupported (st), NanoSeconds (GetGuardInterval (st))),
+      GetPreambleForTransmission (dataMode.GetModulationClass (), GetShortPreambleEnabled ()),
+      ConvertGuardIntervalToNanoSeconds (dataMode, GetShortGuardIntervalSupported (st), NanoSeconds (GetGuardInterval (st))),
       GetNumberOfAntennas (),
-      nss,
+      m_nss,
       0,
-      GetChannelWidthForTransmission (m_dataMode, GetChannelWidth (st)),
+      GetChannelWidthForTransmission (dataMode, GetChannelWidth (st)),
       GetAggregation (st));
 }
 
@@ -191,41 +187,37 @@ RLibWifiManager::DoGetRtsTxVector (WifiRemoteStation *st)
 }
 
 void
-RLibWifiManager::UpdateState (uint32_t station_id, uint16_t nSuccessful, uint16_t nFailed)
+RLibWifiManager::UpdateState (RLibWifiRemoteStation *st, uint16_t nSuccessful, uint16_t nFailed)
 {
   // Write observation to shared memory
   auto env = m_env->EnvSetterCond ();
 
-  env->station_id = station_id;
-  env->type = 1;
-  env->time = Simulator::Now ().GetSeconds ();
-  env->n_successful = nSuccessful;
-  env->n_failed = nFailed;
-  env->n_wifi = m_nWifi;
   env->power = m_power;
+  env->time = Simulator::Now ().GetSeconds ();
   env->cw = m_cw;
-  env->mcs = m_mcs;
+  env->n_failed = nFailed;
+  env->n_successful = nSuccessful;
+  env->n_wifi = m_nWifi;
+  env->station_id = st->m_station_id;
+  env->mcs = st->m_mcs;
+  env->type = 1;
 
   m_env->SetCompleted ();
 }
 
 void
-RLibWifiManager::ExecuteAction (uint32_t station_id)
+RLibWifiManager::ExecuteAction (RLibWifiRemoteStation *st)
 {
   // Get selected action
   auto act = m_env->ActionGetterCond ();
 
-  if (act->station_id != station_id)
+  if (act->station_id != st->m_station_id)
     {
-      NS_ASSERT_MSG (act->station_id == station_id, "Error! Different station_id in ns3-ai action and environment structures!");
+      NS_ASSERT_MSG (act->station_id == st->m_station_id, "Error! Different station_id in ns3-ai action and environment structures!");
     }
-  m_mcs = act->mode;
+  st->m_mcs = act->mcs;
 
   m_env->GetCompleted ();
-
-  // Set new MCS
-  WifiMode mode("HeMcs" + std::to_string (m_mcs));
-  m_dataMode = mode;
 }
 
-} //namespace ns3
+}

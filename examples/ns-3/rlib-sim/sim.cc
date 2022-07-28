@@ -68,7 +68,6 @@ main (int argc, char *argv[])
   uint32_t dataRate = 125;
   double initialPosition = 0.0;
   double logEvery = 1.0;
-  uint16_t memblockKey = 2333;
   minGI = 3200;
   uint32_t nWifi = 1;
   nss = 1;
@@ -86,7 +85,6 @@ main (int argc, char *argv[])
   cmd.AddValue ("dataRate", "Aggregate traffic generators data rate (Mb/s)", dataRate);
   cmd.AddValue ("initialPosition", "Initial position of the AP on X axis (m)", initialPosition);
   cmd.AddValue ("logEvery", "Time interval between successive measurements (s)", logEvery);
-  cmd.AddValue ("memblockKey", "ns3-ai shared memory id", memblockKey);
   cmd.AddValue ("minGI", "Shortest guard interval (ns)", minGI);
   cmd.AddValue ("nWifi", "Number of transmitting stations", nWifi);
   cmd.AddValue ("pcapPath", "Save a PCAP file from the AP; relative path", pcapPath);
@@ -129,7 +127,9 @@ main (int argc, char *argv[])
   // Setup rate adaptation algorithm
   if (wifiManager == "ns3::RLibWifiManager")
     {
-      wifi.SetRemoteStationManager (wifiManager, "nWifi", UintegerValue (nWifi));
+      wifi.SetRemoteStationManager (wifiManager,
+                                    "nWifi", UintegerValue (nWifi),
+                                    "NSS", UintegerValue (nss));
     }
   else
     {
@@ -198,9 +198,8 @@ main (int argc, char *argv[])
     }
 
   // Register callback for a successful packet reception
-  uint32_t apNode = wifiApNode.Get (0)->GetId ();
-  Config::ConnectWithoutContext ("/NodeList/" + std::to_string (apNode) +
-                                     "/DeviceList/*/$ns3::WifiNetDevice/Phy/State/RxOk",
+  std::string apNode = std::to_string (wifiApNode.Get (0)->GetId ());
+  Config::ConnectWithoutContext ("/NodeList/" + apNode + "/DeviceList/*/$ns3::WifiNetDevice/Phy/State/RxOk",
                                  MakeCallback (PhyRxOkCallback));
 
   // Register callbacks for the CW and power change

@@ -9,22 +9,29 @@ namespace ns3 {
 // ns3-ai structures
 struct sEnv
 {
-  uint32_t station_id;
-  uint8_t type;
-  double time;
-  uint32_t n_successful;
-  uint32_t n_failed;
-  uint32_t n_wifi;
   double power;
+  double time;
   uint32_t cw;
+  uint32_t n_failed;
+  uint32_t n_successful;
+  uint32_t n_wifi;
+  uint32_t station_id;
   uint8_t mcs;
+  uint8_t type;
 } Packed;
 
 struct sAct
 {
   uint32_t station_id;
-  uint8_t mode;
+  uint8_t mcs;
 } Packed;
+
+// Structure holding additional information required by the RLibWifiManager
+struct RLibWifiRemoteStation : public WifiRemoteStation
+{
+  uint32_t m_station_id;
+  uint8_t m_mcs;
+};
 
 class RLibWifiManager : public WifiRemoteStationManager
 {
@@ -50,17 +57,16 @@ private:
   WifiTxVector DoGetDataTxVector (WifiRemoteStation *station) override;
   WifiTxVector DoGetRtsTxVector (WifiRemoteStation *station) override;
 
-  void UpdateState (uint32_t station_id, uint16_t nSuccessful, uint16_t nFailed);
-  void ExecuteAction (uint32_t station_id);
+  void UpdateState (RLibWifiRemoteStation *station, uint16_t nSuccessful, uint16_t nFailed);
+  void ExecuteAction (RLibWifiRemoteStation *station);
 
-  WifiMode m_ctlMode;     // Wifi mode for RTS frames
-  WifiMode m_dataMode;    // Wifi mode for data frames
-  uint32_t m_cw;          // current Contention Window
-  uint32_t m_nWifi;       // number of transmitting stations
-  double m_power;         // current transmission power
-  uint8_t m_mcs;          // currently used MCS
+  WifiMode m_ctlMode;
+  uint32_t m_cw;
+  uint32_t m_nWifi;
+  uint32_t m_nss;
+  double m_power;
 
-  Ns3AIRL<sEnv, sAct> * m_env;  // ns3-ai environment
+  Ns3AIRL<sEnv, sAct> * m_env;
 };
 
 }

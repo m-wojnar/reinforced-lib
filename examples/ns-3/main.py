@@ -13,15 +13,15 @@ from reinforced_lib.exts import IEEE_802_11_ax
 class Env(Structure):
     _pack_ = 1
     _fields_ = [
-        ('station_id', c_uint32),
-        ('type', c_uint8),
-        ('time', c_double),
-        ('n_successful', c_uint32),
-        ('n_failed', c_uint32),
-        ('n_wifi', c_uint32),
         ('power', c_double),
+        ('time', c_double),
         ('cw', c_uint32),
-        ('mcs', c_uint8)
+        ('n_failed', c_uint32),
+        ('n_successful', c_uint32),
+        ('n_wifi', c_uint32),
+        ('station_id', c_uint32),
+        ('mcs', c_uint8),
+        ('type', c_uint8)
     ]
 
 
