@@ -31,13 +31,14 @@ author = 'Maksymilian Wojnar, Wojciech Ciężobka'
 # ones.
 extensions = [
     'sphinx_rtd_theme',
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosectionlabel',
+    'sphinx.ext.autosummary',
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.mathjax',
     'sphinx.ext.napoleon',
-    'sphinx.ext.mathjax'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
