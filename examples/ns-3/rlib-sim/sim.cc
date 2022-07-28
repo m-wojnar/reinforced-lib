@@ -8,6 +8,7 @@
 #include "ns3/flow-monitor-module.h"
 #include "ns3/internet-module.h"
 #include "ns3/mobility-module.h"
+#include "ns3/node-list.h"
 #include "ns3/ssid.h"
 #include "ns3/wifi-net-device.h"
 #include "ns3/yans-wifi-helper.h"
@@ -36,6 +37,7 @@ void InstallTrafficGenerator (Ptr<ns3::Node> sourceNode, Ptr<ns3::Node> sinkNode
 void Measurement (Ptr<FlowMonitor> monitor, Ptr<Node> sinkNode, std::ostringstream *ostream,
                   double warmupTime, std::string csvPrefix);
 void PhyRxOkCallback (Ptr<const Packet> packet, double snr, WifiMode mode, WifiPreamble preamble);
+void PopulateARPcache ();
 void PowerCallback (std::string path, Ptr<const Packet> packet, double txPowerW);
 void StartMovement (Ptr<ns3::Node> node, double velocity);
 void WarmupMeasurement (Ptr<FlowMonitor> monitor);
@@ -68,7 +70,6 @@ main (int argc, char *argv[])
   uint32_t dataRate = 125;
   double initialPosition = 0.0;
   double logEvery = 1.0;
-  uint16_t memblockKey = 2333;
   minGI = 3200;
   uint32_t nWifi = 1;
   nss = 1;
@@ -86,7 +87,6 @@ main (int argc, char *argv[])
   cmd.AddValue ("dataRate", "Aggregate traffic generators data rate (Mb/s)", dataRate);
   cmd.AddValue ("initialPosition", "Initial position of the AP on X axis (m)", initialPosition);
   cmd.AddValue ("logEvery", "Time interval between successive measurements (s)", logEvery);
-  cmd.AddValue ("memblockKey", "ns3-ai shared memory id", memblockKey);
   cmd.AddValue ("minGI", "Shortest guard interval (ns)", minGI);
   cmd.AddValue ("nWifi", "Number of transmitting stations", nWifi);
   cmd.AddValue ("pcapPath", "Save a PCAP file from the AP; relative path", pcapPath);
@@ -129,7 +129,9 @@ main (int argc, char *argv[])
   // Setup rate adaptation algorithm
   if (wifiManager == "ns3::RLibWifiManager")
     {
-      wifi.SetRemoteStationManager (wifiManager, "nWifi", UintegerValue (nWifi));
+      wifi.SetRemoteStationManager (wifiManager,
+                                    "nWifi", UintegerValue (nWifi),
+                                    "NSS", UintegerValue (nss));
     }
   else
     {
@@ -176,6 +178,9 @@ main (int argc, char *argv[])
   Ipv4InterfaceContainer staNodesInterface = address.Assign (staDevices);
   Ipv4InterfaceContainer apNodeInterface = address.Assign (apDevice);
 
+  // PopulateArpCache
+  PopulateARPcache ();
+
   // Configure applications
   DataRate applicationsDataRate (dataRate * 1e6 / nWifi);
   uint32_t portNumber = 9;
@@ -198,9 +203,8 @@ main (int argc, char *argv[])
     }
 
   // Register callback for a successful packet reception
-  uint32_t apNode = wifiApNode.Get (0)->GetId ();
-  Config::ConnectWithoutContext ("/NodeList/" + std::to_string (apNode) +
-                                     "/DeviceList/*/$ns3::WifiNetDevice/Phy/State/RxOk",
+  std::string apNode = std::to_string (wifiApNode.Get (0)->GetId ());
+  Config::ConnectWithoutContext ("/NodeList/" + apNode + "/DeviceList/*/$ns3::WifiNetDevice/Phy/State/RxOk",
                                  MakeCallback (PhyRxOkCallback));
 
   // Register callbacks for the CW and power change
@@ -404,6 +408,57 @@ PhyRxOkCallback (Ptr<const Packet> packet, double snr, WifiMode mode, WifiPreamb
       packetsNum++;
       rateSum += mode.GetDataRate (channelWidth, minGI, nss) / 1e6;
       mcsSum += mode.GetMcsValue ();
+    }
+}
+
+void
+PopulateARPcache ()
+{
+  Ptr<ArpCache> arp = CreateObject<ArpCache> ();
+  arp->SetAliveTimeout (Seconds (3600 * 24 * 365));
+
+  for (auto i = NodeList::Begin (); i != NodeList::End (); ++i)
+    {
+      Ptr<Ipv4L3Protocol> ip = (*i)->GetObject<Ipv4L3Protocol> ();
+      ObjectVectorValue interfaces;
+      ip->GetAttribute ("InterfaceList", interfaces);
+
+      for (auto j = interfaces.Begin (); j != interfaces.End (); j++)
+        {
+          Ptr<Ipv4Interface> ipIface = (*j).second->GetObject<Ipv4Interface> ();
+          Ptr<NetDevice> device = ipIface->GetDevice ();
+          Mac48Address addr = Mac48Address::ConvertFrom (device->GetAddress ());
+
+          for (uint32_t k = 0; k < ipIface->GetNAddresses (); k++)
+            {
+              Ipv4Address ipAddr = ipIface->GetAddress (k).GetLocal ();
+              if (ipAddr == Ipv4Address::GetLoopback ())
+                {
+                  continue;
+                }
+
+              ArpCache::Entry *entry = arp->Add (ipAddr);
+              Ipv4Header ipv4Hdr;
+              ipv4Hdr.SetDestination (ipAddr);
+
+              Ptr<Packet> p = Create<Packet> (100);
+              entry->MarkWaitReply (ArpCache::Ipv4PayloadHeaderPair (p, ipv4Hdr));
+              entry->MarkAlive (addr);
+            }
+        }
+    }
+
+  for (auto i = NodeList::Begin (); i != NodeList::End (); ++i)
+    {
+      Ptr<Ipv4L3Protocol> ip = (*i)->GetObject<Ipv4L3Protocol> ();
+      ObjectVectorValue interfaces;
+      ip->GetAttribute ("InterfaceList", interfaces);
+
+      for (auto j = interfaces.Begin (); j != interfaces.End (); j++)
+        {
+          Ptr<Ipv4Interface> ipIface = (*j).second->GetObject<Ipv4Interface> ();
+          ipIface->SetAttribute ("ArpCache", PointerValue (arp));
+        }
     }
 }
 
