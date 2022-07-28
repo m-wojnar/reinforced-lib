@@ -11,8 +11,9 @@ from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpa
 
 class BaseExt(ABC):
     """
-    Container for domain-specific knowledge and functions for a given extension. Provides transformation
-    from extension functions and observation space to agents observation and sample spaces.
+    Container for domain-specific knowledge and functions for a given environment. Provides transformation
+    from observation functions and observation space to agents update and sample spaces. Stores default
+    argument values for agents initialization.
     """
 
     def __init__(self) -> None:
@@ -32,7 +33,7 @@ class BaseExt(ABC):
     @abstractmethod
     def observation_space(self) -> gym.spaces.Space:
         """
-        Observations taken by the 'transform' function in OpenAI Gym format.
+        Basic observations of the environment in the OpenAI Gym format.
         """
 
         pass
@@ -44,16 +45,17 @@ class BaseExt(ABC):
             user_parameters: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
-        Get agents constructor parameters from extension parameter functions.
+        Composes agent initialization parameters from the parameters passed by the user and default values defined
+        in parameter functions. Returns dictionary with parameters fitting the agents parameters space.
 
         Parameters
         ----------
         agent_type : type, optional
             Type of selected agent.
         agent_parameters_space : gym.spaces.Dict, optional
-            Parameters required by the agents' constructor in OpenAI Gym format.
+            Parameters required by the agents' constructor in the OpenAI Gym format.
         user_parameters : dict, optional
-            Agent parameters provided by user.
+            Parameters provided by the user.
 
         Returns
         -------
@@ -81,7 +83,7 @@ class BaseExt(ABC):
                 if name in default_parameters:
                     continue
 
-                raise NoDefaultParameterError(type(self), name, type)
+                raise NoDefaultParameterError(type(self), name, space)
 
             func = self._parameter_functions[name]
             func_space = func.parameter_info.type
@@ -99,15 +101,15 @@ class BaseExt(ABC):
             agent_sample_space: gym.spaces.Space = None
     ) -> None:
         """
-        Create functions that transform extension functions and observation
-        space to agents observation and sample spaces.
+        Create functions that transform environment observations and values provided by observation functions to agents
+        update and sample spaces values.
 
         Parameters
         ----------
         agent_update_space : gym.spaces.Space, optional
-            Observations required by the agents 'update' function in OpenAI Gym format.
+            Observations required by the agents 'update' function in the OpenAI Gym format.
         agent_sample_space : gym.spaces.Space, optional
-            Observations required by the agents 'sample' function in OpenAI Gym format.
+            Observations required by the agents 'sample' function in the OpenAI Gym format.
         """
 
         self._update_space_transform = self._transform_spaces(self.observation_space, agent_update_space)
@@ -120,7 +122,8 @@ class BaseExt(ABC):
             accessor: Union[str, int] = None
     ) -> Callable:
         """
-        Creates function that transforms extension functions values and observation space to a given space.
+        Creates function that transforms environment observations and values provided by observation functions to
+        a given space values.
 
         Parameters
         ----------
@@ -134,7 +137,7 @@ class BaseExt(ABC):
         Returns
         -------
         func : Callable
-            Function that transforms extension functions values and in_space to out_space.
+            Function that transforms values from in_space to out_space.
         """
 
         if out_space is None:
@@ -214,16 +217,16 @@ class BaseExt(ABC):
     @staticmethod
     def _get_nested_args(accessor: Union[str, int], *args, **kwargs) -> Tuple[Tuple, Dict]:
         """
-        Selects the appropriate nested args and kwargs.
+        Selects the appropriate nested args or kwargs.
 
         Parameters
         ----------
         accessor : str or int
             Path to nested observations.
         *args : tuple
-            Extension observations.
+            Environment observations.
         **kwargs : dict
-            Extension observations.
+            Environment observations.
 
         Returns
         -------
@@ -246,16 +249,16 @@ class BaseExt(ABC):
 
     def _simple_transform(self, accessor: Union[str, int], *args, **kwargs) -> Any:
         """
-        Returns the appropriate observation from Extension observations.
+        Returns the appropriate observation from environment observations.
 
         Parameters
         ----------
         accessor : str or int
             Path to nested observations.
         *args : tuple
-            Extension observations.
+            Environment observations.
         **kwargs : dict
-            Extension observations.
+            Environment observations.
 
         Returns
         -------
@@ -273,25 +276,26 @@ class BaseExt(ABC):
 
     def _function_transform(self, func: Callable, name: str, accessor: Union[str, int], *args, **kwargs) -> Any:
         """
-        Returns the appropriate observation from extension functions (or from observations if present).
+        Returns the appropriate observation from the observation function or from environment observations
+        if present.
 
         Parameters
         ----------
         func : Callable
             Function that returns selected observation.
         name : str
-            Name of selected observation.
+            Name of the selected observation.
         accessor : str or int
             Path to nested observations.
         *args : tuple
-            Extension observations.
+            Environment observations.
         **kwargs : dict
-            Extension observations.
+            Environment observations.
 
         Returns
         -------
         observation : any
-            Selected observation from extension functions.
+            Selected observation.
         """
 
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
@@ -303,23 +307,24 @@ class BaseExt(ABC):
 
     def _dict_transform(self, observations: Dict[str, Callable], accessor: Union[str, int], *args, **kwargs) -> Dict:
         """
-        Returns a dictionary filled with appropriate observations from extension functions and observations.
+        Returns a dictionary filled with appropriate environment observations and values provided by
+        observation functions.
         
         Parameters
         ----------
         observations : dict[str, Callable]
-            Dictionary with observation names and functions that provide selected observations.
+            Dictionary with observation names and functions that provide according observations.
         accessor : str or int
             Path to nested observations.
         *args : tuple
-            Extension observations.
+            Environment observations.
         **kwargs : dict
-            Extension observations.
+            Environment observations.
 
         Returns
         -------
         observations : dict
-            Dictionary with selected observations.
+            Dictionary with functions providing observations.
         """
 
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
@@ -327,7 +332,7 @@ class BaseExt(ABC):
 
     def _tuple_transform(self, observations: List[Callable], accessor: Union[str, int], *args, **kwargs) -> Tuple:
         """
-        Returns a tuple filled with appropriate observations from extension functions and observations.
+        Returns a tuple filled with appropriate environment observations and values provided by observation functions.
 
         Parameters
         ----------
@@ -336,14 +341,14 @@ class BaseExt(ABC):
         accessor : str or int
             Path to nested observations.
         *args : tuple
-            Extension observations.
+            Environment observations.
         **kwargs : dict
-            Extension observations.
+            Environment observations.
 
         Returns
         -------
         observations : tuple
-            Tuple with selected observations.
+            Tuple with functions providing observations.
         """
 
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
@@ -351,14 +356,15 @@ class BaseExt(ABC):
 
     def transform(self, *args, **kwargs) -> Tuple[Any, Any]:
         """
-        Transforms extension functions and observations to agent observation and sample spaces.
+        Transforms environment observations and values provided by observation functions to agent observation
+        and sample spaces values.
 
         Parameters
         ----------
         *args : tuple
-            Extension observations.
+            Environment observations.
         **kwargs : dict
-            Extension observations.
+            Environment observations.
 
         Returns
         -------

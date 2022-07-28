@@ -3,7 +3,7 @@
 Agents
 ======
 
-This module is a set of RL agents. You can either choose one of our built-in agents or implemet
+This module is a set of RL agents. You can either choose one of our built-in agents or implement
 your agent with the help of this short guide.
 
 .. _custom_agents:
@@ -19,7 +19,7 @@ custom agent on a simple example of epsilon-greedy agent:
 
     class EGreedy(BaseAgent)
 
-Firstly, you need to define a state of your agent, which in our case will hold
+Firstly, we need to define a state of our agent, which in our case will hold
 
     * constant experiment rate (e),
     * quality values of each arm (Q),
@@ -59,7 +59,7 @@ Next, we can define the Epsilon-greedy agent, which will have 3 static methods:
             N=jnp.ones(n_arms, dtype=jnp.int32)
         )
     
-    # This method updates the agents state after performing some action and recieving a reward
+    # This method updates the agents state after performing some action and receiving a reward
     @staticmethod
     def update(
         state: EGreedyState,
@@ -121,7 +121,7 @@ Having defined those static methods, we can implement the class constructor:
         self.sample = jax.jit(partial(self.sample))
 
 Lastly, we must specify the parameters spaces that each of the implemented method takes.
-It will help the library to automatically infer the neccessary parameters from the environment.
+It will help the library to automatically infer the necessary parameters from the environment.
 
 .. code-block:: python
 
@@ -292,6 +292,8 @@ Thompson Sampling
 .. autoclass:: ThompsonSampling
     :show-inheritance:
     :members:
+
+.. _particle-filter_agent:
 
 Particle Filter
 ~~~~~~~~~~~~~~~
