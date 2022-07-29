@@ -1,11 +1,15 @@
 from typing import Any, Dict, List, Tuple, Union
 
+import os
 import gym
+import pickle
+import lz4.frame
 import jax.random
 
 from reinforced_lib.agents.base_agent import BaseAgent
 from reinforced_lib.exts.base_ext import BaseExt
 from reinforced_lib.utils.exceptions import *
+from reinforced_lib.utils.utils import ROOT_DIR
 
 
 class RLib:
@@ -41,6 +45,7 @@ class RLib:
             no_ext_mode: bool = False
     ) -> None:
         self._no_ext_mode = no_ext_mode
+        self._lz4_ext = ".pkl.lz4"
 
         self._agent = None
         self._agent_type = agent_type
@@ -300,28 +305,35 @@ class RLib:
 
         raise NotImplementedError()
 
-    def save_agent_state(self, agent_id: int = 0, path: str = None) -> None:
+    def save_agent(self, agent_id: int = 0, path: str = None) -> None:
         """
-        Saves selected agent instance to file in X format.
+        Saves selected agent instance to a file in lz4 format.
 
         Parameters
         ----------
         agent_id : int, default=0
             The identifier of agent instance.
         path : str
-            Path to the output file.
+            Path to the output file. If ``.pkl.lz4`` extension not detected, it will be appended automaticly.
         """
 
-        if not path:
-            raise ValueError('No path is specified.')
+        if path is None:
+            path = os.path.join(ROOT_DIR, "saves", f"agent{self._lz4_ext}")
+        elif path[-8:] != self._lz4_ext:
+            path = path + self._lz4_ext
 
-        # TODO implement objects saving and agree on a format
+        agent_packed = {
+            "state": self._agents_states[agent_id],
+            "key": self._agents_keys[agent_id],
+            "params": self._agent_params,
+        }
 
-        raise NotImplementedError()
+        with lz4.frame.open(path, 'wb') as f:
+            f.write(pickle.dumps(agent_packed))
 
-    def load_agent_state(self, path) -> int:
+    def load_agent(self, path: str) -> int:
         """
-        Loads agent instance from file in X format.
+        Loads agent instance from a file in lz4 format.
 
         Parameters
         ----------
@@ -334,6 +346,18 @@ class RLib:
             The identifier of loaded instance.
         """
 
-        # TODO implement loading objects from file
+        if path[-8:] != self._lz4_ext:
+            path = path + self._lz4_ext
+        
+        with lz4.frame.open(path, 'rb') as f:
+            agent_packed = pickle.loads(f.read())
+        
+        if agent_packed["params"] != self._agent_params:
+            raise IncorretAgentParametersError(len(self._agents_states))
+        
+        agent_id = len(self._agents_states)
 
-        raise NotImplementedError()
+        self._agents_states.append(agent_packed["state"])
+        self._agents_keys.append(agent_packed["key"])
+
+        return agent_id

@@ -67,6 +67,15 @@ class IncorrectExtensionTypeError(IncorrectTypeError):
         super(provided_type, 'extension')
 
 
+class IncorretAgentParametersError(Exception):
+
+    def __init__(self, agent_id: int = None) -> None:
+        self.agent_id = agent_id if agent_id else ''
+
+    def __str__(self) -> str:
+        return f'Agent {self.agent_id} has beed already defined with different parameters. Agent load failed.'
+
+
 class ForbiddenOperationError(Exception):
     """
     Raised when user is trying to perform forbidden operation.
