@@ -4,6 +4,7 @@ Custom agents
 Although our library provides a palette of already implemented :ref:`agents <Agents>`, one might want to
 add a personalised one to the collection. This guide is here to help you with that task.
 
+
 Customizing agents
 ------------------
 
@@ -151,6 +152,7 @@ It will help the library to automatically infer the necessary parameters from th
 
 Now we have a ready to operate epsilon-greedy agent!
 
+
 Template Agent
 --------------
 
@@ -253,6 +255,7 @@ to create your own agent.
                 lambda: (state, jax.random.choice(key, state.Q.size)),
                 lambda: (state, jnp.argmax(state.Q))
             )
+
 
 Sum up
 ------

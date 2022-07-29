@@ -63,6 +63,7 @@ extension.
    Agents <agents>
    Extensions <extensions>
    Logging <logging>
+   Exceptions <exceptions>
 
 
 Indices and tables

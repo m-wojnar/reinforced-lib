@@ -4,6 +4,7 @@ Agents
 This module is a set of RL agents. You can either choose one of our built-in agents or implement
 your agent with the help of :ref:`Custom agents` guide.
 
+
 BaseAgent
 ---------
 
@@ -14,6 +15,7 @@ BaseAgent
 
 .. autoclass:: BaseAgent
     :members:
+
 
 Thompson Sampling
 -----------------
@@ -28,8 +30,17 @@ Thompson Sampling
     :show-inheritance:
     :members:
 
-Particle Filter
------------------
+
+ParticleFilter (Core)
+---------------------
+
+.. automodule:: reinforced_lib.agents.core.particle_filter
+    :show-inheritance:
+    :members:
+
+
+Particle Filter (Wi-Fi)
+-----------------------
 
 .. currentmodule:: reinforced_lib.agents.wifi.particle_filter
 
@@ -40,6 +51,7 @@ Particle Filter
 .. autoclass:: ParticleFilter
     :show-inheritance:
     :members:
+
 
 Epsilon-greedy
 --------------

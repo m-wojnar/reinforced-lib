@@ -5,7 +5,6 @@ The environment extension is our functionality that allows agent to infer latent
 not originally supported by the environment. You can either choose one of our built-in extensions or
 implement your own with the help of this short guide.
 
-.. _key_concepts_exts:
 
 Key concepts
 ------------
@@ -14,7 +13,7 @@ There are two main benefits of using extensions:
 
 #. Automatic initialization of agents - en extensions can provide default arguments that can be used to
    initialize an agent. For example, if we would like to create the ``wifi.ParticleFilter``
-   :ref:`agent <Particle Filter>` without using any extension, we would probably do it in the
+   :ref:`agent <Particle Filter (Wi-Fi)>` without using any extension, we would probably do it in the
    following way:
 
    .. code-block:: python
@@ -53,7 +52,7 @@ There are two main benefits of using extensions:
 
 #. Filling missing parameters - some of the parameters required by the agent can be filled with known values or
    calculated based on a set of basic observations. For example, a ``sample`` method of the ``wifi.ParticleFilter``
-   :ref:`agent <Particle Filter>` requires transmission data rates and minimal SNR values required for a
+   :ref:`agent <Particle Filter (Wi-Fi)>` requires transmission data rates and minimal SNR values required for a
    successful transmission for each MCS. This values can be found in the IEEE 802.11ax standard documentation or
    precalculated empirically. Below is a sample code that could be used to sample from the agent without using
    any extension:
@@ -105,6 +104,7 @@ There are two main benefits of using extensions:
 Default values or functions that calculates missing parameters can be defined using *observation functions*
 and *parameter functions*. These functions are decorated with the ``@observation`` and ``@parameter`` decorators
 accordingly. More detailed description of this decorator can be found in :ref:`the section below <Customizing extensions>`.
+
 
 Customizing extensions
 ----------------------
@@ -189,6 +189,7 @@ and returned type in the decorator:
 
 Full source code of the IEEE 802.11ax extension can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/exts/ieee_802_11_ax.py>`_.
 
+
 Rules and limitations
 ---------------------
 
@@ -216,6 +217,7 @@ However, there are some rules and limitations that programmers and users must ta
 * if an observation function requires some parameter and it is not provided by a named argument, ``BaseExt`` will
   select the first (possibly nested) positional argument and pass it to the function, but if there will be no
   positional arguments, library will raise an exception.
+
 
 How do extensions work?
 -----------------------
