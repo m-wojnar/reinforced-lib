@@ -9,7 +9,7 @@ TODO add section, when pip configured
 Basic usage
 -----------
 
-The vital interface of  :ref:`reinforced-lib <reinforced-lib>` is the :ref:`class <rlib>` ``Rlib``,
+The vital interface of  :ref:`reinforced-lib <reinforced-lib>` is the :ref:`class <RLib Class>` ``Rlib``,
 which abstracts the agent-environment interaction. In basic use case, you only need to provide
 appropiate agent with the environmet related to your problem domain and the lib will take care of the rest.
 

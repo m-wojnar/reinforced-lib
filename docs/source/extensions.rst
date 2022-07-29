@@ -1,9 +1,5 @@
-.. _extensions:
-
 Environment extensions
 ======================
-
-.. _base_ext:
 
 BaseExt
 -------
@@ -13,13 +9,8 @@ BaseExt
 .. autoclass:: BaseExt
     :members:
 
-List of extensions
-------------------
-
-.. _ieee_802_11_ax:
-
 IEEE 802.11ax
-~~~~~~~~~~~~~
+-------------
 
 .. currentmodule:: reinforced_lib.exts.ieee_802_11_ax
 

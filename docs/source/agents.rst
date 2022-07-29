@@ -1,12 +1,8 @@
-.. _agents:
-
 Agents
 ======
 
 This module is a set of RL agents. You can either choose one of our built-in agents or implement
 your agent with the help of :ref:`Custom agents` guide.
-
-.. _base_agent:
 
 BaseAgent
 ---------
@@ -32,8 +28,6 @@ Thompson Sampling
     :show-inheritance:
     :members:
 
-.. _particle-filter_agent:
-
 Particle Filter
 -----------------
 
@@ -46,8 +40,6 @@ Particle Filter
 .. autoclass:: ParticleFilter
     :show-inheritance:
     :members:
-
-.. _e-greedy_agent:
 
 Epsilon-greedy
 --------------

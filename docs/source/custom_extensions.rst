@@ -5,7 +5,7 @@ The environment extension is our functionality that allows agent to infer latent
 not originally supported by the environment. You can either choose one of our built-in extensions or
 implement your own with the help of this short guide.
 
-.. _key_concepts:
+.. _key_concepts_exts:
 
 Key concepts
 ------------
@@ -14,7 +14,7 @@ There are two main benefits of using extensions:
 
 #. Automatic initialization of agents - en extensions can provide default arguments that can be used to
    initialize an agent. For example, if we would like to create the ``wifi.ParticleFilter``
-   :ref:`agent <particle-filter_agent>` without using any extension, we would probably do it in the
+   :ref:`agent <Particle Filter>` without using any extension, we would probably do it in the
    following way:
 
    .. code-block:: python
@@ -29,7 +29,7 @@ There are two main benefits of using extensions:
            }
        )
 
-   On the other hand, if we decide to use the :ref:`IEEE 802.11ax <ieee_802_11_ax>` extension, this parameters can
+   On the other hand, if we decide to use the :ref:`IEEE 802.11ax <IEEE 802.11ax>` extension, this parameters can
    be automatically provided by the extension:
 
    .. code-block:: python
@@ -53,7 +53,7 @@ There are two main benefits of using extensions:
 
 #. Filling missing parameters - some of the parameters required by the agent can be filled with known values or
    calculated based on a set of basic observations. For example, a ``sample`` method of the ``wifi.ParticleFilter``
-   :ref:`agent <particle-filter_agent>` requires transmission data rates and minimal SNR values required for a
+   :ref:`agent <Particle Filter>` requires transmission data rates and minimal SNR values required for a
    successful transmission for each MCS. This values can be found in the IEEE 802.11ax standard documentation or
    precalculated empirically. Below is a sample code that could be used to sample from the agent without using
    any extension:
@@ -72,7 +72,7 @@ There are two main benefits of using extensions:
        }
        action = rl.sample(**observations)
 
-   If we use the :ref:`IEEE 802.11ax <ieee_802_11_ax>` extension, part of this parameters can be provided by the
+   If we use the :ref:`IEEE 802.11ax <IEEE 802.11ax>` extension, part of this parameters can be provided by the
    extension:
 
    .. code-block:: python
@@ -109,8 +109,8 @@ accordingly. More detailed description of this decorator can be found in :ref:`t
 Customizing extensions
 ----------------------
 
-To create your own extension, you should inherit from the :ref:`abstract class <base_ext>` ``BaseExt``.
-We will present adding custom extension on an example of the :ref:`IEEE 802.11ax <ieee_802_11_ax>` extension.
+To create your own extension, you should inherit from the :ref:`abstract class <BaseExt>` ``BaseExt``.
+We will present adding custom extension on an example of the :ref:`IEEE 802.11ax <IEEE 802.11ax>` extension.
 
 .. code-block:: python
 
@@ -175,7 +175,7 @@ example observation function that provides approximated collision probability in
         return 0.154887 * np.log(1.03102 * n_wifi)
 
 Note that the observation function can take parameters that are specified in the observation space.
-:ref:`BaseExt <base_ext>` methods will automatically pass the given observation to the function to allow
+:ref:`BaseExt <BaseExt>` methods will automatically pass the given observation to the function to allow
 dynamic computation of the returned value. What is important, observation methods take ``*args`` and ``**kwargs``
 as the last parameters (this is required by the internal behaviour of the ``setup_transformations`` function).
 As previously, name of the function should match name of the filled parameter, but we can specify parameter name
@@ -194,7 +194,7 @@ Rules and limitations
 
 Extensions are very powerful mechanism that makes the Reinforced-lib universal and easy to use. The ``BaseExt``
 methods can handle complex and nested observation spaces, such as the
-`example ones <https://github.com/m-wojnar/reinforced-lib/blob/main/tests/exts/base_ext_test.py>`_.
+`example ones <https://github.com/m-wojnar/reinforced-lib/blob/main/test/exts/test_base_ext.py>`_.
 However, there are some rules and limitations that programmers and users must take into consideration:
 
 * arguments and parameters provided by the user have higher priority than default or calculated values provided
@@ -220,9 +220,9 @@ However, there are some rules and limitations that programmers and users must ta
 How do extensions work?
 -----------------------
 
-The main axis of this module is the :ref:`abstract class <base_ext>` ``BaseExt``, which provides the core
+The main axis of this module is the :ref:`abstract class <BaseExt>` ``BaseExt``, which provides the core
 functionality of extensions. It implements important methods, such as ``get_agent_params``, ``transform``,
 and ``setup_transformations``. The class internally makes use of these methods to provide simple
-and powerful API of the Reinforced-lib. You can read more about the ``BaseExt`` class :ref:`here <base_ext>`
+and powerful API of the Reinforced-lib. You can read more about the ``BaseExt`` class :ref:`here <BaseExt>`
 or check out `the source code <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/exts/base_ext.py>`_.
 

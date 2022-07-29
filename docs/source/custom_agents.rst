@@ -1,8 +1,14 @@
 Custom agents
 =============
 
+Although our library provides a palette of already implemented :ref:`agents <Agents>`, one might want to
+add a personalised one to the collection. This guide is here to help you with that task.
+
+Customizing agents
+------------------
+
 To fully benefit from the reinforced-lib features, including the JAX jit optimization, your agent
-should inherit from the :ref:`abstract class <base_agent>` ``BaseAgent``. We will present adding
+should inherit from the :ref:`abstract class <BaseAgent>` ``BaseAgent``. We will present adding
 custom agent on a simple example of epsilon-greedy agent:
 
 .. code-block:: python
@@ -143,7 +149,13 @@ It will help the library to automatically infer the necessary parameters from th
     def action_space(self) -> gym.spaces.Space:
         return gym.spaces.Discrete(self.n_arms)
 
-Now we have a ready to operate epsilon-greedy agent! Putting the code together:
+Now we have a ready to operate epsilon-greedy agent!
+
+Template Agent
+--------------
+
+Here is all of the above code in one piece. You can copy-paste it and use as an inspiration
+to create your own agent.
 
 .. code-block:: python
 
@@ -242,6 +254,9 @@ Now we have a ready to operate epsilon-greedy agent! Putting the code together:
                 lambda: (state, jnp.argmax(state.Q))
             )
 
+Sum up
+------
+
 To sum up everything one more time:
 
 1. Custom agent inherits from the `BaseAgent``
@@ -250,4 +265,4 @@ To sum up everything one more time:
 4. We provide the required parameters in format of *OpenAI Gym* spaces
 
 The built-in implementation of the epsilon-greedy agent, with addition of optional optimistic start,
-can be found :ref:`here <e-greedy_agent>`.
+can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/agents/e_greedy.py>`_.
