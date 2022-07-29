@@ -1,5 +1,0 @@
-Environments
-============
-
-Add Sections
-------------

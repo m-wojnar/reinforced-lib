@@ -58,7 +58,7 @@ def simple_resample(operands: Tuple[ParticleFilterState, PRNGKey]) -> ParticleFi
 
 def effective_sample_size(state: ParticleFilterState, threshold: Scalar = 0.5) -> bool:
     """
-    Calculates effective sample size [1]_. If ESS is smaller than number of samples * threshold,
+    Calculates effective sample size [3]_. If ESS is smaller than number of samples * threshold,
     than resampling is necessary.
 
     Parameters
@@ -75,7 +75,7 @@ def effective_sample_size(state: ParticleFilterState, threshold: Scalar = 0.5) -
 
     References
     ----------
-    .. [1] https://en.wikipedia.org/wiki/Effective_sample_size#Weighted_samples
+    .. [3] https://en.wikipedia.org/wiki/Effective_sample_size#Weighted_samples
     """
 
     logit_weights = state.logit_weights - jnp.max(state.logit_weights)
@@ -184,21 +184,28 @@ class ParticleFilter:
         Function that updates particles based on the observation of the environment, takes two positional arguments:
             - ``state``: state of the filter (`ParticleFilterState`).
             - ``observation``: observation of the environment (`any`).
+        
         Returns updated state of the filter (`ParticleFilterState`).
+    
     resample_fn : callable, default=particle_filter.simple_resample
         Function that performs resampling of particles, takes one positional argument:
             - ``operands``: tuple containing filter state and a PRNG key (`tuple[ParticleFilterState, PRNGKey]`).
+        
         Returns updated state of the filter (`ParticleFilterState`).
+    
     resample_criterion_fn : callable, default=particle_filter.effective_sample_size
         Function that checks if resampling is necessary, takes one positional argument:
             - ``state``: state of the filter (`ParticleFilterState`).
+        
         Returns information whether resampling should be performed (`bool`).
+    
     transition_fn : callable, default=particle_filter.simple_transition
         Function that updates particles positions, takes four positional arguments:
             - ``state``: state of the filter (`ParticleFilterState`).
             - ``key``: a PRNG key used as the random key (`PRNGKey`).
             - ``scale``: scale of the random movement of particles (`float or array_like`).
             - ``time``: current time (`float`).
+        
         Returns updated state of the filter (`ParticleFilterState`).
     """
 
@@ -293,24 +300,32 @@ class ParticleFilter:
             Function that updates particles based on the observation of the environment, takes two positional arguments:
                 - ``state``: state of the filter (`ParticleFilterState`).
                 - ``observation``: observation of the environment (`any`).
+            
             Returns updated state of the filter (`ParticleFilterState`).
+        
         observation : any
             Observation of the environment.
         resample_fn : callable
             Function that performs resampling of particles, takes one positional argument:
                 - ``operands``: tuple containing filter state and a PRNG key (`tuple[ParticleFilterState, PRNGKey]`).
+            
             Returns updated state of the filter (`ParticleFilterState`).
+        
         resample_criterion_fn : callable
             Function that checks if resampling is necessary, takes one positional argument:
                 - ``state``: state of the filter (`ParticleFilterState`).
+            
             Returns information whether resampling should be performed (`bool`).
+
         transition_fn : callable
             Function that updates particles positions, takes four positional arguments:
                 - ``state``: state of the filter (`ParticleFilterState`).
                 - ``key``: a PRNG key used as the random key (`PRNGKey`).
                 - ``scale``: scale of the random movement of particles (`float or array_like`).
                 - ``time``: current time (`float`).
+            
             Returns updated state of the filter (`ParticleFilterState`).
+
         time : float
             Current time.
         measurement_time : float

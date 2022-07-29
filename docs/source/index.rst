@@ -45,15 +45,25 @@ extension.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Table of contents
+   :caption: Guides
    :hidden:
 
    Getting started <getting_started>
+   Examples <examples>
+   Custom agents <custom_agents>
+   Custom extensions <custom_extensions>
+   Custom loggers <custom_loggers>
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Documentation
+   :hidden:
+
    API <api>
    Agents <agents>
-   Environments <environments>
-   Environment extensions <extensions>
+   Extensions <extensions>
    Logging <logging>
+   Exceptions <exceptions>
 
 
 Indices and tables
