@@ -3,9 +3,9 @@ from typing import Any, Dict, List, Tuple, Union
 import gym
 import jax.random
 
-from reinforced_lib.agents.base_agent import BaseAgent
-from reinforced_lib.exts.base_ext import BaseExt
-from reinforced_lib.logs.base_logger import BaseLogger
+from reinforced_lib.agents import BaseAgent
+from reinforced_lib.exts import BaseExt
+from reinforced_lib.logs import BaseLogger
 from reinforced_lib.logs.logs_observer import LogsObserver, Source
 from reinforced_lib.utils.exceptions import *
 
@@ -146,7 +146,7 @@ class RLib:
         types and names. If user passes one object (or list with only one object) and list of multiple objects, 
         function broadcasts passed objects. 'loggers_sources' items can be names of the logger sources
         (e.g. 'action') or tuples containing the name and the SourceType (e.g. ('action', SourceType.OBSERVATION)).
-        If the name itself is inconclusive, logger will log all observations or attributes with that name.
+        If the name itself is inconclusive, behaviour depends on the implementation of the logger.
 
         Parameters
         ----------
