@@ -41,7 +41,7 @@ class IncorrectTypeError(Exception):
 
 class IncorrectAgentTypeError(IncorrectTypeError):
     """
-    Raised when provided agent is not an agent class.
+    Raised when provided agent does not inherit from the BaseAgent class.
 
     Parameters
     ----------
@@ -55,7 +55,7 @@ class IncorrectAgentTypeError(IncorrectTypeError):
 
 class IncorrectExtensionTypeError(IncorrectTypeError):
     """
-    Raised when provided extension is not an extension class.
+    Raised when provided extension does not inherit from the BaseExt class.
 
     Parameters
     ----------
@@ -65,6 +65,20 @@ class IncorrectExtensionTypeError(IncorrectTypeError):
 
     def __init__(self, provided_type: type) -> None:
         super(provided_type, 'extension')
+
+
+class IncorrectLoggerTypeError(IncorrectTypeError):
+    """
+    Raised when provided logger does not inherit from the BaseLogger class.
+
+    Parameters
+    ----------
+    provided_type : type
+        Type provided by user.
+    """
+
+    def __init__(self, provided_type: type) -> None:
+        super(provided_type, 'logger')
 
 
 class ForbiddenOperationError(Exception):
@@ -105,7 +119,7 @@ class ForbiddenExtensionSetError(ForbiddenOperationError):
 
 class ForbiddenLoggerSetError(ForbiddenOperationError):
     """
-    Raised when user is trying to add new logger after the first step has been made.
+    Raised when user is trying to add new logger after the first training or sampling step has been made.
     """
 
     def __str__(self) -> str:
