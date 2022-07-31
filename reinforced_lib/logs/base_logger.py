@@ -1,9 +1,19 @@
 from abc import ABC
+from enum import Enum
 from typing import Any, Dict, List, Tuple, Union
 
 from chex import Array, Scalar
 
-Source = Union[Tuple[str, Any], str]
+from reinforced_lib.utils.exceptions import UnsupportedLogTypeError
+
+
+class SourceType(Enum):
+    OBSERVATION = 0
+    STATE = 1
+    METRIC = 2
+
+
+Source = Union[Tuple[str, SourceType], str]
 
 
 class BaseLogger(ABC):
@@ -17,13 +27,20 @@ class BaseLogger(ABC):
         pass
 
     def log_scalar(self, source: Source, value: Scalar) -> None:
-        pass
+        raise UnsupportedLogTypeError(type(self), type(value))
 
     def log_dict(self, source: Source, value: Dict) -> None:
-        pass
+        raise UnsupportedLogTypeError(type(self), type(value))
 
     def log_array(self, source: Source, value: Array) -> None:
-        pass
+        raise UnsupportedLogTypeError(type(self), type(value))
 
     def log_other(self, source: Source, value: Any) -> None:
-        pass
+        raise UnsupportedLogTypeError(type(self), type(value))
+
+    @staticmethod
+    def source_to_name(source: Source) -> str:
+        if isinstance(source, tuple):
+            return f'{source[0]}-{source[1].name.lower()}'
+        else:
+            return source

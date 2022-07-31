@@ -50,7 +50,7 @@ class IncorrectAgentTypeError(IncorrectTypeError):
     """
 
     def __init__(self, provided_type: type) -> None:
-        super(provided_type, 'agent')
+        super().__init__(provided_type, 'agent')
 
 
 class IncorrectExtensionTypeError(IncorrectTypeError):
@@ -64,7 +64,7 @@ class IncorrectExtensionTypeError(IncorrectTypeError):
     """
 
     def __init__(self, provided_type: type) -> None:
-        super(provided_type, 'extension')
+        super().__init__(provided_type, 'extension')
 
 
 class IncorrectLoggerTypeError(IncorrectTypeError):
@@ -78,7 +78,7 @@ class IncorrectLoggerTypeError(IncorrectTypeError):
     """
 
     def __init__(self, provided_type: type) -> None:
-        super(provided_type, 'logger')
+        super().__init__(provided_type, 'logger')
 
 
 class ForbiddenOperationError(Exception):
@@ -178,3 +178,37 @@ class NoDefaultParameterError(Exception):
     def __str__(self) -> str:
         return f'Extension {self._extension_name} does not provide parameter ' \
                f'{self._parameter_name} of type {self._parameter_type}.'
+
+
+class UnsupportedLogTypeError(Exception):
+    """
+    Raised when user is trying to log values that are not supported by the logger.
+
+    Parameters
+    ----------
+    logger_type : type
+        Type of the used logger.
+    log_type : type
+        Type of the logged value.
+    """
+
+    def __init__(self, logger_type: type, log_type: type) -> None:
+        self._logger_name = logger_type.__name__
+        self._log_name = log_type.__name__
+
+    def __str__(self) -> str:
+        return f'Logger {self._logger_name} does not support logging {self._log_name}.'
+
+
+class IncorrectSourceTypeError(IncorrectTypeError):
+    """
+    Raised when provided source is not a correct source type (Union[Tuple[str, SourceType], str]).
+
+    Parameters
+    ----------
+    provided_type : type
+        Type provided by user.
+    """
+
+    def __init__(self, provided_type: type) -> None:
+        super().__init__(provided_type, 'source')

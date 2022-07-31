@@ -5,7 +5,6 @@ import jax.random
 
 from reinforced_lib.agents import BaseAgent
 from reinforced_lib.exts import BaseExt
-from reinforced_lib.logs import BaseLogger
 from reinforced_lib.logs.logs_observer import LogsObserver, Source
 from reinforced_lib.utils.exceptions import *
 
@@ -67,6 +66,9 @@ class RLib:
             self.set_loggers(loggers_type, loggers_sources, loggers_params)
 
     def __del__(self) -> None:
+        self.finish()
+
+    def finish(self) -> None:
         self._logs_observer.finish_loggers()
 
     def set_agent(self, agent_type: type, agent_params: Dict = None) -> None:
@@ -165,11 +167,8 @@ class RLib:
         loggers_types, loggers_sources = self._object_to_list(loggers_types), self._object_to_list(loggers_sources)
         loggers_types, loggers_sources = self._broadcast(loggers_types, loggers_sources)
 
-        for ltype, source in zip(loggers_types, loggers_sources):
-            if not issubclass(ltype, BaseLogger):
-                raise IncorrectLoggerTypeError(ltype)
-
-            self._logs_observer.add_logger(source, ltype, loggers_params)
+        for logger_type, source in zip(loggers_types, loggers_sources):
+            self._logs_observer.add_logger(source, logger_type, loggers_params)
 
     @staticmethod
     def _object_to_list(obj: Union[Any, List[Any]]) -> List[Any]:
@@ -305,8 +304,17 @@ class RLib:
         if not self._no_ext_mode:
             update_observations, sample_observations = self._ext.transform(*args, **kwargs)
 
-        self._logs_observer.update_observations(update_observations)
-        self._logs_observer.update_observations(sample_observations)
+        if isinstance(update_observations, dict) and isinstance(sample_observations, dict):
+            observations = {}
+            observations.update(update_observations)
+            observations.update(sample_observations)
+            self._logs_observer.update_observations(observations)
+        elif isinstance(update_observations, tuple) and isinstance(sample_observations, tuple):
+            observations = update_observations + sample_observations
+            self._logs_observer.update_observations(observations)
+        else:
+            self._logs_observer.update_observations(update_observations)
+            self._logs_observer.update_observations(sample_observations)
 
         if isinstance(update_observations, dict):
             state = self._agent.update(state, update_key, **update_observations)
@@ -323,6 +331,7 @@ class RLib:
             state, action = self._agent(state, sample_key, sample_observations)
 
         self._logs_observer.update_agent_state(state)
+        self._logs_observer.update_metrics(action, 'action')
 
         self._agents_states[agent_id] = state
         self._agents_keys[agent_id] = key

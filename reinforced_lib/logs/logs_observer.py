@@ -1,20 +1,11 @@
 from collections import defaultdict
-from enum import Enum
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Any, Callable, Dict, List
 
 import jax.numpy as jnp
 
 from reinforced_lib.agents import BaseAgent
-from reinforced_lib.logs import BaseLogger
-
-
-class SourceType(str, Enum):
-    OBSERVATIONS = 'observations'
-    AGENT_STATE = 'agent_state'
-    METRICS = 'metrics'
-
-
-Source = Union[Tuple[str, SourceType], str]
+from reinforced_lib.logs import BaseLogger, Source, SourceType
+from reinforced_lib.utils.exceptions import IncorrectLoggerTypeError, IncorrectSourceTypeError
 
 
 class LogsObserver:
@@ -27,14 +18,23 @@ class LogsObserver:
         self._metrics_loggers = defaultdict(list)
 
     def add_logger(self, source: Source, logger_type: type, logger_params: Dict[str, Any]) -> None:
-        logger = self._get_logger(logger_type, logger_params)
+        if not issubclass(logger_type, BaseLogger):
+            raise IncorrectLoggerTypeError(logger_type)
 
         if isinstance(source, tuple):
-            if source[1] == SourceType.OBSERVATIONS:
+            if len(source) != 2 or not isinstance(source[0], str) or not hasattr(source[1], 'name'):
+                raise IncorrectSourceTypeError(type(source))
+        elif not isinstance(source, str):
+            raise IncorrectSourceTypeError(type(source))
+
+        logger = self._loggers_instances.get(logger_type, logger_type(**logger_params))
+
+        if isinstance(source, tuple):
+            if source[1] == SourceType.OBSERVATION:
                 self._observations_loggers[logger].append((source, source[0]))
-            elif source[1] == SourceType.AGENT_STATE:
+            elif source[1] == SourceType.STATE:
                 self._agent_state_loggers[logger].append((source, source[0]))
-            elif source[1] == SourceType.METRICS:
+            elif source[1] == SourceType.METRIC:
                 self._metrics_loggers[logger].append((source, source[0]))
         elif isinstance(source, str):
             self._observations_loggers[logger].append((source, source))
@@ -42,12 +42,15 @@ class LogsObserver:
             self._metrics_loggers[logger].append((source, source))
 
         self._loggers_sources[logger].append(source)
+        self._loggers_instances[logger_type] = logger
 
-    def _get_logger(self, ltype: type, logger_params: Dict[str, Any]) -> BaseLogger:
-        if ltype not in self._loggers_instances:
-            self._loggers_instances[ltype] = ltype(**logger_params)
+    def init_loggers(self):
+        for logger, sources in self._loggers_sources.items():
+            logger.init(sources)
 
-        return self._loggers_instances[ltype]
+    def finish_loggers(self):
+        for logger in self._loggers_sources.keys():
+            logger.finish()
 
     def update_observations(self, observations: Any) -> None:
         if isinstance(observations, dict):
@@ -56,8 +59,8 @@ class LogsObserver:
     def update_agent_state(self, agent_state: BaseAgent) -> None:
         self._update(self._agent_state_loggers, lambda name: getattr(agent_state, name, None))
 
-    def update_metrics(self, metrics: Dict[str, Any]) -> None:
-        self._update(self._metrics_loggers, lambda name: metrics.get(name, None))
+    def update_metrics(self, metric: Any, metric_name: str) -> None:
+        self._update(self._metrics_loggers, lambda name: metric if name == metric_name else None)
 
     @staticmethod
     def _update(loggers: Dict[BaseLogger, List[str]], get_value: Callable) -> None:
@@ -72,11 +75,3 @@ class LogsObserver:
                         logger.log_array(source, value)
                     else:
                         logger.log_other(source, value)
-
-    def init_loggers(self):
-        for logger, sources in self._loggers_sources.items():
-            logger.init(sources)
-
-    def finish_loggers(self):
-        for logger in self._loggers_sources.keys():
-            logger.finish()
