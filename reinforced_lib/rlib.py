@@ -5,7 +5,8 @@ import jax.random
 
 from reinforced_lib.agents import BaseAgent
 from reinforced_lib.exts import BaseExt
-from reinforced_lib.logs.logs_observer import LogsObserver, Source
+from reinforced_lib.logs import Source
+from reinforced_lib.logs.logs_observer import LogsObserver
 from reinforced_lib.utils.exceptions import *
 
 
@@ -66,9 +67,17 @@ class RLib:
             self.set_loggers(loggers_type, loggers_sources, loggers_params)
 
     def __del__(self) -> None:
+        """
+        Automatically finalizes the library work.
+        """
+
         self.finish()
 
     def finish(self) -> None:
+        """
+        Used to explicitly finalize the library work. In particular, it finishes loggers work.
+        """
+
         self._logs_observer.finish_loggers()
 
     def set_agent(self, agent_type: type, agent_params: Dict = None) -> None:
