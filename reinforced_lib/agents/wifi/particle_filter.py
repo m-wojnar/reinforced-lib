@@ -8,7 +8,7 @@ import jax.numpy as jnp
 from chex import Array, PRNGKey, Scalar
 from jax.scipy.special import erf
 
-from reinforced_lib.agents.base_agent import BaseAgent
+from reinforced_lib.agents import BaseAgent
 from reinforced_lib.agents.core.particle_filter import ParticleFilter as ParticleFilterBase
 from reinforced_lib.agents.core.particle_filter import ParticleFilterState, linear_transition
 

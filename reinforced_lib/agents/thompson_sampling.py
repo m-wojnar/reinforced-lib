@@ -6,7 +6,7 @@ import jax
 import jax.numpy as jnp
 from chex import dataclass, Array, PRNGKey, Scalar
 
-from reinforced_lib.agents.base_agent import BaseAgent, AgentState
+from reinforced_lib.agents import BaseAgent, AgentState
 
 
 @dataclass
