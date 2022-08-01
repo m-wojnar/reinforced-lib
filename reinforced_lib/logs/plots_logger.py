@@ -59,9 +59,12 @@ class PlotsLogger(BaseLogger):
         """
 
         def lineplot(values: List, alpha: Scalar = 1.0, label: bool = False) -> None:
-            if jnp.isscalar(values[0]):
+            values = jnp.array(values)
+            values = jnp.squeeze(values)
+
+            if values.ndim == 1:
                 plt.plot(values, alpha=alpha, c='C0')
-            else:
+            elif values.ndim == 2:
                 for i, val in enumerate(jnp.array(values).T):
                     plt.plot(val, alpha=alpha, c=f'C{i % 10}', label=i if label else '')
                 plt.legend()
