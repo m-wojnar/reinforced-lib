@@ -4,14 +4,16 @@ import unittest
 import reinforced_lib as rfl
 import jax
 import jax.numpy as jnp
+import os
 
 from reinforced_lib.agents import ThompsonSampling
 from reinforced_lib.exts import IEEE_802_11_ax
+from reinforced_lib.utils import ROOT_DIR
 
 
 class TestRLibSerialization(unittest.TestCase):
 
-    checkpoint_path = "/Users/wciezobka/agh/reinforced-lib/saves/checkpoint.pkl.lz4"
+    checkpoint_path = os.path.join(ROOT_DIR, "saves", "checkpoint.pkl.lz4")
     arms_probs = jnp.array([1.0, 1.0, 0.99, 0.97, 0.91, 0.77, 0.32, 0.05, 0.01, 0.0, 0.0, 0.0])
     time = jnp.linspace(0, 10, 1000)
     t_change = jnp.max(time) / 2
@@ -85,6 +87,17 @@ class TestRLibSerialization(unittest.TestCase):
         actions_straight = self.run_experiment(reload=False)
         actions_reload = self.run_experiment(reload=True, full_reload=True)
         self.assertTrue(jnp.array_equal(actions_straight, actions_reload))
+    
+
+    def test_full_reload_alter(self):
+        """
+        Tests if we can retrive the state of saved experiment with new constructor and change of
+        agents parameters.
+        """
+
+        actions_straight = self.run_experiment(reload=False)
+        actions_reload = self.run_experiment(reload=True, full_reload=True, new_decay=2.0)
+        self.assertFalse(jnp.array_equal(actions_straight, actions_reload))
 
 
 if __name__ == "__main__":

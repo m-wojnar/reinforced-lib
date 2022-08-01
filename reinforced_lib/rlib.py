@@ -11,7 +11,7 @@ from reinforced_lib.exts import BaseExt
 from reinforced_lib.logs import Source
 from reinforced_lib.logs.logs_observer import LogsObserver
 from reinforced_lib.utils.exceptions import *
-from reinforced_lib.utils.utils import ROOT_DIR
+from reinforced_lib.utils import ROOT_DIR
 
 
 class RLib:
