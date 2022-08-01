@@ -59,6 +59,9 @@ class RLib:
         self._agents_states = []
         self._agents_keys = []
 
+        self._ext_type = ext_type
+        self._ext_params = ext_params
+
         self._logs_observer = LogsObserver()
         self._init_loggers = True
 
@@ -372,59 +375,78 @@ class RLib:
 
         raise NotImplementedError()
 
-    def save_agent(self, agent_id: int = 0, path: str = None) -> None:
+    def save(self, path: str = None) -> None:
         """
-        Saves selected agent instance to a file in lz4 format.
+        Saves the state of the experiment to a file in lz4 format. For each agent both the state and the
+        initialization parameters are saved. The environment extension is saved as well to fully reconstruct the
+        experiment.
 
         Parameters
         ----------
-        agent_id : int, default=0
-            The identifier of agent instance.
         path : str
-            Path to the output file. If ``.pkl.lz4`` extension not detected, it will be appended automaticly.
+            Path to the checkpoint file. If ``.pkl.lz4`` extension not detected, it will be appended automaticly.
         """
 
         if path is None:
-            path = os.path.join(ROOT_DIR, "saves", f"agent{self._lz4_ext}")
+            path = os.path.join(ROOT_DIR, "saves", f"checkpoint{self._lz4_ext}")
         elif path[-8:] != self._lz4_ext:
             path = path + self._lz4_ext
 
-        agent_packed = {
-            "state": self._agents_states[agent_id],
-            "key": self._agents_keys[agent_id],
-            "params": self._agent_params,
+        experiment_state = {
+            "agent_type": self._agent_type,
+            "agent_params": self._agent_params,
+            "agents": {
+                agent_id: {
+                    "state": self._agents_states[agent_id],
+                    "key": self._agents_keys[0],
+                } for agent_id in range(len(self._agents_states))
+            },
+            "ext_type": self._ext_type,
+            "ext_params": self._ext_params
         }
 
         with lz4.frame.open(path, 'wb') as f:
-            f.write(pickle.dumps(agent_packed))
+            f.write(pickle.dumps(experiment_state))
+    
 
-    def load_agent(self, path: str) -> int:
+    def load(
+        self,
+        path: str,
+        agent_params: Dict[str, Any] = None,
+        ext_params: Dict[str, Any] = None,
+    ) -> None:
         """
-        Loads agent instance from a file in lz4 format.
+        Loads the state of the experiment from a file in lz4 format.
 
         Parameters
         ----------
         path : str
-            Path to the input file.
-
-        Returns
-        -------
-        id : int
-            The identifier of loaded instance.
+            Path to the checkpoint file. If ``.pkl.lz4`` extension not detected, it will be appended automaticly.
+        agent_params : Dict[str, Any], optional
+            _description_, by default None
+        ext_params : Dict[str, Any], optional
+            _description_, by default None
         """
 
         if path[-8:] != self._lz4_ext:
             path = path + self._lz4_ext
         
         with lz4.frame.open(path, 'rb') as f:
-            agent_packed = pickle.loads(f.read())
+            experiment_state = pickle.loads(f.read())
         
-        if agent_packed["params"] != self._agent_params:
-            raise IncorretAgentParametersError(len(self._agents_states))
+        self._agents_states = []
+        self._agents_keys = []
+
+        if ext_params:
+            self.set_ext(experiment_state["ext_type"], ext_params)
+        else:
+            self.set_ext(experiment_state["ext_type"], experiment_state["ext_params"])
         
-        agent_id = len(self._agents_states)
-
-        self._agents_states.append(agent_packed["state"])
-        self._agents_keys.append(agent_packed["key"])
-
-        return agent_id
+        if agent_params:
+            self.set_agent(experiment_state["agent_type"], agent_params)
+        else:
+            self.set_agent(experiment_state["agent_type"], experiment_state["agent_params"])
+        
+        for agent_packed in experiment_state["agents"].values():
+            self._agents_states.append(agent_packed["state"])
+            self._agents_keys.append(agent_packed["key"])
