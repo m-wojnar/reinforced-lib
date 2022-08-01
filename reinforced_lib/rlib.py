@@ -17,15 +17,15 @@ class RLib:
     Parameters
     ----------
     agent_type : type, optional
-        Type of selected agent. Must inherit from the BaseAgent class.
+        Type of selected agent. Must inherit from the ``BaseAgent`` class.
     agent_params : dict, optional
         Parameters of selected agent.
     ext_type : type, optional
-        Type of selected extension. Must inherit from the BaseExt class.
+        Type of selected extension. Must inherit from the ``BaseExt`` class.
     ext_params : dict, optional
         Parameters of selected extension.
     loggers_type : type or list[type], optional
-        Types of selected logging modules.
+        Types of selected logging modules. Must inherit from the ``BaseLogger`` class.
     loggers_sources : Source or list[Source], optional
         Names (and types) of selected sources.
     loggers_params : dict, optional
@@ -82,13 +82,13 @@ class RLib:
 
     def set_agent(self, agent_type: type, agent_params: Dict = None) -> None:
         """
-        Initializes agent of type 'agent_type' with parameters 'agent_params'. The agent type must inherit from
-        the BaseAgent class. The agent type cannot be changed after the first agent instance is initialized.
+        Initializes agent of type ``agent_type`` with parameters ``agent_params``. The agent type must inherit from
+        the ``BaseAgent class``. The agent type cannot be changed after the first agent instance is initialized.
 
         Parameters
         ----------
         agent_type : type
-            Type of selected agent. Must inherit from the BaseAgent class.
+            Type of selected agent. Must inherit from the ``BaseAgent`` class.
         agent_params : dict, optional
             Parameters of selected agent.
         """
@@ -112,13 +112,13 @@ class RLib:
 
     def set_ext(self, ext_type: type, ext_params: Dict = None) -> None:
         """
-        Initializes extension of type 'ext_type' with parameters 'ext_params'. The extension type must inherit from
-        the BaseExt class. The extension type cannot be changed after the first agent instance is initialized.
+        Initializes extension of type ``ext_type`` with parameters ``ext_params``. The extension type must inherit from
+        the ``BaseExt`` class. The extension type cannot be changed after the first agent instance is initialized.
 
         Parameters
         ----------
         ext_type : type
-            Type of selected extension. Must inherit from the BaseExt class.
+            Type of selected extension. Must inherit from the ``BaseExt`` class.
         ext_params : dict, optional
             Parameters of selected extension.
         """
@@ -152,11 +152,11 @@ class RLib:
     ) -> None:
         """
         Initializes loggers that log environment observations, agents state or training metrics.
-        'loggers_types' and 'loggers_sources' arguments can be objects of appropriate types or lists of object. 
+        ``loggers_types`` and ``loggers_sources`` arguments can be objects of appropriate types or lists of object.
         If user passes two objects or lists of the same lengths, function initializes modules with corresponding 
         types and names. If user passes one object (or list with only one object) and list of multiple objects, 
-        function broadcasts passed objects. 'loggers_sources' items can be names of the logger sources
-        (e.g. 'action') or tuples containing the name and the SourceType (e.g. ('action', SourceType.OBSERVATION)).
+        function broadcasts passed objects. ``loggers_sources`` items can be names of the logger sources (e.g. "action")
+        or tuples containing the name and the ``SourceType`` (e.g. ``("action", SourceType.OBSERVATION)``).
         If the name itself is inconclusive, behaviour depends on the implementation of the logger.
 
         Parameters
@@ -199,12 +199,12 @@ class RLib:
     @property
     def observation_space(self) -> gym.spaces.Space:
         """
-        Returns observation space of selected extension or agent (if 'no_ext_mode' is enabled).
+        Returns observation space of selected extension or agent (if ``no_ext_mode`` is enabled).
 
         Returns
         -------
         space : gym.spaces.Space
-            Observation space of selected extension or agent (if 'no_ext_mode' is enabled).
+            Observation space of selected extension or agent.
         """
 
         if self._no_ext_mode:
@@ -268,11 +268,12 @@ class RLib:
             sample_observations: Union[Dict, Tuple, Any] = None,
             **kwargs
     ) -> Any:
-        """Takes the extension state as input, updates the agent state, and returns the next action selected by
-        the agent. If 'no_ext_mode' is disabled, observations are passed by args and kwargs (observations must
-        match selected extension observation space). If 'no_ext_mode' is enabled, observations must be passed
-        by 'update_observations' and 'sample_observations' parameters (observations must match agents
-        'update_observation_space' and 'sample_observation_space'). If there are no agent instance initialized,
+        """
+        Takes the extension state as input, updates the agent state, and returns the next action selected by
+        the agent. If ``no_ext_mode`` is disabled, observations are passed by args and kwargs (observations must
+        match selected extension observation space). If ``no_ext_mode`` is enabled, observations must be passed
+        by ``update_observations`` and ``sample_observations`` parameters (observations must match agents
+        ``update_observation_space`` and ``sample_observation_space``). If there are no agent instance initialized,
         the method automatically initializes the first instance.
 
         Parameters
@@ -282,9 +283,9 @@ class RLib:
         *args : tuple
             Extension observations.
         update_observations : dict or tuple or any, optional
-            Observations used when 'no_ext_mode' is enabled (must match agents 'update_observation_space').
+            Observations used when ``no_ext_mode`` is enabled (must match agents ``update_observation_space``).
         sample_observations : dict or tuple or any, optional
-            Observations used when 'no_ext_mode' is enabled (must match agents 'sample_observation_space').
+            Observations used when ``no_ext_mode`` is enabled (must match agents ``sample_observation_space``).
         **kwargs : dict
             Extension observations.
 

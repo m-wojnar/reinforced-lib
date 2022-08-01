@@ -88,14 +88,14 @@ def parameter(parameter_name: str = None, parameter_type: gym.spaces.Space = Non
 
 def test_box(a: gym.spaces.Space, b: gym.spaces.Box) -> bool:
     """
-    Tests if space 'a' is identical to gym.space.Box space 'b'.
+    Tests if space ``a`` is identical to gym.space.Box space ``b``.
 
     Parameters
     ----------
     a : gym.spaces.Space
-        Space 'a'.
+        Space ``a``.
     b : gym.spaces.Box
-        Box space 'b'.
+        Box space ``b``.
 
     Returns
     -------
@@ -112,14 +112,14 @@ def test_box(a: gym.spaces.Space, b: gym.spaces.Box) -> bool:
 
 def test_discrete(a: gym.spaces.Space, b: gym.spaces.Discrete) -> bool:
     """
-    Tests if space 'a' is identical to gym.space.Discrete space 'b'.
+    Tests if space ``a`` is identical to gym.space.Discrete space ``b``.
 
     Parameters
     ----------
     a : gym.spaces.Space
-        Space 'a'.
+        Space ``a``.
     b : gym.spaces.Discrete
-        Discrete space 'b'.
+        Discrete space ``b``.
 
     Returns
     -------
@@ -134,14 +134,14 @@ def test_discrete(a: gym.spaces.Space, b: gym.spaces.Discrete) -> bool:
 
 def test_multi_binary(a: gym.spaces.Space, b: gym.spaces.MultiBinary) -> bool:
     """
-    Tests if space 'a' is identical to gym.space.MultiBinary space 'b'.
+    Tests if space ``a`` is identical to gym.space.MultiBinary space ``b``.
 
     Parameters
     ----------
     a : gym.spaces.Space
-        Space 'a'.
+        Space ``a``.
     b : gym.spaces.MultiBinary
-        MultiBinary space 'b'.
+        MultiBinary space ``b``.
 
     Returns
     -------
@@ -155,14 +155,14 @@ def test_multi_binary(a: gym.spaces.Space, b: gym.spaces.MultiBinary) -> bool:
 
 def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> bool:
     """
-    Tests if space 'a' is identical to gym.space.MultiDiscrete space 'b'.
+    Tests if space ``a`` is identical to gym.space.MultiDiscrete space ``b``.
 
     Parameters
     ----------
     a : gym.spaces.Space
-        Space 'a'.
+        Space ``a``.
     b : gym.spaces.MultiDiscrete
-        MultiDiscrete space 'b'.
+        MultiDiscrete space ``b``.
 
     Returns
     -------
@@ -177,14 +177,14 @@ def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> boo
 
 def test_space(a: gym.spaces.Space, b: gym.spaces.Space) -> bool:
     """
-    Tests if space 'a' is identical to space 'b'.
+    Tests if space ``a`` is identical to space ``b``.
 
     Parameters
     ----------
     a : gym.spaces.Space
-        Space 'a'.
+        Space ``a``.
     b : gym.spaces.Space
-        Space 'b'.
+        Space ``b``.
 
     Returns
     -------

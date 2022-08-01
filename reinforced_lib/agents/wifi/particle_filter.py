@@ -231,7 +231,7 @@ class ParticleFilter(BaseAgent):
         state : ParticleFilterState
             Current state of the agent.
         observation : tuple
-            Tuple containing action, n_successful, n_failed, power, cw, and min_snrs.
+            Tuple containing ``action``, ``n_successful``, ``n_failed``, ``power``, ``cw``, and ``min_snrs``.
 
         Returns
         -------

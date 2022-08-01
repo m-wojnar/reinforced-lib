@@ -3,7 +3,7 @@ API module
 
 .. currentmodule:: reinforced_lib.rlib
 
-RLib Class
+RLib class
 ----------
 
 .. autoclass:: RLib

@@ -28,8 +28,8 @@ There are two main benefits of using extensions:
            }
        )
 
-   On the other hand, if we decide to use the :ref:`IEEE 802.11ax <IEEE 802.11ax>` extension, this parameters can
-   be automatically provided by the extension:
+   On the other hand, if we decide to use the ``IEEE_802_11_ax`` :ref:`extension <IEEE 802.11ax>` extension,
+   this parameters can be automatically provided by the extension:
 
    .. code-block:: python
 
@@ -71,8 +71,8 @@ There are two main benefits of using extensions:
        }
        action = rl.sample(**observations)
 
-   If we use the :ref:`IEEE 802.11ax <IEEE 802.11ax>` extension, part of this parameters can be provided by the
-   extension:
+   If we use the ``IEEE_802_11_ax`` :ref:`extension <IEEE 802.11ax>` extension, part of this parameters can be
+   provided by the extension:
 
    .. code-block:: python
 
@@ -109,8 +109,8 @@ accordingly. More detailed description of this decorator can be found in :ref:`t
 Customizing extensions
 ----------------------
 
-To create your own extension, you should inherit from the :ref:`abstract class <BaseExt>` ``BaseExt``.
-We will present adding custom extension on an example of the :ref:`IEEE 802.11ax <IEEE 802.11ax>` extension.
+To create your own extension, you should inherit from the :ref:`abstract class <BaseExt>` ``BaseExt``. We will
+present adding custom extension on an example of the ``IEEE_802_11_ax`` :ref:`extension <IEEE 802.11ax>` extension.
 
 .. code-block:: python
 
@@ -175,7 +175,7 @@ example observation function that provides approximated collision probability in
         return 0.154887 * np.log(1.03102 * n_wifi)
 
 Note that the observation function can take parameters that are specified in the observation space.
-:ref:`BaseExt <BaseExt>` methods will automatically pass the given observation to the function to allow
+``BaseExt`` methods will automatically pass the given observation to the function to allow
 dynamic computation of the returned value. What is important, observation methods take ``*args`` and ``**kwargs``
 as the last parameters (this is required by the internal behaviour of the ``setup_transformations`` function).
 As previously, name of the function should match name of the filled parameter, but we can specify parameter name

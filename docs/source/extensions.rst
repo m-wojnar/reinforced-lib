@@ -1,6 +1,10 @@
 Environment extensions
 ======================
 
+This module is a set of environment extensions. You can either choose one of our built-in extensions or implement
+your extension with the help of :ref:`Custom extensions` guide.
+
+
 BaseExt
 -------
 
@@ -8,6 +12,7 @@ BaseExt
 
 .. autoclass:: BaseExt
     :members:
+
 
 IEEE 802.11ax
 -------------

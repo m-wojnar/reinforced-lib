@@ -19,8 +19,6 @@ Source = Union[Tuple[str, SourceType], str]
 class BaseLogger(ABC):
     """
     Container for functions of the logger. Provides simple interface for defining custom loggers.
-    '__init__' function can take any arguments that can be passed by the 'loggers_params' dictionary
-    in the RLib class. '__init__' function declaration must include **kwargs argument.
     """
 
     def __init__(self, **kwargs):
