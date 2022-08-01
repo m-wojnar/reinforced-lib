@@ -2,8 +2,7 @@ import gym.spaces
 import numpy as np
 from scipy.special import erf
 
-from reinforced_lib.exts.base_ext import BaseExt
-from reinforced_lib.exts.utils import observation, parameter
+from reinforced_lib.exts import BaseExt, observation, parameter
 
 
 class IEEE_802_11_ax(BaseExt):

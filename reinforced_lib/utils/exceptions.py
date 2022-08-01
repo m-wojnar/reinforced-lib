@@ -41,7 +41,7 @@ class IncorrectTypeError(Exception):
 
 class IncorrectAgentTypeError(IncorrectTypeError):
     """
-    Raised when provided agent is not an agent class.
+    Raised when provided agent does not inherit from the BaseAgent class.
 
     Parameters
     ----------
@@ -50,12 +50,12 @@ class IncorrectAgentTypeError(IncorrectTypeError):
     """
 
     def __init__(self, provided_type: type) -> None:
-        super(provided_type, 'agent')
+        super().__init__(provided_type, 'agent')
 
 
 class IncorrectExtensionTypeError(IncorrectTypeError):
     """
-    Raised when provided extension is not an extension class.
+    Raised when provided extension does not inherit from the BaseExt class.
 
     Parameters
     ----------
@@ -64,7 +64,21 @@ class IncorrectExtensionTypeError(IncorrectTypeError):
     """
 
     def __init__(self, provided_type: type) -> None:
-        super(provided_type, 'extension')
+        super().__init__(provided_type, 'extension')
+
+
+class IncorrectLoggerTypeError(IncorrectTypeError):
+    """
+    Raised when provided logger does not inherit from the BaseLogger class.
+
+    Parameters
+    ----------
+    provided_type : type
+        Type provided by user.
+    """
+
+    def __init__(self, provided_type: type) -> None:
+        super().__init__(provided_type, 'logger')
 
 
 class ForbiddenOperationError(Exception):
@@ -101,6 +115,15 @@ class ForbiddenExtensionSetError(ForbiddenOperationError):
 
     def __str__(self) -> str:
         return 'Cannot set extension type when \'no_ext_mode\' is enabled.'
+
+
+class ForbiddenLoggerSetError(ForbiddenOperationError):
+    """
+    Raised when user is trying to add new logger after the first training or sampling step has been made.
+    """
+
+    def __str__(self) -> str:
+        return 'Cannot add new loggers type after the first step has been made.'
 
 
 class IncorrectSpaceError(Exception):
@@ -155,3 +178,37 @@ class NoDefaultParameterError(Exception):
     def __str__(self) -> str:
         return f'Extension {self._extension_name} does not provide parameter ' \
                f'{self._parameter_name} of type {self._parameter_type}.'
+
+
+class UnsupportedLogTypeError(Exception):
+    """
+    Raised when user is trying to log values that are not supported by the logger.
+
+    Parameters
+    ----------
+    logger_type : type
+        Type of the used logger.
+    log_type : type
+        Type of the logged value.
+    """
+
+    def __init__(self, logger_type: type, log_type: type) -> None:
+        self._logger_name = logger_type.__name__
+        self._log_name = log_type.__name__
+
+    def __str__(self) -> str:
+        return f'Logger {self._logger_name} does not support logging {self._log_name}.'
+
+
+class IncorrectSourceTypeError(IncorrectTypeError):
+    """
+    Raised when provided source is not a correct source type (Union[Tuple[str, SourceType], str]).
+
+    Parameters
+    ----------
+    provided_type : type
+        Type provided by user.
+    """
+
+    def __init__(self, provided_type: type) -> None:
+        super().__init__(provided_type, 'source')
