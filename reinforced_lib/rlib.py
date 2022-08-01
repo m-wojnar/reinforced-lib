@@ -318,9 +318,6 @@ class RLib:
             observations.update(update_observations)
             observations.update(sample_observations)
             self._logs_observer.update_observations(observations)
-        elif isinstance(update_observations, tuple) and isinstance(sample_observations, tuple):
-            observations = update_observations + sample_observations
-            self._logs_observer.update_observations(observations)
         else:
             self._logs_observer.update_observations(update_observations)
             self._logs_observer.update_observations(sample_observations)

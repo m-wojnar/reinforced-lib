@@ -72,7 +72,7 @@ class PlotsLogger(BaseLogger):
             lineplot(smoothed, label=True)
             plt.title(name)
             plt.xlabel('step')
-            plt.savefig(os.path.join(self._plots_dir, f'{name}.{self._plots_ext}'))
+            plt.savefig(os.path.join(self._plots_dir, f'{name}.{self._plots_ext}'), bbox_inches='tight')
             plt.show()
 
     @staticmethod
