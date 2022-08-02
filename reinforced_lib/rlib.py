@@ -10,7 +10,6 @@ import jax.random
 from reinforced_lib.agents import BaseAgent
 from reinforced_lib.exts import BaseExt
 from reinforced_lib.logs import Source
-from reinforced_lib.logs.csv_logger import CsvLogger
 from reinforced_lib.logs.logs_observer import LogsObserver
 from reinforced_lib.utils.exceptions import *
 
@@ -429,9 +428,9 @@ class RLib:
         path : str
             Path to the checkpoint file.
         agent_params : Dict[str, Any], optional
-            _description_, by default None
+            Dictionary of altered agents parameters with their new values, by default None
         ext_params : Dict[str, Any], optional
-            _description_, by default None
+            Dictionary of altered extension parameters with their new values, by default None
         """
         
         with lz4.frame.open(path, 'rb') as f:

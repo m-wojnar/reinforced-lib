@@ -10,7 +10,6 @@ from reinforced_lib.agents import ThompsonSampling
 from reinforced_lib.exts import IEEE_802_11_ax
 from reinforced_lib.rlib import RLib
 from reinforced_lib.logs import *
-from matplotlib import pyplot as plt
 
 
 class TestRLibSerialization(unittest.TestCase):
