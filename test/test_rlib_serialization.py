@@ -9,14 +9,13 @@ import reinforced_lib as rfl
 from reinforced_lib.agents import ThompsonSampling
 from reinforced_lib.exts import IEEE_802_11_ax
 from reinforced_lib.rlib import RLib
-from reinforced_lib.utils import ROOT_DIR
 from reinforced_lib.logs import *
 from matplotlib import pyplot as plt
 
 
 class TestRLibSerialization(unittest.TestCase):
 
-    checkpoint_path = os.path.join(ROOT_DIR, "saves", "checkpoint.pkl.lz4")
+    checkpoint_path = os.path.join(os.path.expanduser("~"), "checkpoint.pkl.lz4")
     arms_probs = jnp.array([1.0, 1.0, 0.99, 0.97, 0.91, 0.77, 0.32, 0.05, 0.01, 0.0, 0.0, 0.0])
     time = jnp.linspace(0, 10, 1000)
     t_change = jnp.max(time) / 2
@@ -51,7 +50,6 @@ class TestRLibSerialization(unittest.TestCase):
 
             if t > self.t_change and not reloaded:
                 rl.save()
-                rl.finish()
 
                 if new_decay:
                     rl = RLib.load(self.checkpoint_path, agent_params={"decay": new_decay})

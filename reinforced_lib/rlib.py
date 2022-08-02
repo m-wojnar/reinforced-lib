@@ -13,7 +13,6 @@ from reinforced_lib.logs import Source
 from reinforced_lib.logs.csv_logger import CsvLogger
 from reinforced_lib.logs.logs_observer import LogsObserver
 from reinforced_lib.utils.exceptions import *
-from reinforced_lib.utils import ROOT_DIR
 
 
 class RLib:
@@ -393,7 +392,7 @@ class RLib:
         """
 
         if path is None:
-            path = os.path.join(ROOT_DIR, "saves", f"checkpoint{self._lz4_ext}")
+            path = os.path.join(os.path.expanduser("~"), f"checkpoint{self._lz4_ext}")
         elif path[-8:] != self._lz4_ext:
             path = path + self._lz4_ext
 
