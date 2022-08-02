@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import Any, Dict, List, Tuple, Union
 
 import os
@@ -9,6 +10,7 @@ import jax.random
 from reinforced_lib.agents import BaseAgent
 from reinforced_lib.exts import BaseExt
 from reinforced_lib.logs import Source
+from reinforced_lib.logs.csv_logger import CsvLogger
 from reinforced_lib.logs.logs_observer import LogsObserver
 from reinforced_lib.utils.exceptions import *
 from reinforced_lib.utils import ROOT_DIR
@@ -62,6 +64,9 @@ class RLib:
         self._ext_type = ext_type
         self._ext_params = ext_params
 
+        self._loggers_type = loggers_type
+        self._loggers_sources = loggers_sources
+        self._loggers_params = loggers_params
         self._logs_observer = LogsObserver()
         self._init_loggers = True
 
@@ -402,51 +407,61 @@ class RLib:
                 } for agent_id in range(len(self._agents_states))
             },
             "ext_type": self._ext_type,
-            "ext_params": self._ext_params
+            "ext_params": self._ext_params,
+            "loggers_type": self._loggers_type,
+            "loggers_sources": self._loggers_sources,
+            "loggers_params": self._loggers_params
         }
 
         with lz4.frame.open(path, 'wb') as f:
             f.write(pickle.dumps(experiment_state))
     
-
+    @staticmethod
     def load(
-        self,
         path: str,
         agent_params: Dict[str, Any] = None,
         ext_params: Dict[str, Any] = None,
-    ) -> None:
+    ) -> RLib:
         """
         Loads the state of the experiment from a file in lz4 format.
 
         Parameters
         ----------
         path : str
-            Path to the checkpoint file. If ``.pkl.lz4`` extension not detected, it will be appended automaticly.
+            Path to the checkpoint file.
         agent_params : Dict[str, Any], optional
             _description_, by default None
         ext_params : Dict[str, Any], optional
             _description_, by default None
         """
-
-        if path[-8:] != self._lz4_ext:
-            path = path + self._lz4_ext
         
         with lz4.frame.open(path, 'rb') as f:
             experiment_state = pickle.loads(f.read())
         
-        self._agents_states = []
-        self._agents_keys = []
+        rlib = RLib()
+        
+        rlib._agents_states = []
+        rlib._agents_keys = []
 
         if ext_params:
-            self.set_ext(experiment_state["ext_type"], ext_params)
+            rlib.set_ext(experiment_state["ext_type"], ext_params)
         else:
-            self.set_ext(experiment_state["ext_type"], experiment_state["ext_params"])
+            rlib.set_ext(experiment_state["ext_type"], experiment_state["ext_params"])
         
         if agent_params:
-            self.set_agent(experiment_state["agent_type"], agent_params)
+            rlib.set_agent(experiment_state["agent_type"], agent_params)
         else:
-            self.set_agent(experiment_state["agent_type"], experiment_state["agent_params"])
+            rlib.set_agent(experiment_state["agent_type"], experiment_state["agent_params"])
+
+        if experiment_state["loggers_type"]:
+            rlib.set_loggers(
+                experiment_state["loggers_type"],
+                experiment_state["loggers_sources"],
+                experiment_state["loggers_params"]
+            )
         
         for agent_packed in experiment_state["agents"].values():
-            self._agents_states.append(agent_packed["state"])
-            self._agents_keys.append(agent_packed["key"])
+            rlib._agents_states.append(agent_packed["state"])
+            rlib._agents_keys.append(agent_packed["key"])
+
+        return rlib

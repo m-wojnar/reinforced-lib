@@ -1,14 +1,17 @@
 from typing import List
 
 import unittest
-import reinforced_lib as rfl
+import os
 import jax
 import jax.numpy as jnp
-import os
+import reinforced_lib as rfl
 
 from reinforced_lib.agents import ThompsonSampling
 from reinforced_lib.exts import IEEE_802_11_ax
+from reinforced_lib.rlib import RLib
 from reinforced_lib.utils import ROOT_DIR
+from reinforced_lib.logs import *
+from matplotlib import pyplot as plt
 
 
 class TestRLibSerialization(unittest.TestCase):
@@ -20,11 +23,14 @@ class TestRLibSerialization(unittest.TestCase):
     key = jax.random.PRNGKey(42)
 
 
-    def run_experiment(self, reload: bool, full_reload: bool = False, new_decay: int = None) -> List[int]:
+    def run_experiment(self, reload: bool, new_decay: int = None) -> List[int]:
         rl = rfl.RLib(
             agent_type=ThompsonSampling,
             agent_params={"decay": 0.0},
-            ext_type=IEEE_802_11_ax
+            ext_type=IEEE_802_11_ax,
+            loggers_type=CsvLogger,
+            loggers_sources=['n_failed', 'n_successful', ('action', SourceType.METRIC)],
+            loggers_params={'csv_path': f'output_reload={reload}_new-decay={new_decay}.csv'}
         )
 
         actions = []
@@ -45,15 +51,12 @@ class TestRLibSerialization(unittest.TestCase):
 
             if t > self.t_change and not reloaded:
                 rl.save()
-
-                if full_reload:
-                    rl.__del__()
-                    rl = rfl.RLib()
+                rl.finish()
 
                 if new_decay:
-                    rl.load(self.checkpoint_path, agent_params={"decay": new_decay})
+                    rl = RLib.load(self.checkpoint_path, agent_params={"decay": new_decay})
                 else:
-                    rl.load(self.checkpoint_path)
+                    rl = RLib.load(self.checkpoint_path)
                 reloaded = True
         
         return actions
@@ -76,27 +79,6 @@ class TestRLibSerialization(unittest.TestCase):
 
         actions_straight = self.run_experiment(reload=False)
         actions_reload = self.run_experiment(reload=True, new_decay=2.0)
-        self.assertFalse(jnp.array_equal(actions_straight, actions_reload))
-    
-
-    def test_full_reload(self):
-        """
-        Tests if the reinitialization of RLib class does not mess up everything
-        """
-
-        actions_straight = self.run_experiment(reload=False)
-        actions_reload = self.run_experiment(reload=True, full_reload=True)
-        self.assertTrue(jnp.array_equal(actions_straight, actions_reload))
-    
-
-    def test_full_reload_alter(self):
-        """
-        Tests if we can retrive the state of saved experiment with new constructor and change of
-        agents parameters.
-        """
-
-        actions_straight = self.run_experiment(reload=False)
-        actions_reload = self.run_experiment(reload=True, full_reload=True, new_decay=2.0)
         self.assertFalse(jnp.array_equal(actions_straight, actions_reload))
 
 
