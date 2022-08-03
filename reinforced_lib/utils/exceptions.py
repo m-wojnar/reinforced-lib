@@ -119,7 +119,7 @@ class ForbiddenExtensionChangeError(ForbiddenOperationError):
 
 class ForbiddenExtensionSetError(ForbiddenOperationError):
     """
-    Raised when user is trying to set extension type when 'no_ext_mode' is enabled.
+    Raised when user is trying to set extension type when ``no_ext_mode`` is enabled.
     """
 
     def __str__(self) -> str:
@@ -211,7 +211,7 @@ class UnsupportedLogTypeError(Exception):
 
 class IncorrectSourceTypeError(IncorrectTypeError):
     """
-    Raised when provided source is not a correct source type (Union[Tuple[str, SourceType], str]).
+    Raised when provided source is not a correct source type (``Union[Tuple[str, SourceType], str]``).
 
     Parameters
     ----------

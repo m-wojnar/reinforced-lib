@@ -107,9 +107,9 @@ class BaseExt(ABC):
         Parameters
         ----------
         agent_update_space : gym.spaces.Space, optional
-            Observations required by the agents 'update' function in the OpenAI Gym format.
+            Observations required by the agents ``update`` function in the OpenAI Gym format.
         agent_sample_space : gym.spaces.Space, optional
-            Observations required by the agents 'sample' function in the OpenAI Gym format.
+            Observations required by the agents ``sample`` function in the OpenAI Gym format.
         """
 
         self._update_space_transform = self._transform_spaces(self.observation_space, agent_update_space)
@@ -137,7 +137,7 @@ class BaseExt(ABC):
         Returns
         -------
         func : Callable
-            Function that transforms values from in_space to out_space.
+            Function that transforms values from ``in_space`` to ``out_space``.
         """
 
         if out_space is None:

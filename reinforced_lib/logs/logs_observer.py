@@ -64,7 +64,7 @@ class LogsObserver:
 
     def init_loggers(self):
         """
-        Initializes all loggers by calling their 'init' method.
+        Initializes all loggers by calling their ``init`` method.
         """
 
         for logger, sources in self._loggers_sources.items():
@@ -72,7 +72,7 @@ class LogsObserver:
 
     def finish_loggers(self):
         """
-        Finalizes work of all loggers by calling their 'finish' method.
+        Finalizes work of all loggers by calling their ``finish`` method.
         """
 
         for logger in self._loggers_sources.keys():

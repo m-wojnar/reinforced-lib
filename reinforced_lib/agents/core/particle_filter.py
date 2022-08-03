@@ -89,7 +89,7 @@ def effective_sample_size(state: ParticleFilterState, threshold: Scalar = 0.5) -
 def simple_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, *args) -> ParticleFilterState:
     """
     Performs simple movement of particles positions based on normal distribution with
-    mean = 0 and standard deviation = scale.
+    ``mean = 0`` and ``standard deviation = scale``.
 
     Parameters
     ----------
@@ -118,7 +118,7 @@ def simple_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, *
 def linear_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, time: Scalar) -> ParticleFilterState:
     """
     Performs movement of particles positions based on normal distribution with
-    mean = 0 and standard deviation = scale * (last_measurement - time).
+    ``mean = 0`` and ``standard deviation = scale * (last_measurement - time)``.
 
     Parameters
     ----------
@@ -143,7 +143,7 @@ def linear_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, t
 def affine_transition(state: ParticleFilterState, key: PRNGKey, scale: Array, time: Scalar) -> ParticleFilterState:
     """
     Performs movement of particles positions based on normal distribution with
-    mean = 0 and standard deviation = scale_a * (last_measurement - time) + scale_b.
+    ``mean = 0`` and ``standard deviation = scale_a * (last_measurement - time) + scale_b``.
 
     Parameters
     ----------
