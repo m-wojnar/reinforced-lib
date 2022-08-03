@@ -73,7 +73,7 @@ the training, we can load the whole experiment to a new RLib instance.
     # Do some other staff, quit the script if you want.
 
     # Load the saved training
-    rl = RLib.load(self.checkpoint_path)
+    rl = RLib.load("<checkpoint-path>")
 
     # Continue the training
     # ...
@@ -106,13 +106,15 @@ parameter (responsible for the 'memory' of the thompson sampling agent).
     rl.save("<checkpoint-path>")
 
     # Load the saved training with altered parameters
-    rl = RLib.load(self.checkpoint_path, agent_params={"decay": new_decay})
+    rl = RLib.load("<checkpoint-path>", agent_params={"decay": new_decay})
 
     # Continue the training with new parameters
     # ...
 
 You can change as many parameters we want. The provided example is constrained only to the agent
-parameters alteration, but you can modify extension parameters in the same way.
+parameters alteration, but you can modify extension parameters in the same way. You can even controll the
+the loggers behaviour with the flag ``restore_loggers`` (more on loggers in the :ref:`Logging module <Logging module>`
+section).
 
 
 Modular architecture

@@ -48,12 +48,12 @@ class TestRLibSerialization(unittest.TestCase):
             actions.append(int(a))
 
             if t > self.t_change and not reloaded:
-                rl.save()
+                save_path = rl.save()
 
                 if new_decay:
-                    rl = RLib.load(self.checkpoint_path, agent_params={"decay": new_decay})
+                    rl = RLib.load(save_path, agent_params={"decay": new_decay}, restore_loggers=False)
                 else:
-                    rl = RLib.load(self.checkpoint_path)
+                    rl = RLib.load(save_path, restore_loggers=False)
                 reloaded = True
         
         return actions

@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Tuple, Union
 import os
 import gym
 import pickle
+import datetime
 import lz4.frame
 import jax.random
 
@@ -36,6 +37,9 @@ class RLib:
         Parameters of selected loggers.
     no_ext_mode : bool, default=False
         Pass observations directly to the agent (don't use the Extensions module).
+    save_directory : str, default=None
+        Path to a user specified directory where the save() method will store experiment checkpoints.
+        If none specified, utilizes the home directory.
     """
 
     def __init__(
@@ -47,11 +51,13 @@ class RLib:
             loggers_type: Union[type, List[type]] = None,
             loggers_sources: Union[Source, List[Source]] = None,
             loggers_params: Dict[str, Any] = None,
-            no_ext_mode: bool = False
+            no_ext_mode: bool = False,
+            save_directory: str = None
     ) -> None:
         self._ext = None
         self._no_ext_mode = no_ext_mode
         self._lz4_ext = ".pkl.lz4"
+        self._save_directory = save_directory if save_directory else os.path.expanduser("~")
 
         self._agent = None
         self._agent_type = agent_type
@@ -378,20 +384,27 @@ class RLib:
 
         raise NotImplementedError()
 
-    def save(self, path: str = None) -> None:
+    def save(self, path: str = None) -> str:
         """
         Saves the state of the experiment to a file in lz4 format. For each agent both the state and the
-        initialization parameters are saved. The environment extension is saved as well to fully reconstruct the
-        experiment.
+        initialization parameters are saved. The environment extension, and loggers settings are saved as well
+        to fully reconstruct the experiment.
 
         Parameters
         ----------
+        path : str, optional
+            Path to the checkpoint file. If none specified, saves to the path specified by the
+            ``save_directory`` class parameter. If ``.pkl.lz4`` extension not detected, it will be appended automaticly.
+        
+        Returns
+        -------
         path : str
-            Path to the checkpoint file. If ``.pkl.lz4`` extension not detected, it will be appended automaticly.
+            Path to the saved checkpoint file.
         """
 
         if path is None:
-            path = os.path.join(os.path.expanduser("~"), f"checkpoint{self._lz4_ext}")
+            timestamp = datetime.datetime.now()
+            path = os.path.join(self._save_directory, f"rlib-checkpoint-{timestamp.date()}-{timestamp.time()}.pkl.lz4")
         elif path[-8:] != self._lz4_ext:
             path = path + self._lz4_ext
 
@@ -400,25 +413,29 @@ class RLib:
             "agent_params": self._agent_params,
             "agents": {
                 agent_id: {
-                    "state": self._agents_states[agent_id],
-                    "key": self._agents_keys[0],
-                } for agent_id in range(len(self._agents_states))
+                    "state": state,
+                    "key": key,
+                } for agent_id, (state, key) in enumerate(zip(self._agents_states, self._agents_keys))
             },
             "ext_type": self._ext_type,
             "ext_params": self._ext_params,
             "loggers_type": self._loggers_type,
             "loggers_sources": self._loggers_sources,
-            "loggers_params": self._loggers_params
+            "loggers_params": self._loggers_params,
+            "save_directory": self._save_directory
         }
 
         with lz4.frame.open(path, 'wb') as f:
             f.write(pickle.dumps(experiment_state))
+        
+        return path
     
     @staticmethod
     def load(
         path: str,
         agent_params: Dict[str, Any] = None,
         ext_params: Dict[str, Any] = None,
+        restore_loggers: bool = True
     ) -> RLib:
         """
         Loads the state of the experiment from a file in lz4 format.
@@ -436,7 +453,7 @@ class RLib:
         with lz4.frame.open(path, 'rb') as f:
             experiment_state = pickle.loads(f.read())
         
-        rlib = RLib()
+        rlib = RLib(save_directory=experiment_state["save_directory"])
         
         rlib._agents_states = []
         rlib._agents_keys = []
@@ -451,7 +468,7 @@ class RLib:
         else:
             rlib.set_agent(experiment_state["agent_type"], experiment_state["agent_params"])
 
-        if experiment_state["loggers_type"]:
+        if restore_loggers and experiment_state["loggers_type"]:
             rlib.set_loggers(
                 experiment_state["loggers_type"],
                 experiment_state["loggers_sources"],
