@@ -9,7 +9,7 @@ Customizing loggers
 -------------------
 
 To create your own extension, you should inherit from the :ref:`abstract class <BaseLogger>` ``BaseLogger``.
-We will present adding custom logger on an examples of the ``CsvLogger`` :ref:`logger <CsvLogger>` .
+We will present adding custom logger on the example of the ``CsvLogger`` :ref:`logger <CsvLogger>` .
 
 .. code-block:: python
 
@@ -20,7 +20,7 @@ by the ``loggers_params`` parameter in the ``RLib`` :ref:`class <RLib class>` co
 include the ``**kwargs`` in the arguments list. Values provided in ``loggers_params`` are passed to instances
 of all loggers listed in the ``loggers_type`` parameter, so it is very important to choose parameter names carefully.
 For example constructor parameters of the ``PlotsLogger`` start with prefix ``plots_*`` and parameters of the
-``CsvLogger`` start with ``csv_*``. Below is an example constructor of the ``PlotsLogger``:
+``CsvLogger`` start with ``csv_*``. Below is an example constructor of the ``CsvLogger``:
 
 .. code-block:: python
 
@@ -91,7 +91,7 @@ type with this logger, it will raise the ``UnsupportedLogTypeError`` :ref:`excep
 Template logger
 ---------------
 
-Here is the above code in one piece. You can copy-paste it and use as an inspiration to create your own agent.
+Here is the above code in one piece. You can copy-paste it and use as an inspiration to create your own logger.
 Full source code of the ``CsvLogger`` can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/logs/csv_logger.py>`_.
 
 .. code-block:: python
