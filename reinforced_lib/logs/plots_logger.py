@@ -1,5 +1,6 @@
 import os.path
 from collections import defaultdict
+from datetime import datetime
 from typing import List
 
 import jax.numpy as jnp
@@ -16,7 +17,7 @@ class PlotsLogger(BaseLogger):
 
     Parameters
     ----------
-    plots_dir : str, default="."
+    plots_dir : str, default="~"
         Output directory for plots.
     plots_ext : str, default="svg"
         Extension of saved plots.
@@ -29,10 +30,10 @@ class PlotsLogger(BaseLogger):
     .. [3] https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average
     """
 
-    def __init__(self, plots_dir: str = '.', plots_ext: str = 'svg', plots_smoothing: Scalar = 0.6, **kwargs) -> None:
+    def __init__(self, plots_dir: str = None, plots_ext: str = 'svg', plots_smoothing: Scalar = 0.6, **kwargs) -> None:
         super().__init__(**kwargs)
 
-        self._plots_dir = plots_dir
+        self._plots_dir = plots_dir if plots_dir else os.path.expanduser("~")
         self._plots_ext = plots_ext
         self._plots_smoothing = plots_smoothing
 
@@ -55,7 +56,8 @@ class PlotsLogger(BaseLogger):
 
     def finish(self) -> None:
         """
-        Shows generated plots and saves them to the output directory with specified extension.
+        Shows generated plots and saves them to the output directory with specified extension
+        (names of files follow the pattern ``"rlib-plot-[source]-[date]-[time].[ext]"``).
         """
 
         def lineplot(values: List, alpha: Scalar = 1.0, label: bool = False) -> None:
@@ -69,13 +71,16 @@ class PlotsLogger(BaseLogger):
                     plt.plot(val, alpha=alpha, c=f'C{i % 10}', label=i if label else '')
                 plt.legend()
 
+        now = datetime.now()
+
         for name, values in self._plots_values.items():
+            filename = f'rlib-plot-{name}-{now.strftime("%Y%m%d")}-{now.strftime("%H%M%S")}.{self._plots_ext}'
             smoothed = self._exponential_moving_average(values, self._plots_smoothing)
             lineplot(values, alpha=0.3)
             lineplot(smoothed, label=True)
             plt.title(name)
             plt.xlabel('step')
-            plt.savefig(os.path.join(self._plots_dir, f'{name}.{self._plots_ext}'), bbox_inches='tight')
+            plt.savefig(os.path.join(self._plots_dir, filename), bbox_inches='tight')
             plt.show()
 
     @staticmethod

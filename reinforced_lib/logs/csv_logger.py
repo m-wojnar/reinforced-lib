@@ -1,4 +1,6 @@
 import json
+import os.path
+from datetime import datetime
 from typing import Any, Dict, List
 
 import jax.numpy as jnp
@@ -14,7 +16,7 @@ class CsvLogger(BaseLogger):
 
     Parameters
     ----------
-    csv_path : str, default="output.csv"
+    csv_path : str, default="~/rlib-logs-[date]-[time].csv"
         Path to the output file.
 
     References
@@ -23,8 +25,13 @@ class CsvLogger(BaseLogger):
        (RFC No. 4180). RFC Editor. https://www.rfc-editor.org/rfc/rfc4180.txt
     """
 
-    def __init__(self, csv_path: str = 'output.csv', **kwargs) -> None:
+    def __init__(self, csv_path: str = None, **kwargs) -> None:
         super().__init__(**kwargs)
+
+        if csv_path is None:
+            now = datetime.now()
+            csv_path = f'rlib-logs-{now.strftime("%Y%m%d")}-{now.strftime("%H%M%S")}.csv'
+            csv_path = os.path.join(os.path.expanduser("~"), csv_path)
 
         self._file = open(csv_path, 'w')
 
