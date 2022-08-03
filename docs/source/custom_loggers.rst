@@ -24,10 +24,16 @@ For example constructor parameters of the ``PlotsLogger`` start with prefix ``pl
 
 .. code-block:: python
 
-    def __init__(self, csv_path: str = 'output.csv', **kwargs) -> None:
+    def __init__(self, csv_path: str = None, **kwargs) -> None:
         super().__init__(**kwargs)
 
+        if csv_path is None:
+            now = datetime.now()
+            csv_path = f'rlib-logs-{now.strftime("%Y%m%d")}-{now.strftime("%H%M%S")}.csv'
+            csv_path = os.path.join(os.path.expanduser("~"), csv_path)
+
         self._file = open(csv_path, 'w')
+
         self._columns_values = {}
         self._columns_names = []
 
@@ -81,4 +87,68 @@ If the logger is not able to log a value of some type (for example it could be h
 object), we do not have to implement corresponding ``log_*`` method. If the user will try to log a value of that
 type with this logger, it will raise the ``UnsupportedLogTypeError`` :ref:`exception <Exceptions>`.
 
+
+Template logger
+---------------
+
+Here is the above code in one piece. You can copy-paste it and use as an inspiration to create your own agent.
 Full source code of the ``CsvLogger`` can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/logs/csv_logger.py>`_.
+
+.. code-block:: python
+
+    import json
+    import os.path
+    from datetime import datetime
+    from typing import Any, Dict, List
+
+    import jax.numpy as jnp
+    import numpy as np
+    from chex import Array, Scalar
+
+    from reinforced_lib.logs import BaseLogger, Source
+
+
+    class CsvLogger(BaseLogger):
+        def __init__(self, csv_path: str = None, **kwargs) -> None:
+            super().__init__(**kwargs)
+
+            if csv_path is None:
+                now = datetime.now()
+                csv_path = f'rlib-logs-{now.strftime("%Y%m%d")}-{now.strftime("%H%M%S")}.csv'
+                csv_path = os.path.join(os.path.expanduser("~"), csv_path)
+
+            self._file = open(csv_path, 'w')
+
+            self._columns_values = {}
+            self._columns_names = []
+
+        def init(self, sources: List[Source]) -> None:
+            self._columns_names = list(map(self.source_to_name, sources))
+            header = ','.join(self._columns_names)
+            self._file.write(f'{header}\n')
+
+        def finish(self) -> None:
+            self._file.close()
+
+        def log_scalar(self, source: Source, value: Scalar) -> None:
+            self._columns_values[self.source_to_name(source)] = value
+            self._save()
+
+        def log_array(self, source: Source, value: Array) -> None:
+            if isinstance(value, (np.ndarray, jnp.ndarray)):
+                value = value.tolist()
+
+            self.log_other(source, value)
+
+        def log_dict(self, source: Source, value: Dict) -> None:
+            self.log_other(source, value)
+
+        def log_other(self, source: Source, value: Any) -> None:
+            self._columns_values[self.source_to_name(source)] = f"\"{json.dumps(value)}\""
+            self._save()
+
+        def _save(self) -> None:
+            if len(self._columns_values) == len(self._columns_names):
+                line = ','.join(str(self._columns_values[name]) for name in self._columns_names)
+                self._file.write(f'{line}\n')
+                self._columns_values = {}
