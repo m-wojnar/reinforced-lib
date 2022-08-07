@@ -266,5 +266,5 @@ To sum up everything one more time:
 3. We use *jax.jit()* to optimize the agents performance
 4. We provide the required parameters in format of *OpenAI Gym* spaces
 
-The built-in implementation of the epsilon-greedy agent, with addition of optional optimistic start,
-can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/agents/e_greedy.py>`_.
+The built-in implementation of the epsilon-greedy agent with addition of optional optimistic start and exponential
+recency-weighted average update can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/agents/e_greedy.py>`_.

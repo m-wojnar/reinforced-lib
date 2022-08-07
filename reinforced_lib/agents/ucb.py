@@ -10,9 +10,9 @@ from reinforced_lib.agents import BaseAgent, AgentState
 
 
 @dataclass
-class EGreedyState(AgentState):
+class UCBState(AgentState):
     """
-    Container for the state of the e-greedy agent.
+    Container for the state of the UCB agent.
 
     Attributes
     ----------
@@ -26,18 +26,16 @@ class EGreedyState(AgentState):
     N: Array
 
 
-class EGreedy(BaseAgent):
+class UCB(BaseAgent):
     """
-    Epsilon-greedy agent with optional optimistic start behaviour and exponential recency-weighted average update.
+    UCB agent with optional exponential recency-weighted average update.
 
     Parameters
     ----------
     n_arms : int
         Number of bandit arms.
-    e : float
-        Experiment rate (epsilon).
-    optimistic_start : float, default=0.0
-        If non-zero than it is interpreted as the optimistic start to encourage exploration.
+    c : float
+        Degree of exploration.
     alpha : float, default=0.0
         If non-zero than exponential recency-weighted average is used to update Q values. ``alpha`` must be in [0, 1).
     """
@@ -45,24 +43,23 @@ class EGreedy(BaseAgent):
     def __init__(
             self,
             n_arms: jnp.int32,
-            e: Scalar,
-            optimistic_start: Scalar = 0.0,
+            c: Scalar,
             alpha: Scalar = 0.0
     ) -> None:
+        assert c >= 0
         assert 0 <= alpha <= 1
 
         self.n_arms = n_arms
 
-        self.init = jax.jit(partial(self.init, n_arms=n_arms, optimistic_start=optimistic_start))
+        self.init = jax.jit(partial(self.init, n_arms=n_arms))
         self.update = jax.jit(partial(self.update, alpha=alpha))
-        self.sample = jax.jit(partial(self.sample, e=e))
+        self.sample = jax.jit(partial(self.sample, c=c))
 
     @staticmethod
     def parameters_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32),
-            'optimistic_start': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32),
+            'c': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32),
             'alpha': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
         })
 
@@ -75,7 +72,9 @@ class EGreedy(BaseAgent):
 
     @property
     def sample_observation_space(self) -> gym.spaces.Dict:
-        return gym.spaces.Dict({})
+        return gym.spaces.Dict({
+            'time': gym.spaces.Box(0.0, jnp.inf, (1,))
+        })
 
     @property
     def action_space(self) -> gym.spaces.Space:
@@ -84,11 +83,10 @@ class EGreedy(BaseAgent):
     @staticmethod
     def init(
             key: PRNGKey,
-            n_arms: jnp.int32,
-            optimistic_start: Scalar
-    ) -> EGreedyState:
+            n_arms: jnp.int32
+    ) -> UCBState:
         """
-        Creates and initializes instance of the e-greedy agent.
+        Creates and initializes instance of the UCB agent.
 
         Parameters
         ----------
@@ -96,34 +94,32 @@ class EGreedy(BaseAgent):
             A PRNG key used as the random key.
         n_arms : int
             Number of contextual bandit arms.
-        optimistic_start : float
-            Initial estimated action value.
 
         Returns
         -------
-        state : EGreedyState
-            Initial state of the e-greedy agent.
+        state : UCBState
+            Initial state of the UCB agent.
         """
 
-        return EGreedyState(
-            Q=(optimistic_start * jnp.ones(n_arms)),
+        return UCBState(
+            Q=jnp.zeros(n_arms),
             N=jnp.ones(n_arms, dtype=jnp.int32)
         )
 
     @staticmethod
     def update(
-        state: EGreedyState,
+        state: UCBState,
         key: PRNGKey,
         action: jnp.int32,
         reward: Scalar,
         alpha: Scalar
-    ) -> EGreedyState:
+    ) -> UCBState:
         """
         Updates the state of the agent after performing some action and receiving a reward.
 
         Parameters
         ----------
-        state : EGreedyState
+        state : UCBState
             Current state of agent.
         key : PRNGKey
             A PRNG key used as the random key.
@@ -136,20 +132,20 @@ class EGreedy(BaseAgent):
 
         Returns
         -------
-        EGreedyState
+        UCBState
             Updated agent state.
         """
 
-        def classic_update(operands: Tuple) -> EGreedyState:
+        def classic_update(operands: Tuple) -> UCBState:
             state, action, reward, alpha = operands
-            return EGreedyState(
+            return UCBState(
                 Q=state.Q.at[action].add((1.0 / state.N[action]) * (reward - state.Q[action])),
                 N=state.N.at[action].add(1)
             )
 
-        def erwa_update(operands: Tuple) -> EGreedyState:
+        def erwa_update(operands: Tuple) -> UCBState:
             state, action, reward, alpha = operands
-            return EGreedyState(
+            return UCBState(
                 Q=state.Q.at[action].add(alpha * (reward - state.Q[action])),
                 N=state.N.at[action].add(1)
             )
@@ -158,32 +154,29 @@ class EGreedy(BaseAgent):
 
     @staticmethod
     def sample(
-        state: EGreedyState,
+        state: UCBState,
         key: PRNGKey,
-        e: Scalar
-    ) -> Tuple[EGreedyState, jnp.int32]:
+        time: Scalar,
+        c: Scalar
+    ) -> Tuple[UCBState, jnp.int32]:
         """
         Selects next action based on current agent state.
 
         Parameters
         ----------
-        state : EGreedyState
+        state : UCBState
             Current state of the agent.
         key : PRNGKey
             A PRNG key used as the random key.
-        e : float
-            Experiment rate (epsilon).
+        time : float
+            Current time.
+        c : float
+            Degree of exploration.
 
         Returns
         -------
-        tuple[EGreedyState, jnp.int32]
+        tuple[UCBState, jnp.int32]
             Tuple containing updated agent state and selected action.
         """
 
-        epsilon_key, choice_key = jax.random.split(key)
-
-        return jax.lax.cond(
-            jax.random.uniform(epsilon_key) < e,
-            lambda: (state, jax.random.choice(choice_key, state.Q.size)),
-            lambda: (state, jnp.argmax(state.Q))
-        )
+        return state, jnp.argmax(state.Q + c * jnp.sqrt(jnp.log(time) / state.N))
