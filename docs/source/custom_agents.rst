@@ -26,12 +26,11 @@ and will inherit from AgentState:
 
 .. code-block:: python
     
-    @chex.dataclass
+    @dataclass
     class EGreedyState(AgentState):
 
-        e: jnp.float32
-        Q: chex.Array
-        N: chex.Array
+        Q: Array
+        N: Array
 
 Next, we can define the Epsilon-greedy agent, which will have 3 static methods:
 
@@ -40,14 +39,11 @@ Next, we can define the Epsilon-greedy agent, which will have 3 static methods:
     # This method initializes the agent with 'n_arms' arms 
     @staticmethod
     def init(
-        n_arms: jnp.int32, 
-        e: jnp.float32
+        key: PRNGKey,
+        n_arms: jnp.int32
     ) -> EGreedyState:
 
         return EGreedyState(
-
-            # The experiment rate e
-            e=e,
 
             # The initial Q values are set as zeros, due to the lack of prior knowledge
             Q=jnp.zeros(n_arms),
@@ -60,15 +56,12 @@ Next, we can define the Epsilon-greedy agent, which will have 3 static methods:
     @staticmethod
     def update(
         state: EGreedyState,
-        key: chex.PRNGKey,
+        key: PRNGKey,
         action: jnp.int32,
-        reward: jnp.float32,
+        reward: Scalar,
     ) -> EGreedyState:
 
         return EGreedyState(
-
-            # We do not change the experiment rate
-            e=state.e,
 
             # Q value update
             Q=state.Q.at[action].add((1.0 / state.N[action]) * (reward - state.Q[action])),
@@ -81,17 +74,21 @@ Next, we can define the Epsilon-greedy agent, which will have 3 static methods:
     @staticmethod
     def sample(
         state: EGreedyState,
-        key: chex.PRNGKey
+        key: PRNGKey,
+        e: Scalar
     ) -> Tuple[EGreedyState, jnp.int32]:
 
         # We further want to jax.jit this function, so basic 'if' is not allowed here
         return jax.lax.cond(
 
+            # Split PRNGkey to use it twice
+            epsilon_key, choice_key = jax.random.split(key)
+
             # The agent experiments with probability e
-            jax.random.uniform(key) < state.e,
+            jax.random.uniform(epsilon_key) < e,
 
             # On exploration, agent chooses a random arm
-            lambda: (state, jax.random.choice(key, state.Q.size)),
+            lambda: (state, jax.random.choice(choice_key, state.Q.size)),
 
             # On exploitation, agent chooses the best known arm
             lambda: (state, jnp.argmax(state.Q))
@@ -104,18 +101,20 @@ Having defined those static methods, we can implement the class constructor:
     def __init__(
         self, 
         n_arms: jnp.int32, 
-        e: jnp.float32
+        e: Scalar
     ) -> None:
+
+        # Make sure that epsilon has correct value
+        assert 0 <= e <= 1
 
         # We specify the features of our agent
         self.n_arms = n_arms
-        self.e = e
 
         # Here, we can use the jax.jit() functionality with the previously
         # defined behaviour functions, to make the agent super fast
-        self.init = jax.jit(partial(self.init, n_arms=self.n_arms, e=self.e))
+        self.init = jax.jit(partial(self.init, n_arms=self.n_arms))
         self.update = jax.jit(partial(self.update))
-        self.sample = jax.jit(partial(self.sample))
+        self.sample = jax.jit(partial(self.sample, e=e))
 
 Lastly, we must specify the parameters spaces that each of the implemented method takes.
 It will help the library to automatically infer the necessary parameters from the environment.
@@ -128,8 +127,7 @@ It will help the library to automatically infer the necessary parameters from th
     def parameters_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32),
-            'optimistic_start': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32)
+            'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
         })
     
     # Parameters required by the 'update' method in OpenAI Gym format.
@@ -164,45 +162,42 @@ to create your own agent.
     from functools import partial
     from typing import Tuple
 
-    import chex
     import gym.spaces
     import jax
     import jax.numpy as jnp
+    from chex import dataclass, Array, Scalar, PRNGKey
 
-    from reinforced_lib.agents.base_agent import BaseAgent, AgentState
+    from reinforced_lib.agents import BaseAgent, AgentState
 
 
-    @chex.dataclass
+    @dataclass
     class EGreedyState(AgentState):
+        Q: Array
+        N: Array
 
-        e: jnp.float32
-        Q: chex.Array
-        N: chex.Array
-    
 
     class EGreedy(BaseAgent):
 
         def __init__(
-            self, 
-            n_arms: jnp.int32, 
-            e: jnp.float32
+                self,
+                n_arms: jnp.int32,
+                e: Scalar
         ) -> None:
+            assert 0 <= e <= 1
 
             self.n_arms = n_arms
-            self.e = e
 
-            self.init = jax.jit(partial(self.init, n_arms=self.n_arms, e=self.e))
+            self.init = jax.jit(partial(self.init, n_arms=n_arms))
             self.update = jax.jit(partial(self.update))
-            self.sample = jax.jit(partial(self.sample))
-        
+            self.sample = jax.jit(partial(self.sample, e=e))
+
         @staticmethod
         def parameters_space() -> gym.spaces.Dict:
             return gym.spaces.Dict({
                 'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-                'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32),
-                'optimistic_start': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32)
+                'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
             })
-        
+
         @property
         def update_observation_space(self) -> gym.spaces.Dict:
             return gym.spaces.Dict({
@@ -217,44 +212,48 @@ to create your own agent.
         @property
         def action_space(self) -> gym.spaces.Space:
             return gym.spaces.Discrete(self.n_arms)
- 
+
         @staticmethod
         def init(
-            n_arms: jnp.int32, 
-            e: jnp.float32
+                key: PRNGKey,
+                n_arms: jnp.int32,
+                optimistic_start: Scalar
         ) -> EGreedyState:
 
             return EGreedyState(
-                e=e,
-                Q=jnp.zeros(n_arms),
+                Q=(optimistic_start * jnp.ones(n_arms)),
                 N=jnp.ones(n_arms, dtype=jnp.int32)
             )
-        
+
         @staticmethod
         def update(
             state: EGreedyState,
-            key: chex.PRNGKey,
+            key: PRNGKey,
             action: jnp.int32,
-            reward: jnp.float32,
+            reward: Scalar,
+            alpha: Scalar
         ) -> EGreedyState:
 
             return EGreedyState(
-                e=state.e,
-                Q=state.Q.at[action].add((1.0 / state.N[action]) * (reward - state.Q[action]))
+                Q=state.Q.at[action].add((1.0 / state.N[action]) * (reward - state.Q[action])),
                 N=state.N.at[action].add(1)
             )
 
         @staticmethod
         def sample(
             state: EGreedyState,
-            key: chex.PRNGKey
+            key: PRNGKey,
+            e: Scalar
         ) -> Tuple[EGreedyState, jnp.int32]:
 
+            epsilon_key, choice_key = jax.random.split(key)
+
             return jax.lax.cond(
-                jax.random.uniform(key) < state.e,
-                lambda: (state, jax.random.choice(key, state.Q.size)),
+                jax.random.uniform(epsilon_key) < e,
+                lambda: (state, jax.random.choice(choice_key, state.Q.size)),
                 lambda: (state, jnp.argmax(state.Q))
             )
+
 
 
 Sum up
