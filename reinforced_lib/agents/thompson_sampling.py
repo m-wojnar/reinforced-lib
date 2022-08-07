@@ -47,6 +47,8 @@ class ThompsonSampling(BaseAgent):
     """
 
     def __init__(self, n_arms: jnp.int32, decay: Scalar = 1.0) -> None:
+        assert decay >= 0
+
         self.n_arms = n_arms
 
         self.init = jax.jit(partial(self.init, n_arms=self.n_arms))

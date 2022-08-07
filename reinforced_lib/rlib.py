@@ -318,6 +318,9 @@ class RLib:
         if not self._no_ext_mode and not self._ext:
             raise NoExtensionError()
 
+        update_observations = update_observations if update_observations else {}
+        sample_observations = sample_observations if sample_observations else {}
+
         if self._init_loggers:
             self._logs_observer.init_loggers()
             self._init_loggers = False
@@ -352,7 +355,7 @@ class RLib:
         elif isinstance(sample_observations, tuple):
             state, action = self._agent.sample(state, sample_key, *sample_observations)
         else:
-            state, action = self._agent(state, sample_key, sample_observations)
+            state, action = self._agent.sample(state, sample_key, sample_observations)
 
         self._logs_observer.update_agent_state(state)
         self._logs_observer.update_metrics(action, 'action')

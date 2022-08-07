@@ -47,6 +47,9 @@ class ParticleFilter(BaseAgent):
             particles_num: jnp.int32 = 1000,
             scale: Scalar = 10.0
     ) -> None:
+        assert scale > 0
+        assert particles_num > 0
+
         self.n_mcs = n_mcs
 
         self.pf = ParticleFilterBase(
