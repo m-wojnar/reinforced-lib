@@ -17,22 +17,36 @@ BaseAgent
     :members:
 
 
-Thompson Sampling
------------------
+Epsilon-greedy
+--------------
 
-.. currentmodule:: reinforced_lib.agents.thompson_sampling
+.. currentmodule:: reinforced_lib.agents.e_greedy
 
-.. autoclass:: ThompsonSamplingState
+.. autoclass:: EGreedyState
     :show-inheritance:
     :members:
 
-.. autoclass:: ThompsonSampling
+.. autoclass:: EGreedy
     :show-inheritance:
     :members:
 
 
-ParticleFilter (Core)
----------------------
+Gradient Bandit
+---------------
+
+.. currentmodule:: reinforced_lib.agents.gradient_bandit
+
+.. autoclass:: GradientBanditState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: GradientBandit
+    :show-inheritance:
+    :members:
+
+
+Particle Filter (Core)
+----------------------
 
 .. automodule:: reinforced_lib.agents.core.particle_filter
     :show-inheritance:
@@ -53,15 +67,29 @@ Particle Filter (Wi-Fi)
     :members:
 
 
-Epsilon-greedy
---------------
+Thompson Sampling
+-----------------
 
-.. currentmodule:: reinforced_lib.agents.e_greedy
+.. currentmodule:: reinforced_lib.agents.thompson_sampling
 
-.. autoclass:: EGreedyState
+.. autoclass:: ThompsonSamplingState
     :show-inheritance:
     :members:
 
-.. autoclass:: EGreedy
+.. autoclass:: ThompsonSampling
+    :show-inheritance:
+    :members:
+
+
+UCB
+---
+
+.. currentmodule:: reinforced_lib.agents.ucb
+
+.. autoclass:: UCBState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: UCB
     :show-inheritance:
     :members:

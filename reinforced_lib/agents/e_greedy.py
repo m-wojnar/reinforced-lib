@@ -143,7 +143,7 @@ class EGreedy(BaseAgent):
         def classic_update(operands: Tuple) -> EGreedyState:
             state, action, reward, alpha = operands
             return EGreedyState(
-                Q=state.Q.at[action].add((1.0 / state.N[action]) * (reward - state.Q[action])),
+                Q=state.Q.at[action].add((reward - state.Q[action]) / state.N[action]),
                 N=state.N.at[action].add(1)
             )
 
