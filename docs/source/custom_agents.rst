@@ -64,7 +64,7 @@ Next, we can define the Epsilon-greedy agent, which will have 3 static methods:
         return EGreedyState(
 
             # Q value update
-            Q=state.Q.at[action].add((1.0 / state.N[action]) * (reward - state.Q[action])),
+            Q=state.Q.at[action].add((reward - state.Q[action]) / state.N[action]),
 
             # Incrementing the number of tries on appropriate arm
             N=state.N.at[action].add(1)
@@ -135,7 +135,7 @@ It will help the library to automatically infer the necessary parameters from th
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'action': gym.spaces.Discrete(self.n_arms),
-            'reward': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32)
+            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
         })
     
     # Parameters required by the 'sample' method in OpenAI Gym format.
@@ -202,7 +202,7 @@ to create your own agent.
         def update_observation_space(self) -> gym.spaces.Dict:
             return gym.spaces.Dict({
                 'action': gym.spaces.Discrete(self.n_arms),
-                'reward': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32)
+                'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
             })
 
         @property
@@ -235,7 +235,7 @@ to create your own agent.
         ) -> EGreedyState:
 
             return EGreedyState(
-                Q=state.Q.at[action].add((1.0 / state.N[action]) * (reward - state.Q[action])),
+                Q=state.Q.at[action].add((reward - state.Q[action]) / state.N[action]),
                 N=state.N.at[action].add(1)
             )
 

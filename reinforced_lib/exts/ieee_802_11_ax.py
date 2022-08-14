@@ -85,7 +85,7 @@ class IEEE_802_11_ax(BaseExt):
     def action(self, mcs: int, *args, **kwargs) -> int:
         return mcs
 
-    @observation(observation_type=gym.spaces.Box(0.0, np.inf, (1,)))
+    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
     def reward(self, mcs: int, n_successful: int, n_failed: int, *args, **kwargs) -> float:
         if n_successful + n_failed > 0:
             return self._wifi_modes_rates[mcs] * n_successful / (n_successful + n_failed)
