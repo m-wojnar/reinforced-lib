@@ -85,6 +85,13 @@ class IEEE_802_11_ax(BaseExt):
     def action(self, mcs: int, *args, **kwargs) -> int:
         return mcs
 
+    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    def reward(self, mcs: int, n_successful: int, n_failed: int, *args, **kwargs) -> float:
+        if n_successful + n_failed > 0:
+            return self._wifi_modes_rates[mcs] * n_successful / (n_successful + n_failed)
+        else:
+            return 0.0
+
     @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
     def n_arms(self) -> int:
         return len(self._wifi_modes_rates)
