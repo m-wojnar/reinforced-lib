@@ -147,32 +147,15 @@ class GradientBandit(BaseAgent):
             Updated agent state.
         """
 
+        R = jnp.where(state.n == 1, reward, state.R)
         mask = jnp.ones_like(state.H, dtype=jnp.bool_).at[action].set(False)
         pi = jax.nn.softmax(state.H)
 
-        R = jnp.where(state.n == 1, reward, state.R)
-
-        H = state.H
-        H = jnp.where(mask, H, H + lr * (reward - R) * (1 - pi))
-        H = jnp.where(mask, H - lr * (reward - R) * pi, H)
-
-        def classic_update(operands: Tuple) -> GradientBanditState:
-            state, H, R, reward, alpha = operands
-            return GradientBanditState(
-                H=H,
-                R=R + (reward - R) / state.n,
-                n=state.n + 1
-            )
-
-        def erwa_update(operands: Tuple) -> GradientBanditState:
-            state, H, R, reward, alpha = operands
-            return GradientBanditState(
-                H=H,
-                R=R + alpha * (reward - R),
-                n=state.n + 1
-            )
-
-        return jax.lax.cond(alpha == 0, classic_update, erwa_update, (state, H, R, reward, alpha))
+        return GradientBanditState(
+            H=state.H + lr * (reward - R) * jnp.where(mask, -pi, 1 - pi),
+            R=R + (reward - R) * jnp.where(alpha == 0, 1 / state.n, alpha),
+            n=state.n + 1
+        )
 
     @staticmethod
     def sample(
