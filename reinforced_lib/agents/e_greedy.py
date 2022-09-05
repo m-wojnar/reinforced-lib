@@ -94,7 +94,7 @@ class EGreedy(BaseAgent):
         e : float
             Experiment rate (epsilon).
         optimistic_start : float
-            If non zero than it is interpreted as the optimistic start to encourage exploration.
+            If non-zero than it is interpreted as the optimistic start to encourage exploration.
 
         Returns
         -------

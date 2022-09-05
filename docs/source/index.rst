@@ -10,8 +10,8 @@ Welcome to Reinforced-lib's documentation!
 
 **Reinforced-lib** is a Python library designed to support research and prototyping using Reinforced Learning
 (RL) algorithms. The library can serve as a simple solution with ready to use RL workflows, as well as
-an expandable framework with programmable behaviour. Thanks to a fuctional implementation of librarys core,
-we can provide full acces to JAX's jit functionality, which boosts the agents performance significantly.
+an expandable framework with programmable behaviour. Thanks to a functional implementation of library's core,
+we can provide full access to JAX's jit functionality, which boosts the agents performance significantly.
 
 .. code-block:: python
 
