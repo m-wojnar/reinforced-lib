@@ -397,8 +397,8 @@ class RLib:
         Parameters
         ----------
         path : str, optional
-            Path to the checkpoint file. If none specified, saves to the path specified by the
-            ``save_directory`` class parameter. If ``.pkl.lz4`` extension not detected, it will be appended automaticly.
+            Path to the checkpoint file. If none specified, saves to the path specified by the ``save_directory``
+            class parameter. If ``.pkl.lz4`` extension not detected, it will be appended automatically.
         
         Returns
         -------
@@ -452,6 +452,8 @@ class RLib:
             Dictionary of altered agents parameters with their new values, by default None
         ext_params : Dict[str, Any], optional
             Dictionary of altered extension parameters with their new values, by default None
+        restore_loggers : bool, default=True
+            Flag indicating if the method should restore loggers settings.
         """
         
         with lz4.frame.open(path, 'rb') as f:

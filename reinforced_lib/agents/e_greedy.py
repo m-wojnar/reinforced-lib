@@ -97,7 +97,7 @@ class EGreedy(BaseAgent):
         n_arms : int
             Number of contextual bandit arms.
         optimistic_start : float
-            Initial estimated action value.
+            If non-zero than it is interpreted as the optimistic start to encourage exploration.
 
         Returns
         -------

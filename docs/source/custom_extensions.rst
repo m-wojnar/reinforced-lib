@@ -50,7 +50,7 @@ There are two main benefits of using extensions:
            ext_type=IEEE_802_11_ax,
        )
 
-#. Filling missing parameters - some of the parameters required by the agent can be filled with known values or
+#. Filling missing parameters - some of parameters required by the agent can be filled with known values or
    calculated based on a set of basic observations. For example, a ``sample`` method of the ``wifi.ParticleFilter``
    :ref:`agent <Particle Filter (Wi-Fi)>` requires transmission data rates and minimal SNR values required for a
    successful transmission for each MCS. This values can be found in the IEEE 802.11ax standard documentation or
