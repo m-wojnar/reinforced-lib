@@ -60,7 +60,7 @@ Logging
 
 The logging module provides a simple and powerful API for visualizing and analyzing running algorithm or watching
 the training process. You can monitor observations passed to the agent, the agents state, and basic metrics in
-real time. Below is the simplest example of using the build-in logger ``StdoutLogger``:
+real time. Below is the simplest example of using the built-in logger ``StdoutLogger``:
 
 .. code-block:: python
 
@@ -111,7 +111,8 @@ Or mix different loggers and sources:
         loggers_sources=['n_successful', 'alpha', ('action', SourceType.METRIC)]
     )
 
-In this case remember to provide a list of loggers that is the same length as a list of sources.
+In this case remember to provide a list of loggers that is the same length as a list of sources, because given loggers
+will be used to log values for consecutive sources.
 
 
 Saving experiments
