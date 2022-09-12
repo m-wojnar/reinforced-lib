@@ -1,3 +1,5 @@
+.. _exceptions_page:
+
 Exceptions
 ==========
 

@@ -1,3 +1,5 @@
+.. _agents_page:
+
 Agents
 ======
 

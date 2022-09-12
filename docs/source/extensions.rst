@@ -1,3 +1,5 @@
+.. _extensions_page:
+
 Environment extensions
 ======================
 

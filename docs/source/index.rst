@@ -4,29 +4,6 @@
    contain the root `toctree` directive.
 
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Guides
-   :hidden:
-
-   Getting started <getting_started>
-   Examples <examples>
-   Custom agents <custom_agents>
-   Custom extensions <custom_extensions>
-   Custom loggers <custom_loggers>
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API Documentation
-   :hidden:
-
-   API <api>
-   Agents <agents>
-   Extensions <extensions>
-   Logging <logging>
-   Exceptions <exceptions>
-
-
 .. _reinforced-lib:
 
 Welcome to Reinforced-lib's documentation!
@@ -68,8 +45,53 @@ researchers to optimize the Wi-Fi protocols with built-in RL algorithms and prov
 extension.
 
 
+Table of Contents
+-----------------
+
+Guides
+~~~~~~
+
+* :ref:`Getting started <getting_started_page>`
+* :ref:`Examples <examples_page>`
+* :ref:`Custom agents <custom_agents>`
+* :ref:`Custom extensions <custom_extensions>`
+* :ref:`Custom loggers <custom_loggers>`
+
+API Documentation
+~~~~~~~~~~~~~~~~~
+
+* :ref:`API <api_page>`
+* :ref:`Agents <agents_page>`
+* :ref:`Extensions <extensions_page>`
+* :ref:`Logging <logging_page>`
+* :ref:`Exceptions <exceptions_page>`
+
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Guides
+   :hidden:
+
+   Getting started <getting_started>
+   Examples <examples>
+   Custom agents <custom_agents>
+   Custom extensions <custom_extensions>
+   Custom loggers <custom_loggers>
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Documentation
+   :hidden:
+
+   API <api>
+   Agents <agents>
+   Extensions <extensions>
+   Logging <logging>
+   Exceptions <exceptions>
+
+
 Indices and tables
-------------------
+~~~~~~~~~~~~~~~~~~
 
 * :ref:`genindex`
 * :ref:`search`
