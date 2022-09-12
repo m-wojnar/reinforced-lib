@@ -3,6 +3,30 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Guides
+   :hidden:
+
+   Getting started <getting_started>
+   Examples <examples>
+   Custom agents <custom_agents>
+   Custom extensions <custom_extensions>
+   Custom loggers <custom_loggers>
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API Documentation
+   :hidden:
+
+   API <api>
+   Agents <agents>
+   Extensions <extensions>
+   Logging <logging>
+   Exceptions <exceptions>
+
+
 .. _reinforced-lib:
 
 Welcome to Reinforced-lib's documentation!
@@ -43,32 +67,9 @@ Library design is distinctly influenced by the desire to support research in Wi-
 researchers to optimize the Wi-Fi protocols with built-in RL algorithms and provided IEEE 802.11ax environment
 extension.
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Guides
-   :hidden:
-
-   Getting started <getting_started>
-   Examples <examples>
-   Custom agents <custom_agents>
-   Custom extensions <custom_extensions>
-   Custom loggers <custom_loggers>
-
-.. toctree::
-   :maxdepth: 2
-   :caption: API Documentation
-   :hidden:
-
-   API <api>
-   Agents <agents>
-   Extensions <extensions>
-   Logging <logging>
-   Exceptions <exceptions>
-
 
 Indices and tables
 ------------------
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
