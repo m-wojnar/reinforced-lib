@@ -1,7 +1,6 @@
 from functools import partial
 from typing import Tuple
 
-import distrax
 import gym.spaces
 import jax
 import jax.numpy as jnp
@@ -53,7 +52,7 @@ class ParticleFilter(BaseAgent):
         self.n_mcs = n_mcs
 
         self.pf = ParticleFilterBase(
-            initial_distribution=distrax.Uniform(min_snr - initial_power, max_snr - initial_power),
+            initial_distribution_fn=lambda key, shape: jax.random.uniform(key, shape, minval=min_snr, maxval=max_snr) - initial_power,
             positions_shape=(particles_num,),
             weights_shape=(particles_num,),
             scale=scale,

@@ -1,6 +1,6 @@
 import gym.spaces
 import numpy as np
-from scipy.special import erf
+from jax.scipy.special import erf
 
 from reinforced_lib.exts import BaseExt, observation, parameter
 
@@ -71,7 +71,7 @@ class IEEE_802_11_ax(BaseExt):
 
     @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (len(_wifi_modes_rates),)))
     def context(self, *args, **kwargs) -> np.ndarray:
-        return self._wifi_modes_rates
+        return self.rates()
 
     @observation(observation_type=gym.spaces.Box(0.0, 1.0, (1,)))
     def collision_probability(self, n_wifi: int, *args, **kwargs) -> float:
@@ -94,7 +94,7 @@ class IEEE_802_11_ax(BaseExt):
 
     @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
     def n_arms(self) -> int:
-        return len(self._wifi_modes_rates)
+        return self.n_mcs()
 
     @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
     def n_mcs(self) -> int:
