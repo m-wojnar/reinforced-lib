@@ -62,16 +62,30 @@ Installing ns3-ai
 
 The ns3-ai module interconnects the ns-3 and Reinforced-lib (or other python-writen software) by transferring data through
 the shared memory pool. The memory can be accessed by both sides thus making the connection. Read more on ns3-ai on the
-`official repository <https://github.com/hust-diangroup/ns3-ai>`_. To install the module colone the ns-3 repository to the
-``ns-3-dev/contrib/`` directory:
+`official repository <https://github.com/hust-diangroup/ns3-ai>`_. To install the module colone the ns3-ai repository to the
+``ns-3-dev/contrib/`` directory and install the ``py_interface`` module with pip:
 
 .. code-block:: bash
 
     cd $YOUR_NS3_PATH/contrib/
     git clone https://github.com/hust-diangroup/ns3-ai.git
+    pip install --user "$YOUR_NS3_PATH/contrib/ns3-ai/py_interface"
 
 To have ns3-ai working, you need to rebuild the ns-3, but before doing so, we will transfer some neccessary files to
 enable experimenting with the provided rate adaptation manager.
+
+.. warning::
+
+    The ns3-ai (as of 18.10.2022) is not compatible with the ns-3.36 or later. We have forked and modified the official
+    ns3-ai repository to make it compatible with the 3.36 version. In order to install our compatible version run the
+    following commands instead:
+
+    .. code-block:: bash
+
+        cd $YOUR_NS3_PATH/contrib/
+        git clone https://github.com/m-wojnar/ns3-ai.git
+        git checkout ml4wifi
+        pip install --user "$YOUR_NS3_PATH/contrib/ns3-ai/py_interface"
 
 
 Transfering RA example files
@@ -89,6 +103,7 @@ following commands:
     cp -r $REINFORCED_LIB/examples/ns-3/rlib-wifi-manager $YOUR_NS3_PATH/contrib/
 
 .. note::
+
     To learn more about adding contrib modules to ns-3, visit
     the `ns-3 manual <https://www.nsnam.org/docs/manual/html/new-modules.html>`_.
 
@@ -102,12 +117,13 @@ Simulation scenario
 ns-3 (C++) end
 --------------
 
-We supply an example scenario ``rlib-sim\sim.cc`` to test the rate adaptation manager. The scenario is highly customizable but the key points
+We supply an example scenario ``rlib-sim\sim.cc`` to test the rate adaptation manager in 802.11ax environment. The scenario is highly customizable but the key points
 are that there is one access point AP and a variable number (``--nWifi``) of stations STA; there is an uplink, saturated
-comunication (from AP to STAs) and the AP is in clear line of sight from all the STAs; All the STAs are in the point of 0m
+comunication (from STAs to AP) and the AP is in clear line of sight from all the STAs; All the STAs are in the point of 0m
 and the AP can be either in 0m as well or in some distance (``--initialPosition``) from the STAs. The AP can also be moving
 with a constant velocity (``--velocity``) to simulate dynamic scenarios. Other assumptions from the simulation are the
-log-distance propagation `loss model <https://www.nsnam.org/docs/models/html/propagation.html>`_ and AMPDU frames aggregation.
+log-distance propagation `loss model <https://www.nsnam.org/docs/models/html/propagation.html>`_,  AMPDU frames aggregation,
+5 Ghz frequency band and single spatial stream.
   
   Changable simulation parameters:
   
@@ -135,7 +151,7 @@ Reinforced-lib (python) end
 
 The provided Rate Adaptation manager is implemented in the file ``$REINFORCED_LIB/examples/ns-3/main.py``. Here we specify the
 comunication with the ns-3 simulator by defining the environment observation space and the action space, we create the ``RLib``
-agent, we provide the listening loop which reacts to the incomming (aggregated) frames by responding with the appropriate MCS
+agent, we provide the agent-environment interaction loop which reacts to the incomming (aggregated) frames by responding with the appropriate MCS
 and clean up the environment when the simulation is done. Below we include and explain the essential code snippets.
 
 .. code-block:: python
@@ -238,7 +254,7 @@ previously defined environment and action structures.
     finally:
         del exp
 
-The final step to make the example working is to define the event loop. We loop while the ns3 simulation is running (line 84)
+The final step to make the example working is to define the agent-environment interaction loop. We loop while the ns3 simulation is running (line 84)
 and there is any data to be read (line 86). We differentiated the environment observation by the type attribute which
 indicates whether it is and initialization frame or not. On initialization (line 89), we have to init our RL agenet with
 some seed. In the other case we translate the observation to a dictionary (lines 93-101) and override the action structure
