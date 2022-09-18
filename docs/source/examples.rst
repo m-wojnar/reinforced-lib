@@ -84,6 +84,7 @@ enable experimenting with the provided rate adaptation manager.
 
         cd $YOUR_NS3_PATH/contrib/
         git clone https://github.com/m-wojnar/ns3-ai.git
+        cd "$YOUR_NS3_PATH/contrib/ns3-ai/"
         git checkout ml4wifi
         pip install --user "$YOUR_NS3_PATH/contrib/ns3-ai/py_interface"
 
