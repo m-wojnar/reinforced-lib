@@ -5,6 +5,8 @@ Examples
 ########
 
 
+.. _ns3_connection:
+
 *******************
 Connetion with ns-3
 *******************
@@ -243,13 +245,51 @@ some seed. In the other case we translate the observation to a dictionary (lines
 with the received station ID (line 103) and appropriate MCS selected by the RL agent (line 104). The last thing to do, is to
 clean up the shared memory environment when the simulation is finished (lines 106 and 108).
 
-TODO
-----
-  * Describe shortly main.py arguments
-  * provide examples commands to run
+
+Example experiments
+===================
+
+We have supplied the ``$REINFORCED_LIB/examples/ns-3/main.py`` script with the CLI so that you can test the rate adaptation manager in different
+scenarios. We reflected all the command lines arguments listed in :ref:`ns3 scenario <rlib-sim>` ``rlib-sim\sim.cc``
+with the ``--under_score`` style. There are only two additional arguments:
+
+  * Path to the ns3 root directory ``--ns3_path``, default to ``$HOME/ns-3-dev/``
+  * Shared memory pool key - arbitrary integer large than 1000 ``--mempool_key``, default to 1234
+
+You can try running the following commands to test the Reinforced-lib rate adaptation manager in example scenarios:
+
+  a. Static scenario with 1 AP and 1 STA both positioned in the same place
+
+    .. code-block:: bash
+        
+        python $REINFORCED_LIB/examples/ns-3/main.py --ns3_path="$YOUR_NS3_PATH"
+
+  b. Static scenario with 1 AP and 1 STA both positioned in the same place, with a ``ra-results.csv`` output file and ``ra-experiment-0-0.pcap`` file saved in the ``$HOME\`` directory
+
+    .. code-block:: bash
+        
+        python $REINFORCED_LIB/examples/ns-3/main.py --ns3_path="$YOUR_NS3_PATH" --csv_path="$HOME/ra-results.scv" --pcap_path="$HOME/ra-experiment"
+
+  c. Static scenario with 1 AP and 16 STAs in a 10 m distance
+
+    .. code-block:: bash
+
+        python $REINFORCED_LIB/examples/ns-3/main.py --ns3_path="$YOUR_NS3_PATH" --n_wifi=16 --initial_position=10
+
+  d. Dynamic scenario with 1 AP and 1 STA starting in 0m and moving away from AP with the velocity 1 m/s
+
+    .. code-block:: bash
+
+        python $REINFORCED_LIB/examples/ns-3/main.py --ns3_path="$YOUR_NS3_PATH" --velocity=1
 
 
+.. _gym_integration:
 
 ***************************
 Gym environment integration
 ***************************
+
+
+TODO
+====
+
