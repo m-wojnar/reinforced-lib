@@ -76,7 +76,7 @@ enable experimenting with the provided rate adaptation manager.
 
 .. warning::
 
-    The ns3-ai (as of 18.10.2022) is not compatible with the ns-3.36 or later. We have forked and modified the official
+    The ns3-ai (as of 18.09.2022) is not compatible with the ns-3.36 or later. We have forked and modified the official
     ns3-ai repository to make it compatible with the 3.36 version. In order to install our compatible version run the
     following commands instead:
 
