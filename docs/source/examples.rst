@@ -100,25 +100,25 @@ Simulation scenario
 ns-3 (C++) end
 --------------
 
-We supply an example scenario ``rlib-sim\sim.cc`` to test the rate adaptation manager. The scenario is quite customizable but the main idea
-is that there is one access point AP and a variable number (``--nWifi``) of stations STA. There is an uplink, saturated
-comunication (from AP to STAs) and the AP is in clear line of sight from all the STAs. All the STAs are in the point of 0m
+We supply an example scenario ``rlib-sim\sim.cc`` to test the rate adaptation manager. The scenario is highly customizable but the key points
+are that there is one access point AP and a variable number (``--nWifi``) of stations STA; there is an uplink, saturated
+comunication (from AP to STAs) and the AP is in clear line of sight from all the STAs; All the STAs are in the point of 0m
 and the AP can be either in 0m as well or in some distance (``--initialPosition``) from the STAs. The AP can also be moving
-with a constant velocity (``--velocity``) to simulate dynamic scenarios. Other assumptions in the simulation are the
-log-distance propagation loss `model <https://www.nsnam.org/docs/models/html/propagation.html>`_ and AMPDU frames aggregation.
+with a constant velocity (``--velocity``) to simulate dynamic scenarios. Other assumptions from the simulation are the
+log-distance propagation `loss model <https://www.nsnam.org/docs/models/html/propagation.html>`_ and AMPDU frames aggregation.
   
-  Changable simulatin parameters:
+  Changable simulation parameters:
   
-  * Duration of the simulation; excluding warmup stage (s) ``--simulationTime``, default to 20s
-  * Duration of the warmup stage (s) - a time for the simulator to enable all the mechanisms before the traffic begins ``--warmupTime``, default to 2s
-  * Time interval between successive measurements (s) ``--logEvery``, default to 1s
+  * Duration of the simulation; excluding warmup stage (s) ``--simulationTime``, default to 20 s
+  * Duration of the warmup stage (s) - a time for the simulator to enable all the mechanisms before the traffic begins ``--warmupTime``, default to 2 s
+  * Time interval between successive measurements (s) ``--logEvery``, default to 1 s
   * Simulation Seed ``--RngRun``
   
 ---------------
 
-  * Aggregate traffic generators data rate (Mb/s) ``--dataRate``, default to 125Mb/s
-  * Channel width (MHz) ``--channelWidth``, default to 20MHz
-  * Shortest guard interval (ns) ``--minGI``, default to 3200ns
+  * Aggregated traffic generators data rate (Mb/s) ``--dataRate``, default to 125 Mb/s
+  * Channel width (MHz) ``--channelWidth``, default to 20 MHz
+  * Shortest guard interval (ns) ``--minGI``, default to 3200 ns
   * Rate adaptation manager ``--wifiManager``, default to ``"ns3::RLibWifiManager"``, meaning that the manager is on the Reinforced-lib side
   
 ---------------
@@ -138,6 +138,7 @@ and clean up the environment when the simulation is done. Below we include and e
 
 .. code-block:: python
     :linenos:
+    :lineno-start: 6
 
     from py_interface import *
 
@@ -145,13 +146,14 @@ and clean up the environment when the simulation is done. Below we include and e
     from reinforced_lib.agents import ThompsonSampling
     from reinforced_lib.exts import IEEE_802_11_ax
 
-In the first line we include the ns3-ai structures which enables us the use of the shared memory comunication.
+In line 6 we include the ns3-ai structures which enables us the use of the shared memory comunication.
 Next we import the ``RLib`` class which is the main interface of the library that merges the agent with the environment.
-We chose the ThompsonSampling agent to demonstrate the manager performance. The environment will be of course 802.11ax,
-so we use the appropriate extension.
+We chose the :ref:`Thompson sampling <Thompson Sampling>` agent to demonstrate the manager performance. The environment
+will be of course :ref:`802.11ax <IEEE 802.11ax>`, so we import an appropriate extension.
 
 .. code-block:: python
     :linenos:
+    :lineno-start: 13
 
     class Env(Structure):
     _pack_ = 1
@@ -175,22 +177,35 @@ so we use the appropriate extension.
             ('mcs', c_uint8)
         ]
 
+Next we define the ns3-ai structures that describes the environment space and acion space accordingly. The structures must
+strictly reflect the ones defined in the 
+`header file <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/ns-3/rlib-wifi-manager/model/rlib-wifi-manager.h>`_
+``rlib-wifi-manager/model/rlib-wifi-manager.h`` becouse it is the very interface of the shared memory data bridge between
+python and C++. You can learn more about the data exchange model
+`here <https://github.com/hust-diangroup/ns3-ai/tree/master/examples/a_plus_b>`_.
 
 
 .. code-block:: python
     :linenos:
+    :lineno-start: 73
 
     rl = RLib(
         agent_type=ThompsonSampling,
         ext_type=IEEE_802_11_ax
     )
 
-    exp = Experiment(mempool_key, mem_size, scenario, ns3_path)
+    exp = Experiment(mempool_key, mem_size, "rlib-sim", ns3_path)
     var = Ns3AIRL(memblock_key, Env, Act)
+
+In line 73 we create an instance of the RLib by supplying the Thompson sampling agent and 802.11ax environment extension.
+We define the ns3-ai experiment in line 78 by setting the memory key, memory size, name of the ns3 scenario and the path
+to the ns3 root directory. In line 79 we create a handler to the shared memory interface by providing an arbitral key and
+previously defined environment and action structures.
 
 
 .. code-block:: python
     :linenos:
+    :lineno-start: 81
 
     try:
         ns3_process = exp.run(ns3_args, show_output=True)
@@ -221,9 +236,15 @@ so we use the appropriate extension.
     finally:
         del exp
 
+The final step to make the example working is to define the event loop. We loop while the ns3 simulation is running (line 84)
+and there is any data to be read (line 86). We differentiated the environment observation by the type attribute which
+indicates whether it is and initialization frame or not. On initialization (line 89), we have to init our RL agenet with
+some seed. In the other case we translate the observation to a dictionary (lines 93-101) and override the action structure
+with the received station ID (line 103) and appropriate MCS selected by the RL agent (line 104). The last thing to do, is to
+clean up the shared memory environment when the simulation is finished (lines 106 and 108).
+
 TODO
 ----
-  * Describe code
   * Describe shortly main.py arguments
   * provide examples commands to run
 
