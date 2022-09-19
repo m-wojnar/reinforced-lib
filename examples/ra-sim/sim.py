@@ -1,7 +1,6 @@
 from typing import Dict, Tuple
 
 import gym
-import jax.lax
 import numpy as np
 from gym import spaces
 
@@ -16,10 +15,13 @@ gym.envs.registration.register(
 
 # CW constraints
 MIN_CW_EXP = 4
-MAX_CW_EXP = 15
+MAX_CW_EXP = 10
 
-# based on the ns-3 static simulation with 1 stations, AMPDU on, and constant MCS 11
-FRAMES_PER_SECOND = 244
+# mean value based on the ns-3 static simulation with 1 station, ideal channel, AMPDU on, and constant MCS
+FRAMES_PER_SECOND = 188
+
+# based on the ns-3 static simulation with 1 station, ideal channel, and constant MCS
+AMPDU_SIZES = np.array([3, 6, 9, 12, 18, 25, 28, 31, 37, 41, 41, 41])
 
 # default values used by the ns-3 simulator
 # https://www.nsnam.org/docs/models/html/wifi-testing.html#packet-error-rate-performance
@@ -38,7 +40,7 @@ def distance_to_snr(distance: np.ndarray) -> np.ndarray:
 
 class RASimEnv(gym.Env):
     """
-    Simple Rate Adaptation Simulator for IEEE 802.11 ax networks. Calculates if packet has been transmitted
+    Simple Rate Adaptation Simulator for IEEE 802.11ax networks. Calculates if packet has been transmitted
     successfully based on approximated success probability for a given distance and SNR (according to the
     LogDistance channel model) and approximated collision probability (calculated experimentally).
     Environment simulates Wi-Fi networks with 20 MHz width channel, guard interval set to 3200 ns,
@@ -131,21 +133,24 @@ class RASimEnv(gym.Env):
             Environment state after performing a step, reward, and info about termination.
         """
 
-        success = self.ieee_802_11_ax.success_probability(self.snr[self.ptr])[action] > np.random.random()
+        n_all = AMPDU_SIZES[action]
+        n_successful = int(n_all * self.ieee_802_11_ax.success_probability(self.snr[self.ptr])[action])
         collision = self.ieee_802_11_ax.collision_probability(self.options['n_wifi']) > np.random.random()
 
-        tx_successful = success * (1 - collision)
-        reward = self.ieee_802_11_ax.reward(action, tx_successful, 1 - tx_successful)
+        n_successful = n_successful * (1 - collision)
+        n_failed = n_all - n_successful
 
-        if tx_successful:
+        reward = self.ieee_802_11_ax.reward(action, n_successful, n_failed)
+
+        if n_successful > 0:
             self.cw = MIN_CW_EXP
         else:
             self.cw = min(self.cw + 1, MAX_CW_EXP)
 
         state = {
             'time': self.time[self.ptr],
-            'n_successful': tx_successful,
-            'n_failed': 1 - tx_successful,
+            'n_successful': n_successful,
+            'n_failed': n_failed,
             'n_wifi': self.options['n_wifi'],
             'power': DEFAULT_TX_POWER,
             'cw': 2 ** self.cw - 1,

@@ -42,13 +42,13 @@ def run(
         ext_type=IEEE_802_11_ax
     )
     rl.init(seed)
+    wifi_ext = IEEE_802_11_ax()
 
     env = gym.make('RASimEnv-v1')
     state, _ = env.reset(seed=seed, options=ra_sim_args)
     terminated = False
 
     csv_results = 'wifiManager,seed,nWifi,channelWidth,minGI,velocity,position,time,meanMcs,meanRate,throughput\n'
-    rates = IEEE_802_11_ax().rates()
 
     packets_num, mcs_sum, rate_sum, thr_sum = 0, 0.0, 0.0, 0.0
     last_packets_num, last_mcs_sum, last_rate_sum, last_thr_sum = 0, 0.0, 0.0, 0.0
@@ -60,8 +60,8 @@ def run(
 
         packets_num += 1
         mcs_sum += action
-        rate_sum += rates[action]
-        thr_sum += state['n_successful'] * rates[action]
+        rate_sum += wifi_ext.rates()[action]
+        thr_sum += wifi_ext.reward(action, state['n_successful'], state['n_failed'])
 
         if state['time'] - last_log_time > log_every:
             position = state['time'] * ra_sim_args['velocity'] + ra_sim_args['initial_position']
