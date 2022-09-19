@@ -5,6 +5,7 @@ from typing import Any, Dict, Tuple
 import gym
 gym.logger.set_level(40)
 
+import sim
 from utils import ResultsManager, params_str_template, results_str_template
 from reinforced_lib import RLib
 from reinforced_lib.agents import ThompsonSampling

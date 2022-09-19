@@ -2,7 +2,6 @@ from typing import Dict, Tuple
 
 import gym
 import numpy as np
-from gym import spaces
 
 from reinforced_lib.exts import IEEE_802_11_ax
 
@@ -48,7 +47,7 @@ class RASimEnv(gym.Env):
     """
 
     def __init__(self) -> None:
-        self.action_space = spaces.Discrete(12)
+        self.action_space = gym.spaces.Discrete(12)
         self.observation_space = gym.spaces.Dict({
             'time': gym.spaces.Box(0.0, np.inf, (1,)),
             'n_successful': gym.spaces.Box(0, np.inf, (1,), np.int32),
