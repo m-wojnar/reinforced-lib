@@ -43,7 +43,7 @@ Then change directory to newly created ``ns-3-dev/`` and build the ns-3:
 
 .. code-block:: bash
 
-    ./ns3 configure --enable-examples
+    ./ns3 configure --enable-examples --build-profile=optimized
     ./ns3 build
 
 Once you have built ns-3 (with examples enabled), it should be easy to run the sample programs with the following command,
