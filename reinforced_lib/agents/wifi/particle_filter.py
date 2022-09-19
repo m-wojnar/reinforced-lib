@@ -285,4 +285,4 @@ class ParticleFilter(BaseAgent):
             Probability of a successful transmission.
         """
 
-        return 0.5 * (1 + erf(2 * (observed_snr - min_snr + 0.5)))
+        return 0.5 * (1 + erf(2 * (observed_snr - min_snr)))
