@@ -1,7 +1,11 @@
-from typing import Dict, Tuple
+import random
+import sys
+from typing import Callable, Dict, Tuple
 
 import gym
-import numpy as np
+import jax
+import jax.numpy as jnp
+from chex import dataclass, Array, Numeric, PRNGKey, Scalar
 
 from reinforced_lib.exts import IEEE_802_11_ax
 
@@ -20,7 +24,7 @@ MAX_CW_EXP = 10
 FRAMES_PER_SECOND = 188
 
 # based on the ns-3 static simulation with 1 station, ideal channel, and constant MCS
-AMPDU_SIZES = np.array([3, 6, 9, 12, 18, 25, 28, 31, 37, 41, 41, 41])
+AMPDU_SIZES = jnp.array([3, 6, 9, 12, 18, 25, 28, 31, 37, 41, 41, 41])
 
 # default values used by the ns-3 simulator
 # https://www.nsnam.org/docs/models/html/wifi-testing.html#packet-error-rate-performance
@@ -33,8 +37,88 @@ REFERENCE_SNR = DEFAULT_TX_POWER - DEFAULT_NOISE
 REFERENCE_LOSS = 46.6777
 EXPONENT = 3.0
 
-def distance_to_snr(distance: np.ndarray) -> np.ndarray:
-    return REFERENCE_SNR - (REFERENCE_LOSS + 10 * EXPONENT * np.log10(distance))
+
+def distance_to_snr(distance: Numeric) -> Numeric:
+    return REFERENCE_SNR - (REFERENCE_LOSS + 10 * EXPONENT * jnp.log10(distance))
+
+
+@dataclass
+class RASimState:
+    time: Array
+    snr: Array
+    ptr: jnp.int32
+    cw: jnp.int32
+
+
+@dataclass
+class Env:
+    init: Callable
+    step: Callable
+
+
+def ra_sim(
+        simulation_time: Scalar,
+        velocity: Scalar,
+        initial_position: Scalar,
+        n_wifi: jnp.int32,
+        total_frames: jnp.int32
+) -> Env:
+
+    wifi_ext = IEEE_802_11_ax()
+    phy_rates = jnp.array(wifi_ext._wifi_phy_rates)
+
+    @jax.jit
+    def init() -> Tuple[RASimState, Dict]:
+        distance = jnp.abs(jnp.linspace(0.0, simulation_time * velocity, total_frames) + initial_position)
+
+        state = RASimState(
+            time=jnp.linspace(0.0, simulation_time, total_frames),
+            snr=distance_to_snr(distance),
+            ptr=0,
+            cw=MIN_CW_EXP
+        )
+
+        return state, _get_env_state(state, 0, 0)
+
+    def _get_env_state(state: RASimState, n_successful: jnp.int32, n_failed: jnp.int32) -> Dict:
+        return {
+            'time': state.time[state.ptr],
+            'n_successful': n_successful,
+            'n_failed': n_failed,
+            'n_wifi': n_wifi,
+            'power': DEFAULT_TX_POWER,
+            'cw': 2 ** state.cw - 1,
+            'mcs': 0
+        }
+
+    @jax.jit
+    def step(state: RASimState, action: jnp.int32, key: PRNGKey) -> Tuple[RASimState, Dict, Scalar, jnp.bool_]:
+        n_all = AMPDU_SIZES[action]
+        n_successful = (n_all * wifi_ext.success_probability(state.snr[state.ptr])[action]).astype(jnp.int32)
+        collision = wifi_ext.collision_probability(n_wifi) > jax.random.uniform(key)
+
+        n_successful = n_successful * (1 - collision)
+        n_failed = n_all - n_successful
+
+        cw = jnp.where(n_successful > 0, MIN_CW_EXP, state.cw + 1)
+        cw = jnp.where(cw <= MAX_CW_EXP, cw, MAX_CW_EXP)
+
+        state = RASimState(
+            time=state.time,
+            snr=state.snr,
+            ptr=state.ptr + 1,
+            cw=cw
+        )
+
+        terminated = state.ptr == len(state.time)
+        reward = jnp.where(n_all > 0, phy_rates[action] * n_successful / n_all, 0.0)
+
+        return state, _get_env_state(state, n_successful, n_failed), reward, terminated
+
+    return Env(
+        init=init,
+        step=step
+    )
 
 
 class RASimEnv(gym.Env):
@@ -49,11 +133,11 @@ class RASimEnv(gym.Env):
     def __init__(self) -> None:
         self.action_space = gym.spaces.Discrete(12)
         self.observation_space = gym.spaces.Dict({
-            'time': gym.spaces.Box(0.0, np.inf, (1,)),
-            'n_successful': gym.spaces.Box(0, np.inf, (1,), np.int32),
-            'n_failed': gym.spaces.Box(0, np.inf, (1,), np.int32),
-            'n_wifi': gym.spaces.Box(1, np.inf, (1,), np.int32),
-            'power': gym.spaces.Box(-np.inf, np.inf, (1,)),
+            'time': gym.spaces.Box(0.0, jnp.inf, (1,)),
+            'n_successful': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
+            'n_failed': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
+            'n_wifi': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
+            'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
             'cw': gym.spaces.Discrete(32767),
             'mcs': gym.spaces.Discrete(12)
         })
@@ -65,15 +149,13 @@ class RASimEnv(gym.Env):
             'velocity': 2.0
         }
 
-        self.ieee_802_11_ax = IEEE_802_11_ax()
-
     def reset(
             self,
             seed: int = None,
             options: Dict = None
     ) -> Tuple[gym.spaces.Dict, Dict]:
         """
-        Sets the environment to the initial state.
+        Resets the environment to the initial state.
 
         Parameters
         ----------
@@ -88,34 +170,23 @@ class RASimEnv(gym.Env):
             Initial environment state.
         """
 
+        seed = seed if seed else random.randint(0, sys.maxsize)
         super().reset(seed=seed)
+        self.key = jax.random.PRNGKey(seed)
 
         options = options if options else {}
         self.options.update(options)
 
-        total_time = self.options['simulation_time']
-        total_distance = total_time * self.options['velocity']
-        total_frames = int(total_time * FRAMES_PER_SECOND)
+        self.sim = ra_sim(
+            self.options['simulation_time'],
+            self.options['velocity'],
+            self.options['initial_position'],
+            self.options['n_wifi'],
+            int(self.options['simulation_time'] * FRAMES_PER_SECOND)
+        )
+        self.state, env_state = self.sim.init()
 
-        distance = np.abs(np.linspace(0.0, total_distance, total_frames) + self.options['initial_position'])
-        self.snr = distance_to_snr(distance)
-        self.time = np.linspace(0.0, total_time, total_frames)
-        self.ptr = 0
-
-        self.cw = MIN_CW_EXP
-        self.last_tx_successful = 1
-
-        state = {
-            'time': 0.0,
-            'n_successful': 0,
-            'n_failed': 0,
-            'n_wifi': self.options['n_wifi'],
-            'power': DEFAULT_TX_POWER,
-            'cw': 2 ** self.cw - 1,
-            'mcs': 0
-        }
-
-        return state, {}
+        return env_state, {}
 
     def step(self, action: int) -> Tuple[gym.spaces.Dict, float, bool, bool, Dict]:
         """
@@ -132,31 +203,7 @@ class RASimEnv(gym.Env):
             Environment state after performing a step, reward, and info about termination.
         """
 
-        n_all = AMPDU_SIZES[action]
-        n_successful = int(n_all * self.ieee_802_11_ax.success_probability(self.snr[self.ptr])[action])
-        collision = self.ieee_802_11_ax.collision_probability(self.options['n_wifi']) > np.random.random()
+        step_key, self.key = jax.random.split(self.key)
+        self.state, *env_state = self.sim.step(self.state, action, step_key)
 
-        n_successful = n_successful * (1 - collision)
-        n_failed = n_all - n_successful
-
-        reward = self.ieee_802_11_ax.reward(action, n_successful, n_failed)
-
-        if n_successful > 0:
-            self.cw = MIN_CW_EXP
-        else:
-            self.cw = min(self.cw + 1, MAX_CW_EXP)
-
-        state = {
-            'time': self.time[self.ptr],
-            'n_successful': n_successful,
-            'n_failed': n_failed,
-            'n_wifi': self.options['n_wifi'],
-            'power': DEFAULT_TX_POWER,
-            'cw': 2 ** self.cw - 1,
-            'mcs': action
-        }
-
-        self.ptr += 1
-        done = self.ptr == len(self.time)
-
-        return state, reward, done, False, {}
+        return *env_state, False, {}
