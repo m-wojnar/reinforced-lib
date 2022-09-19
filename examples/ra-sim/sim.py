@@ -78,9 +78,9 @@ def ra_sim(
             cw=MIN_CW_EXP
         )
 
-        return state, _get_env_state(state, 0, 0)
+        return state, _get_env_state(state, 0, 0, 0)
 
-    def _get_env_state(state: RASimState, n_successful: jnp.int32, n_failed: jnp.int32) -> Dict:
+    def _get_env_state(state: RASimState, action: jnp.int32, n_successful: jnp.int32, n_failed: jnp.int32) -> Dict:
         return {
             'time': state.time[state.ptr],
             'n_successful': n_successful,
@@ -88,7 +88,7 @@ def ra_sim(
             'n_wifi': n_wifi,
             'power': DEFAULT_TX_POWER,
             'cw': 2 ** state.cw - 1,
-            'mcs': 0
+            'mcs': action
         }
 
     @jax.jit
@@ -113,7 +113,7 @@ def ra_sim(
         terminated = state.ptr == len(state.time)
         reward = jnp.where(n_all > 0, phy_rates[action] * n_successful / n_all, 0.0)
 
-        return state, _get_env_state(state, n_successful, n_failed), reward, terminated
+        return state, _get_env_state(state, action, n_successful, n_failed), reward, terminated
 
     return Env(
         init=init,

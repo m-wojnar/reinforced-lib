@@ -33,6 +33,7 @@ def run(ra_sim_args: Dict[str, Any], seed: int) -> Tuple[str, float, float, floa
         agent_type=ThompsonSampling,
         ext_type=IEEE_802_11_ax
     )
+    rl.init(seed)
 
     env = gym.make('RASimEnv-v1')
     state, _ = env.reset(seed=seed, options=ra_sim_args)
