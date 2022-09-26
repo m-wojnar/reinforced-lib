@@ -365,29 +365,6 @@ class RLib:
 
         return action
 
-    def fit(self, agent_id: int = 0) -> None:
-        """
-        Trains selected agent instance.
-
-        Parameters
-        ----------
-        agent_id : int, default=0
-            The identifier of agent instance.
-        """
-
-        if not self._agent:
-            raise NoAgentError()
-
-        if not self._no_ext_mode and not self._ext:
-            raise NoExtensionError()
-
-        if len(self._agents_states) == 0:
-            self.init()
-
-        # TODO develop agents training
-
-        raise NotImplementedError()
-
     def save(self, path: str = None) -> str:
         """
         Saves the state of the experiment to a file in lz4 format. For each agent both the state and the

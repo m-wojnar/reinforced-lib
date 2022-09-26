@@ -1,7 +1,6 @@
 from functools import partial
 from typing import Any, Callable, Tuple
 
-import distrax
 import jax
 import jax.numpy as jnp
 from chex import dataclass, Array, Numeric, PRNGKey, Scalar, Shape
@@ -47,7 +46,7 @@ def simple_resample(operands: Tuple[ParticleFilterState, PRNGKey]) -> ParticleFi
 
     state, key = operands
     logit_weights = state.logit_weights - jnp.max(state.logit_weights)
-    positions_idx = distrax.Categorical(logit_weights).sample(seed=key, sample_shape=state.positions.shape)
+    positions_idx = jax.random.categorical(key, logit_weights, shape=state.positions.shape)
 
     return ParticleFilterState(
         positions=state.positions[positions_idx],
@@ -106,7 +105,7 @@ def simple_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, *
         Updated filter state.
     """
 
-    positions_update = distrax.Normal(0, scale).sample(sample_shape=state.positions.shape, seed=key)
+    positions_update = scale * jax.random.normal(key, state.positions.shape)
 
     return ParticleFilterState(
         positions=state.positions + positions_update,
@@ -172,8 +171,13 @@ class ParticleFilter:
 
     Parameters
     ----------
-    initial_distribution : distrax.Distribution
-        Distribution from which the initial state is sampled.
+    initial_distribution_fn : callable
+        Function that samples initial particles positions.
+            - ``key``: PRNG key used as the random key (`PRNGKey`).
+            - ``shape``: shape of the sample (`Shape`).
+
+        Returns initial particles positions (`Array`).
+
     positions_shape : array_like
         Shape of the particles positions array.
     weights_shape : array_like
@@ -211,7 +215,7 @@ class ParticleFilter:
 
     def __init__(
             self,
-            initial_distribution: distrax.Distribution,
+            initial_distribution_fn: Callable,
             positions_shape: Shape,
             weights_shape: Shape,
             scale: Numeric,
@@ -223,7 +227,7 @@ class ParticleFilter:
         self.init = jax.jit(
             partial(
                 self.init,
-                initial_distribution=initial_distribution,
+                initial_distribution_fn=initial_distribution_fn,
                 positions_shape=positions_shape,
                 weights_shape=weights_shape
             )
@@ -243,7 +247,7 @@ class ParticleFilter:
     @staticmethod
     def init(
             key: PRNGKey,
-            initial_distribution: distrax.Distribution,
+            initial_distribution_fn: Callable,
             positions_shape: Shape,
             weights_shape: Shape
     ) -> ParticleFilterState:
@@ -254,8 +258,13 @@ class ParticleFilter:
         ----------
         key : PRNGKey
             A PRNG key used as the random key.
-        initial_distribution : distrax.Distribution
-            Distribution from which the initial state is sampled.
+        initial_distribution_fn : callable
+            Function that samples initial particles positions.
+                - ``key``: PRNG key used as the random key (`PRNGKey`).
+                - ``shape``: shape of the sample (`Shape`).
+
+            Returns initial particles positions (`Array`).
+
         positions_shape : array_like
             Shape of the particles positions array.
         weights_shape : array_like
@@ -268,7 +277,7 @@ class ParticleFilter:
         """
 
         return ParticleFilterState(
-            positions=initial_distribution.sample(sample_shape=positions_shape, seed=key),
+            positions=initial_distribution_fn(key, positions_shape),
             logit_weights=jnp.zeros(weights_shape),
             last_measurement=0.0
         )
@@ -372,4 +381,4 @@ class ParticleFilter:
             Tuple containing filter state and estimated state.
         """
 
-        return state, state.positions[distrax.Categorical(state.logit_weights).sample(seed=key)]
+        return state, state.positions[jax.random.categorical(key, state.logit_weights)]

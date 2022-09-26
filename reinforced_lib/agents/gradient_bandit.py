@@ -1,7 +1,6 @@
 from functools import partial
 from typing import Tuple
 
-import distrax
 import gym.spaces
 import jax
 import jax.numpy as jnp
@@ -178,4 +177,4 @@ class GradientBandit(BaseAgent):
             Tuple containing updated agent state and selected action.
         """
 
-        return state, distrax.Categorical(state.H).sample(seed=key)
+        return state, jax.random.categorical(key, state.H)
