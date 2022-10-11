@@ -8,6 +8,12 @@ import jax.numpy as jnp
 from chex import dataclass, Array, Numeric, PRNGKey, Scalar
 
 
+gym.envs.registration.register(
+    id='BlackjackEnv',
+    entry_point='examples.blackjack.game:BlackjackEnv'
+)
+
+
 class BlackjackEnv(gym.Env):
 
     def __init__(self) -> None:
@@ -18,13 +24,13 @@ class BlackjackEnv(gym.Env):
         })
 
         self.cards_values = jnp.array([0, 10, 2, 3, 4, 11])
-        self.cards_names = jnp.array(["9", "10", "Jack", "Queen", "King", "Ace"])
+        self.cards_names = ["9", "10", "Jack", "Queen", "King", "Ace"]
     
     def __draw_card(self):
-        return int(self.deck.pop() % 6)
+        return (self.deck.pop() % 6).astype(int)
     
     def __count_points(self, hand):
-        return jnp.sum(jnp.take(self.cards_values, hand))
+        return jnp.sum(jnp.take(self.cards_values, jnp.array(hand)))
     
     def __on_hit(self):
 
@@ -45,14 +51,14 @@ class BlackjackEnv(gym.Env):
         dealers_order = self.dealers_hand + list(map(lambda c: c % 6, self.deck))
 
         # Translate dealers new hand to points
-        dealers_order = jnp.take(self.cards_values, dealers_order)
+        dealers_order = jnp.take(self.cards_values, jnp.array(dealers_order))
 
         # Calculate the trace of dealers gameplay
         scan_fun = lambda c, x: (c + x, c + x)
         _, dealers_order = jax.lax.scan(scan_fun, 0, dealers_order)
 
         # Dealers last move was the first card which resulted in sum > 16
-        dealers_score = dealers_order[dealers_order > 16][0]
+        dealers_score = dealers_order[jnp.where(dealers_order > 16, size=1)][0]
 
             # We now must determine the winner:
 
@@ -98,7 +104,7 @@ class BlackjackEnv(gym.Env):
         self.deck = list(jax.random.permutation(self.key, 24))
         self.players_hand = [self.__draw_card(), self.__draw_card()]
         self.dealers_hand = [self.__draw_card(), self.__draw_card()]
-        self.dealers_card = self.cards_names[self.dealers_hand[0]]
+        self.dealers_card = self.dealers_hand[0]
 
         return {
             "current_sum": self.__count_points(self.players_hand),
@@ -107,5 +113,14 @@ class BlackjackEnv(gym.Env):
     
     def step(self, action: int):
         return jax.lax.cond(action == 1, self.__on_hit, self.__on_stick)
+    
+    def render(self):
+
+        players_hand = f"{list(map(lambda i: self.cards_names[i], self.players_hand))}"
+        dealers_hand = f"<{self.cards_names[self.dealers_card]}> {list(map(lambda i: self.cards_names[i], self.players_hand))[1:]}"
+        curr_sum = self.__count_points(self.players_hand)
+        lines = "-"*32
+
+        print(f"{lines}\nPlayer: {players_hand} (sum={curr_sum})\nDealer: {dealers_hand}\n{lines}")
         
         
