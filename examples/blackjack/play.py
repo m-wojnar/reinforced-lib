@@ -1,4 +1,4 @@
-import main
+import blackjack
 import gym
 
 gym.logger.set_level(40)

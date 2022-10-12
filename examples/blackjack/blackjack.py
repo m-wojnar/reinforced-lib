@@ -16,7 +16,7 @@ class BlackjackEnv(gym.Env):
     def __init__(self) -> None:
         self.action_space = gym.spaces.Discrete(2)
         self.observation_space = gym.spaces.Dict({
-            "current_sum": gym.spaces.Discrete(23), # 0-22
+            "current_sum": gym.spaces.Discrete(22), # {0, 2, 3, ..., 22}
             "dealers_card": gym.spaces.Discrete(6), # 9-Ace
         })
 
