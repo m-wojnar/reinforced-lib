@@ -6,6 +6,7 @@ import env
 
 from reinforced_lib import RLib
 from reinforced_lib.agents import EGreedy
+from reinforced_lib.exts import RecommenderSystemExt
 from reinforced_lib.logs import PlotsLogger
 from reinforced_lib.logs import SourceType
 
@@ -36,6 +37,8 @@ def run(episodes: int, seed: int) -> None:
         agent_type=EGreedy,
         agent_params=agent_params,
         no_ext_mode=True,
+        # ext_type=RecommenderSystemExt,
+        # ext_params={"preferences": preferences, "e": 0.25},
         loggers_type=PlotsLogger,
         loggers_sources=[('action', SourceType.METRIC)],
         loggers_params={'scatter': True}
