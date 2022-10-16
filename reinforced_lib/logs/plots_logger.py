@@ -82,16 +82,16 @@ class PlotsLogger(BaseLogger):
                     plt.plot(val, alpha=alpha, c=f'C{i % 10}', label=i if label else '')
                 plt.legend()
         
-        def scatterplot(values: List, alpha: Scalar = 1.0, label: bool = False) -> None:
+        def scatterplot(values: List, label: bool = False) -> None:
             values = jnp.array(values)
             values = jnp.squeeze(values)
             xs = range(1, len(values) + 1)
 
             if values.ndim == 1:
-                plt.scatter(xs, values, alpha=alpha, c='C0', marker='.')
+                plt.scatter(xs, values, c='C0', marker='.', s=4)
             elif values.ndim == 2:
                 for i, val in enumerate(jnp.array(values).T):
-                    plt.scatter(xs, val, alpha=alpha, c=f'C{i % 10}', label=i if label else '', marker='.')
+                    plt.scatter(xs, val, c=f'C{i % 10}', label=i if label else '', marker='.', s=4)
                 plt.legend()
 
         now = datetime.now()
@@ -100,7 +100,7 @@ class PlotsLogger(BaseLogger):
             filename = f'rlib-plot-{name}-{now.strftime("%Y%m%d")}-{now.strftime("%H%M%S")}.{self._plots_ext}'
 
             if self._scatter:
-                scatterplot(values)
+                scatterplot(values, True)
             else:
                 smoothed = self._exponential_moving_average(values, self._plots_smoothing)
                 lineplot(values, alpha=0.3)

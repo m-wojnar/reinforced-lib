@@ -54,8 +54,6 @@ class RLib:
             no_ext_mode: bool = False,
             save_directory: str = None
     ) -> None:
-        self._ext = None
-        self._no_ext_mode = no_ext_mode
         self._lz4_ext = ".pkl.lz4"
         self._save_directory = save_directory if save_directory else os.path.expanduser("~")
 
@@ -65,6 +63,8 @@ class RLib:
         self._agents_states = []
         self._agents_keys = []
 
+        self._ext = None
+        self._no_ext_mode = no_ext_mode
         self._ext_type = ext_type
         self._ext_params = ext_params
 
@@ -73,6 +73,7 @@ class RLib:
         self._loggers_params = loggers_params
         self._logs_observer = LogsObserver()
         self._init_loggers = True
+        self._cumulative_reward = 0.0
 
         if ext_type:
             self.set_ext(ext_type, ext_params)
@@ -334,11 +335,11 @@ class RLib:
         if not self._no_ext_mode:
             update_observations, sample_observations = self._ext.transform(*args, **kwargs)
 
+        all_observations = kwargs
         if isinstance(update_observations, dict) and isinstance(sample_observations, dict):
-            observations = {}
-            observations.update(update_observations)
-            observations.update(sample_observations)
-            self._logs_observer.update_observations(observations)
+            all_observations.update(update_observations)
+            all_observations.update(sample_observations)
+            self._logs_observer.update_observations(all_observations)
         else:
             self._logs_observer.update_observations(update_observations)
             self._logs_observer.update_observations(sample_observations)
@@ -359,6 +360,22 @@ class RLib:
 
         self._logs_observer.update_agent_state(state)
         self._logs_observer.update_metrics(action, 'action')
+
+        def log_reward(reward: float) -> None:
+            self._cumulative_reward += reward
+            self._logs_observer.update_metrics(reward, 'reward')
+            self._logs_observer.update_metrics(self._cumulative_reward, 'cumulative')
+
+        if 'reward' in all_observations:
+            log_reward(all_observations['reward'])
+        elif self._ext:
+            try:
+                if hasattr(self._ext, 'reward'):
+                    log_reward(self._ext.reward(**all_observations))
+                elif 'reward' in self._ext._observation_functions:
+                    log_reward(self._ext._observation_functions['reward'](**all_observations))
+            except TypeError:
+                pass
 
         self._agents_states[agent_id] = state
         self._agents_keys[agent_id] = key
