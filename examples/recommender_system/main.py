@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import env
 from ext import RecommenderSystemExt
 from reinforced_lib import RLib
-from reinforced_lib.agents import *
+from reinforced_lib.agents import EGreedy
 from reinforced_lib.logs import PlotsLogger, SourceType
 
 
@@ -38,7 +38,7 @@ def run(episodes: int, seed: int) -> None:
     cumulative_reward = [total_reward]
 
     for i in range(1, episodes):
-        act = rl.sample(action=act, reward=reward)
+        act = rl.sample(action=act, reward=reward, time=i)
         _, reward, *_ = env.step(act)
         total_reward += reward
         cumulative_reward.append(total_reward)

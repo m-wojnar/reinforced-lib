@@ -17,7 +17,8 @@ class RecommenderSystemExt(BaseExt):
     
     observation_space = gym.spaces.Dict({
         'action': gym.spaces.Discrete(len(preferences)),
-        'reward': gym.spaces.Box(-np.inf, np.inf, (1,))
+        'reward': gym.spaces.Box(-np.inf, np.inf, (1,)),
+        'time': gym.spaces.Box(0.0, np.inf, (1,))
     })
 
     def __init__(self) -> None:
@@ -25,9 +26,17 @@ class RecommenderSystemExt(BaseExt):
         self._preferences = list(self.preferences.values())
         self._context = np.ones(len(self.preferences))
 
-    @observation()
+    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (len(preferences),), np.float32))
     def context(self, *args, **kwargs):
         return self._context
+
+    @observation(observation_type=gym.spaces.Box(0, np.inf, (1,), np.int32))
+    def n_successful(self, reward: float, *args, **kwargs):
+        return reward
+
+    @observation(observation_type=gym.spaces.Box(0, np.inf, (1,), np.int32))
+    def n_failed(self, reward: float, *args, **kwargs):
+        return 1 - reward
 
     @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
     def n_arms(self):
