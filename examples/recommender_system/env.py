@@ -11,25 +11,25 @@ gym.envs.registration.register(
 
 
 class RecommenderSystemEnv(gym.Env):
-    
-    def __init__(self, preferences: Dict) -> None:
-        super().__init__()
-        self.content_tags = list(preferences.keys())
-        self.preferences = preferences  # preferences as probability of enjoying the content
-        self.action_space = gym.spaces.Discrete(len(self.content_tags))
-        self.observation_space = gym.spaces.Space()
-    
-    def reset(self, seed: int = None) -> Tuple[gym.spaces.Space, Dict]:
 
-        self.seed = seed if seed else np.random.randint(1000)
-        super().reset(seed=self.seed)
-        np.random.seed(self.seed)
+    def __init__(self, preferences: Dict) -> None:
+        self.action_space = gym.spaces.Discrete(len(preferences))
+        self.observation_space = gym.spaces.Space()
+
+        self._preferences = list(preferences.values())  # preferences as probability of enjoying the content
+    
+    def reset(
+            self,
+            seed: int = None,
+            options: Dict = None
+    ) -> Tuple[gym.spaces.Space, Dict]:
+
+        seed = seed if seed else np.random.randint(1000)
+        super().reset(seed=seed)
+        np.random.seed(seed)
 
         return None, {}
     
     def step(self, action: int) -> Tuple[gym.spaces.Dict, float, bool, bool, Dict]:
-
-        reward = int(np.random.rand() < self.preferences[self.content_tags[action]])
-
+        reward = int(np.random.rand() < self._preferences[action])
         return None, reward, False, False, {}
-
