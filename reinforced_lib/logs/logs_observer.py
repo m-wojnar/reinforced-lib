@@ -135,11 +135,11 @@ class LogsObserver:
         for logger, sources in loggers.items():
             for source, name in sources:
                 if (value := get_value(name)) is not None:
-                    if jnp.isscalar(value):
+                    if jnp.isscalar(value) or (hasattr(value, 'ndim') and value.ndim == 0):
                         logger.log_scalar(source, value)
                     elif isinstance(value, dict):
                         logger.log_dict(source, value)
-                    elif hasattr(value, '__len__'):
+                    elif isinstance(value, (list, tuple)) or (hasattr(value, 'ndim') and value.ndim == 1):
                         logger.log_array(source, value)
                     else:
                         logger.log_other(source, value)
