@@ -205,6 +205,6 @@ The whole library has a modular architecture, which makes it a flexible, univers
 the library are placed in separate modules and connected in a standardized way to provide versatility and the
 possibility to extend individual modules in the future.
 
-.. image:: ../resources/reinforced-lib.png
+.. image:: ../resources/reinforced-lib.jpg
     :width: 500
     :alt: Reinforced-lib architecture schema
