@@ -12,22 +12,16 @@ full access to JAX’s jit functionality, which boosts the agents performance si
 
 ## Installation
 
-You can clone source code from our repository:
+You can install the latest released version of Reinforced-lib from PyPI via:
+
+```bash
+pip install reinforced-lib
+```
+
+You can also download source code and install the development dependencies if you want to build the documentation locally:
 
 ```bash
 git clone git@github.com:m-wojnar/reinforced-lib.git
-```
-
-And install it with the pip3:
-
-```bash
-cd reinforced-lib
-pip3 install .
-```
-
-You can also install the development dependencies if you want to build the documentation locally:
-
-```bash
 cd reinforced-lib
 pip3 install ".[dev]"
 ```
