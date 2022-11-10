@@ -2,6 +2,8 @@
 
 ![build and test](https://github.com/m-wojnar/reinforced-lib/actions/workflows/python-package.yml/badge.svg)
 ![docs](https://readthedocs.org/projects/reinforced-lib/badge/?version=latest)
+![pypi](https://img.shields.io/pypi/v/reinforced-lib)
+[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
 
 ## Overview
 
