@@ -16,13 +16,13 @@ class UCBState(AgentState):
 
     Attributes
     ----------
-    Q : array_like
-        Quality values for each arm
+    R : array_like
+        Sum of rewards obtained for each arm
     N : array_like
         Number of tries for each arm
     """
 
-    Q: Array
+    R: Array
     N: Array
 
 
@@ -36,8 +36,8 @@ class UCB(BaseAgent):
         Number of bandit arms.
     c : float
         Degree of exploration.
-    gamma : float, default=0.0
-        If non-zero than discounted UCB algorithm [5]_ is used. ``gamma`` must be in [0, 1).
+    gamma : float, default=1.0
+        If less than one, discounted UCB algorithm [5]_ is used. ``gamma`` must be in (0, 1].
 
     References
     ----------
@@ -49,10 +49,10 @@ class UCB(BaseAgent):
             self,
             n_arms: jnp.int32,
             c: Scalar,
-            gamma: Scalar = 0.0
+            gamma: Scalar = 1.0
     ) -> None:
         assert c >= 0
-        assert 0 <= gamma < 1
+        assert 0 < gamma <= 1
 
         self.n_arms = n_arms
 
@@ -77,9 +77,7 @@ class UCB(BaseAgent):
 
     @property
     def sample_observation_space(self) -> gym.spaces.Dict:
-        return gym.spaces.Dict({
-            'time': gym.spaces.Box(0.0, jnp.inf, (1,))
-        })
+        return gym.spaces.Dict({})
 
     @property
     def action_space(self) -> gym.spaces.Space:
@@ -107,7 +105,7 @@ class UCB(BaseAgent):
         """
 
         return UCBState(
-            Q=jnp.zeros(n_arms),
+            R=jnp.zeros(n_arms),
             N=jnp.ones(n_arms)
         )
 
@@ -133,7 +131,7 @@ class UCB(BaseAgent):
         reward : float
             Reward as a result of previous action.
         gamma : float
-            Discount factor (used when ``gamma > 0``).
+            Discount factor.
 
         Returns
         -------
@@ -141,29 +139,15 @@ class UCB(BaseAgent):
             Updated agent state.
         """
 
-        def classic_update(operands: Tuple) -> UCBState:
-            state, action, reward, _ = operands
-            return UCBState(
-                Q=state.Q.at[action].add((reward - state.Q[action]) / state.N[action]),
-                N=state.N.at[action].add(1)
-            )
-
-        def discounted_update(operands: Tuple) -> UCBState:
-            state, action, reward, gamma = operands
-            N_prev = state.N
-            N = (gamma * state.N).at[action].add(1)
-            return UCBState(
-                Q=(jnp.zeros_like(state.Q).at[action].set(reward) + gamma * N_prev * state.Q) / N,
-                N=N
-            )
-
-        return jax.lax.cond(gamma == 0, classic_update, discounted_update, (state, action, reward, gamma))
+        return UCBState(
+            R=(gamma * state.R).at[action].add(reward),
+            N=(gamma * state.N).at[action].add(1)
+        )
 
     @staticmethod
     def sample(
         state: UCBState,
         key: PRNGKey,
-        time: Scalar,
         c: Scalar
     ) -> Tuple[UCBState, jnp.int32]:
         """
@@ -175,8 +159,6 @@ class UCB(BaseAgent):
             Current state of the agent.
         key : PRNGKey
             A PRNG key used as the random key.
-        time : float
-            Current time.
         c : float
             Degree of exploration.
 
@@ -186,4 +168,6 @@ class UCB(BaseAgent):
             Tuple containing updated agent state and selected action.
         """
 
-        return state, jnp.argmax(state.Q + c * jnp.sqrt(jnp.log(time) / state.N))
+        Q = state.R / state.N
+        t = jnp.sum(state.N)
+        return state, jnp.argmax(Q + c * jnp.sqrt(jnp.log(t) / state.N))
