@@ -35,11 +35,11 @@ class EGreedy(BaseAgent):
     n_arms : int
         Number of bandit arms.
     e : float
-        Experiment rate (epsilon).
+        Experiment rate (epsilon). ``e`` must be in [0, 1].
     optimistic_start : float, default=0.0
         If non-zero than it is interpreted as the optimistic start to encourage exploration.
     alpha : float, default=0.0
-        If non-zero than exponential recency-weighted average is used to update Q values. ``alpha`` must be in [0, 1).
+        If non-zero than exponential recency-weighted average is used to update Q values. ``alpha`` must be in [0, 1].
     """
 
     def __init__(
@@ -49,6 +49,7 @@ class EGreedy(BaseAgent):
             optimistic_start: Scalar = 0.0,
             alpha: Scalar = 0.0
     ) -> None:
+        assert 0 <= e <= 1
         assert 0 <= alpha <= 1
 
         self.n_arms = n_arms

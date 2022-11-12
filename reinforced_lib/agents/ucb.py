@@ -28,7 +28,7 @@ class UCBState(AgentState):
 
 class UCB(BaseAgent):
     """
-    UCB agent with optional exponential recency-weighted average update.
+    UCB agent with optional discounting.
 
     Parameters
     ----------
@@ -36,23 +36,28 @@ class UCB(BaseAgent):
         Number of bandit arms.
     c : float
         Degree of exploration.
-    alpha : float, default=0.0
-        If non-zero than exponential recency-weighted average is used to update Q values. ``alpha`` must be in [0, 1).
+    gamma : float, default=0.0
+        If non-zero than discounted UCB algorithm [5]_ is used. ``gamma`` must be in [0, 1).
+
+    References
+    ----------
+    .. [5] Garivier, A., & Moulines, E. (2008). On Upper-Confidence Bound Policies for Non-Stationary
+       Bandit Problems. 10.48550/ARXIV.0805.3415.
     """
 
     def __init__(
             self,
             n_arms: jnp.int32,
             c: Scalar,
-            alpha: Scalar = 0.0
+            gamma: Scalar = 0.0
     ) -> None:
         assert c >= 0
-        assert 0 <= alpha <= 1
+        assert 0 <= gamma < 1
 
         self.n_arms = n_arms
 
         self.init = jax.jit(partial(self.init, n_arms=n_arms))
-        self.update = jax.jit(partial(self.update, alpha=alpha))
+        self.update = jax.jit(partial(self.update, gamma=gamma))
         self.sample = jax.jit(partial(self.sample, c=c))
 
     @staticmethod
@@ -60,7 +65,7 @@ class UCB(BaseAgent):
         return gym.spaces.Dict({
             'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'c': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32),
-            'alpha': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
+            'gamma': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
         })
 
     @property
@@ -103,7 +108,7 @@ class UCB(BaseAgent):
 
         return UCBState(
             Q=jnp.zeros(n_arms),
-            N=jnp.ones(n_arms, dtype=jnp.int32)
+            N=jnp.ones(n_arms)
         )
 
     @staticmethod
@@ -112,7 +117,7 @@ class UCB(BaseAgent):
         key: PRNGKey,
         action: jnp.int32,
         reward: Scalar,
-        alpha: Scalar
+        gamma: Scalar
     ) -> UCBState:
         """
         Updates the state of the agent after performing some action and receiving a reward.
@@ -127,8 +132,8 @@ class UCB(BaseAgent):
             Previously selected action.
         reward : float
             Reward as a result of previous action.
-        alpha : float
-            Exponential recency-weighted average factor (used when ``alpha > 0``).
+        gamma : float
+            Discount factor (used when ``gamma > 0``).
 
         Returns
         -------
@@ -137,20 +142,22 @@ class UCB(BaseAgent):
         """
 
         def classic_update(operands: Tuple) -> UCBState:
-            state, action, reward, alpha = operands
+            state, action, reward, _ = operands
             return UCBState(
                 Q=state.Q.at[action].add((reward - state.Q[action]) / state.N[action]),
                 N=state.N.at[action].add(1)
             )
 
-        def erwa_update(operands: Tuple) -> UCBState:
-            state, action, reward, alpha = operands
+        def discounted_update(operands: Tuple) -> UCBState:
+            state, action, reward, gamma = operands
+            N_prev = state.N
+            N = (gamma * state.N).at[action].add(1)
             return UCBState(
-                Q=state.Q.at[action].add(alpha * (reward - state.Q[action])),
-                N=state.N.at[action].add(1)
+                Q=(jnp.zeros_like(state.Q).at[action].set(reward) + gamma * N_prev * state.Q) / N,
+                N=N
             )
 
-        return jax.lax.cond(alpha == 0, classic_update, erwa_update, (state, action, reward, alpha))
+        return jax.lax.cond(gamma == 0, classic_update, discounted_update, (state, action, reward, gamma))
 
     @staticmethod
     def sample(

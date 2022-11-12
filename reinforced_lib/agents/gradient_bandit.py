@@ -39,9 +39,9 @@ class GradientBandit(BaseAgent):
     n_arms : int
         Number of bandit arms.
     lr : float
-        Step size.
+        Step size. ``lr`` must be greater than 0.
     alpha : float, default=0.0
-        If non-zero than exponential recency-weighted average is used to update Q values. ``alpha`` must be in [0, 1).
+        If non-zero than exponential recency-weighted average is used to update Q values. ``alpha`` must be in [0, 1].
 
     References
     ----------
