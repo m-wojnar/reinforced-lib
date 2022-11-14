@@ -33,20 +33,6 @@ Epsilon-greedy
     :members:
 
 
-Gradient Bandit
----------------
-
-.. currentmodule:: reinforced_lib.agents.gradient_bandit
-
-.. autoclass:: GradientBanditState
-    :show-inheritance:
-    :members:
-
-.. autoclass:: GradientBandit
-    :show-inheritance:
-    :members:
-
-
 Particle Filter (Core)
 ----------------------
 
@@ -65,6 +51,20 @@ Particle Filter (Wi-Fi)
     :members:
 
 .. autoclass:: ParticleFilter
+    :show-inheritance:
+    :members:
+
+
+Softmax
+---------------
+
+.. currentmodule:: reinforced_lib.agents.softmax
+
+.. autoclass:: SoftmaxState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: Softmax
     :show-inheritance:
     :members:
 

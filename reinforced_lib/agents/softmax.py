@@ -10,29 +10,29 @@ from reinforced_lib.agents import BaseAgent, AgentState
 
 
 @dataclass
-class GradientBanditState(AgentState):
+class SoftmaxState(AgentState):
     """
-    Container for the state of the gradient bandit agent.
+    Container for the state of the Softmax agent.
 
     Attributes
     ----------
     H : array_like
         Preference for each arm.
-    R : float
-        Average of rewards for each arm.
+    r : float
+        Average of all obtained rewards.
     n : int
         Number of the step.
     """
 
     H: Array
-    R: Scalar
+    r: Scalar
     n: jnp.int64
 
 
-class GradientBandit(BaseAgent):
+class Softmax(BaseAgent):
     """
-    Gradient bandit agent with baseline and optional exponential recency-weighted average update.
-    Implementation inspired by [4]_.
+    Softmax agent with baseline and optional exponential recency-weighted average update.
+    Algorithms policy can be controlled by temperature parameter. Implementation inspired by [4]_.
 
     Parameters
     ----------
@@ -42,6 +42,8 @@ class GradientBandit(BaseAgent):
         Step size. ``lr`` must be greater than 0.
     alpha : float, default=0.0
         If non-zero than exponential recency-weighted average is used to update Q values. ``alpha`` must be in [0, 1].
+    tau : float, default=1.0
+        Temperature parameter. ``tau`` must be greater than 0.
 
     References
     ----------
@@ -52,23 +54,26 @@ class GradientBandit(BaseAgent):
             self,
             n_arms: jnp.int32,
             lr: Scalar,
-            alpha: Scalar = 0.0
+            alpha: Scalar = 0.0,
+            tau: Scalar = 1.0
     ) -> None:
         assert lr > 0
         assert 0 <= alpha <= 1
+        assert tau > 0
 
         self.n_arms = n_arms
 
         self.init = jax.jit(partial(self.init, n_arms=n_arms))
         self.update = jax.jit(partial(self.update, lr=lr, alpha=alpha))
-        self.sample = jax.jit(self.sample)
+        self.sample = jax.jit(partial(self.sample, tau=tau))
 
     @staticmethod
     def parameters_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'lr': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32),
-            'alpha': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
+            'alpha': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32),
+            'tau': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32)
         })
 
     @property
@@ -90,9 +95,9 @@ class GradientBandit(BaseAgent):
     def init(
             key: PRNGKey,
             n_arms: jnp.int32
-    ) -> GradientBanditState:
+    ) -> SoftmaxState:
         """
-        Creates and initializes instance of the gradient bandit agent.
+        Creates and initializes instance of the Softmax agent.
 
         Parameters
         ----------
@@ -103,31 +108,31 @@ class GradientBandit(BaseAgent):
 
         Returns
         -------
-        state : GradientBanditState
-            Initial state of the gradient bandit agent.
+        state : SoftmaxState
+            Initial state of the Softmax agent.
         """
 
-        return GradientBanditState(
+        return SoftmaxState(
             H=jnp.zeros(n_arms),
-            R=0.0,
+            r=0.0,
             n=1
         )
 
     @staticmethod
     def update(
-        state: GradientBanditState,
+        state: SoftmaxState,
         key: PRNGKey,
         action: jnp.int32,
         reward: Scalar,
         lr: Scalar,
         alpha: Scalar
-    ) -> GradientBanditState:
+    ) -> SoftmaxState:
         """
         Updates the state of the agent after performing some action and receiving a reward.
 
         Parameters
         ----------
-        state : GradientBanditState
+        state : SoftmaxState
             Current state of agent.
         key : PRNGKey
             A PRNG key used as the random key.
@@ -142,39 +147,42 @@ class GradientBandit(BaseAgent):
 
         Returns
         -------
-        GradientBanditState
+        SoftmaxState
             Updated agent state.
         """
 
-        R = jnp.where(state.n == 1, reward, state.R)
+        r = jnp.where(state.n == 1, reward, state.r)
         mask = jnp.ones_like(state.H, dtype=jnp.bool_).at[action].set(False)
         pi = jax.nn.softmax(state.H)
 
-        return GradientBanditState(
-            H=state.H + lr * (reward - R) * jnp.where(mask, -pi, 1 - pi),
-            R=R + (reward - R) * jnp.where(alpha == 0, 1 / state.n, alpha),
+        return SoftmaxState(
+            H=state.H + lr * (reward - r) * jnp.where(mask, -pi, 1 - pi),
+            r=r + (reward - r) * jnp.where(alpha == 0, 1 / state.n, alpha),
             n=state.n + 1
         )
 
     @staticmethod
     def sample(
-        state: GradientBanditState,
-        key: PRNGKey
-    ) -> Tuple[GradientBanditState, jnp.int32]:
+        state: SoftmaxState,
+        key: PRNGKey,
+        tau: Scalar
+    ) -> Tuple[SoftmaxState, jnp.int32]:
         """
         Selects next action based on current agent state.
 
         Parameters
         ----------
-        state : GradientBanditState
+        state : SoftmaxState
             Current state of the agent.
         key : PRNGKey
             A PRNG key used as the random key.
+        tau : float
+            Temperature parameter.
 
         Returns
         -------
-        tuple[GradientBanditState, jnp.int32]
+        tuple[SoftmaxState, jnp.int32]
             Tuple containing updated agent state and selected action.
         """
 
-        return state, jax.random.categorical(key, state.H)
+        return state, jax.random.categorical(key, state.H / tau)
