@@ -19,9 +19,9 @@ class RecommenderSystemEnv(gym.Env):
     """
 
     def __init__(self, preferences: Dict) -> None:
+
         self.action_space = gym.spaces.Discrete(len(preferences))
         self.observation_space = gym.spaces.Space()
-
         self._preferences = list(preferences.values())  # preferences as probability of enjoying the content
     
     def reset(
@@ -70,4 +70,5 @@ class RecommenderSystemEnv(gym.Env):
         """
 
         reward = int(np.random.rand() < self._preferences[action])
+        
         return None, reward, False, False, {}

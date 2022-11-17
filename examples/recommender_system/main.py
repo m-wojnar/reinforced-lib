@@ -9,6 +9,8 @@ from reinforced_lib.logs import PlotsLogger, SourceType
 
 
 def run(episodes: int, seed: int) -> None:
+
+    # Construct the extension
     ext = RecommenderSystemExt()
 
     # Create and reset the environment which will simulate users behavior

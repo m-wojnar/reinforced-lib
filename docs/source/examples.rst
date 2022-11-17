@@ -62,7 +62,7 @@ Installing ns3-ai
 
 The ns3-ai module interconnects the ns-3 and Reinforced-lib (or other python-writen software) by transferring data through
 the shared memory pool. The memory can be accessed by both sides thus making the connection. Read more on ns3-ai on the
-`official repository <https://github.com/hust-diangroup/ns3-ai>`_. To install the module colone the ns3-ai repository to the
+`ns3-ai official repository <https://github.com/hust-diangroup/ns3-ai>`_. To install the module colone the ns3-ai repository to the
 ``ns-3-dev/contrib/`` directory and install the ``py_interface`` module with pip:
 
 .. code-block:: bash
@@ -307,6 +307,146 @@ Gym environment integration
 ***************************
 
 
-TODO
-====
+Our library supports defining RL environments in the OpenAI gym format. We want to show you how well are our
+agents suited to work with gym environments on the example of a simple recommender system.
 
+
+Recommender system example
+==========================
+
+Suppose that we have some goods to sell but for each user we can prsent a single product at a time. We assume that
+each user have some unknown to us preferences about our goods and we want to fit the presentation of the product to his
+or her taste. The situation can be modeled as a `Multi-armed bandit problem <https://en.wikipedia.org/wiki/Multi-armed_bandit>`_
+and we can use our agents (for example the :ref:`epsilon-reedy <Epsilon-greedy>` one).
+
+
+Environment definition
+----------------------
+
+We recommend to define the environment class in the separate python file. After the imports section, you should register your
+new environment by assigning some id and a path of the class relative to the project root like this:
+
+.. code-block:: python
+    :linenos:
+    :lineno-start: 7
+
+    gym.envs.registration.register(
+        id='RecommenderSystemEnv-v1',
+        entry_point='examples.recommender_system.env:RecommenderSystemEnv'
+    )
+
+Then you define the environment class with appropriate constructor, which provides the dictionary of users preferences, the observation
+and action space.
+
+.. code-block:: python
+    :linenos:
+    :lineno-start: 13
+
+    class RecommenderSystemEnv(gym.Env):
+
+        def __init__(self, preferences: Dict) -> None:
+
+            self.action_space = gym.spaces.Discrete(len(preferences))
+            self.observation_space = gym.spaces.Space()
+            self._preferences = list(preferences.values())
+
+Because we inherit from the `gym.Env` class, we must provide the `reset()` and the `step()` methods at least, which are also neccessary
+to make our recommender system environment working. The reset method is only responsible for setting seed. The step method
+pulls the bandits arm and returns the reward.
+
+.. code-block:: python
+    :linenos:
+    :lineno-start: 27
+
+    def reset(
+            self,
+            seed: int = None,
+            options: Dict = None
+    ) -> Tuple[gym.spaces.Space, Dict]:
+
+        seed = seed if seed else np.random.randint(1000)
+        super().reset(seed=seed)
+        np.random.seed(seed)
+
+        return None, {}
+    
+    def step(self, action: int) -> Tuple[gym.spaces.Dict, int, bool, bool, Dict]:
+
+        reward = int(np.random.rand() < self._preferences[action])
+
+        return None, reward, False, False, {}
+
+
+Extension definition
+--------------------
+
+To fully benefit from Reinforced-lib functionalities we recomend to implement an extension which will improve the
+communication between the agent and the environment, as described in the :ref:`Custom extensions <custom_extensions>`
+section. A source code with the implemented extension to our simple recommender system can be found in our
+`official repository <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/recommender_system/ext.py>`_.
+
+
+Agent - environment interaction
+-------------------------------
+
+Once you have defined the environment and optionaly the extension, you can train an agent to act in it efficiently. As
+usual, we begin with neccessary imports:
+
+.. code-block:: python
+    :linenos:
+    :lineno-start: 1
+
+    from reinforced_lib import RLib
+    from reinforced_lib.agents import EGreedy
+    from reinforced_lib.logs import PlotsLogger, SourceType
+    from ext import RecommenderSystemExt
+
+    import gym
+    import env
+
+We define a `run()` function that firstly constructs the recommender system extension, creates and resets the appropriate
+environment with user preferences derived from the extension. We also create and initialize the `RLib` instance with selected
+agent, previously constructed extension and optionaly some loggers to visualise the decission making process.
+
+.. code-block:: python
+    :linenos:
+    :lineno-start: 10
+
+    def run(episodes: int, seed: int) -> None:
+
+        # Construct the extension
+        ext = RecommenderSystemExt()
+
+        # Create and reset the environment which will simulate users behavior
+        env = gym.make("RecommenderSystemEnv-v1", preferences=ext.preferences)
+        _ = env.reset(seed=seed)
+
+        # Wrap everything under RLib object with designated agent
+        rl = RLib(
+            agent_type=EGreedy,
+            agent_params={'e': 0.25},
+            ext_type=RecommenderSystemExt,
+            loggers_type=PlotsLogger,
+            loggers_sources=[('action', SourceType.METRIC), ('cumulative', SourceType.METRIC)],
+            loggers_params={'scatter': True}
+        )
+        rl.init(seed)
+
+Finally we finish the `run()` function with a training loop that asks the agent to select an action, acts on the environment
+and receives some reward. Beforehand we select an arbitrary action from environments
+action space and perform the first rewarded step.
+
+.. code-block:: python
+    :linenos:
+    :lineno-start: 30
+
+        # Loop through each episode and update prior knowledge
+        act = env.action_space.sample()
+        _, reward, *_ = env.step(act)
+
+        for i in range(1, episodes):
+            act = rl.sample(action=act, reward=reward, time=i)
+            _, reward, *_ = env.step(act)
+
+Evaluating this `run()` functions with some finite number of episodes and a seed, should result in two plots being generated,
+one representing the actions selected by the agent, and the second one representing the cumulative reward versus time.
