@@ -6,25 +6,37 @@ Getting started
 Installation
 ------------
 
+With pip
+~~~~~~~~
+
+You can install the latest released version of Reinforced-lib from PyPI via:
+
+.. code-block:: bash
+
+    pip install reinforced-lib
+
+From source 
+~~~~~~~~~~~
+
 You can clone source code from our repository:
 
 .. code-block:: bash
 
     git clone git@github.com:m-wojnar/reinforced-lib.git
 
-And install it with the pip3:
+And install it with the pip:
 
 .. code-block:: bash
 
     cd reinforced-lib
-    pip3 install .
+    pip install .
 
 You can also install the development dependencies if you want to build the documentation locally:
 
 .. code-block:: bash
 
     cd reinforced-lib
-    pip3 install ".[dev]"
+    pip install ".[dev]"
 
 
 Basic usage
