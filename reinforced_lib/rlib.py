@@ -253,7 +253,7 @@ class RLib:
         if not self._agent:
             raise NoAgentError()
 
-        return self._agent.action_space()
+        return self._agent.action_space
 
     def init(self, seed: int = 42) -> int:
         """
