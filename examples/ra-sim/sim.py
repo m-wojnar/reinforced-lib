@@ -6,6 +6,7 @@ import gym
 import jax
 import jax.numpy as jnp
 from chex import dataclass, Array, Numeric, PRNGKey, Scalar
+from jax.scipy.special import erf
 
 from reinforced_lib.exts import IEEE_802_11_ax
 
@@ -37,9 +38,20 @@ REFERENCE_SNR = DEFAULT_TX_POWER - DEFAULT_NOISE
 REFERENCE_LOSS = 46.6777
 EXPONENT = 3.0
 
+# experimentally selected values to match the ns-3 simulations results
+MIN_SNRS = jnp.array([12.10, 12.10, 12.10, 12.10, 12.25, 16.25, 17.50, 19.00, 22.80, 24.50, 30.75, 32.75])
+
 
 def distance_to_snr(distance: Numeric) -> Numeric:
     return REFERENCE_SNR - (REFERENCE_LOSS + 10 * EXPONENT * jnp.log10(distance))
+
+
+def success_probability(snr: Scalar, mcs: jnp.int32) -> Scalar:
+    return 0.5 * (1 + erf(2 * (snr - MIN_SNRS[mcs])))
+
+
+def collision_probability(n_wifi: jnp.int32) -> Scalar:
+    return 0.154887 * jnp.log(1.03102 * n_wifi)
 
 
 @dataclass
@@ -64,8 +76,7 @@ def ra_sim(
         total_frames: jnp.int32
 ) -> Env:
 
-    wifi_ext = IEEE_802_11_ax()
-    phy_rates = jnp.array(wifi_ext._wifi_phy_rates)
+    phy_rates = jnp.array(IEEE_802_11_ax()._wifi_phy_rates)
 
     @jax.jit
     def init() -> Tuple[RASimState, Dict]:
@@ -94,8 +105,8 @@ def ra_sim(
     @jax.jit
     def step(state: RASimState, action: jnp.int32, key: PRNGKey) -> Tuple[RASimState, Dict, Scalar, jnp.bool_]:
         n_all = AMPDU_SIZES[action]
-        n_successful = (n_all * wifi_ext.success_probability(state.snr[state.ptr])[action]).astype(jnp.int32)
-        collision = wifi_ext.collision_probability(n_wifi) > jax.random.uniform(key)
+        n_successful = (n_all * success_probability(state.snr[state.ptr], action)).astype(jnp.int32)
+        collision = collision_probability(n_wifi) > jax.random.uniform(key)
 
         n_successful = n_successful * (1 - collision)
         n_failed = n_all - n_successful

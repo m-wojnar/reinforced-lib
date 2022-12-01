@@ -88,10 +88,6 @@ class IEEE_802_11_ax(BaseExt):
     def context(self, *args, **kwargs) -> np.ndarray:
         return self.rates()
 
-    @observation(observation_type=gym.spaces.Box(0.0, 1.0, (1,)))
-    def collision_probability(self, n_wifi: int, *args, **kwargs) -> float:
-        return 0.154887 * np.log(1.03102 * n_wifi)
-
     @observation(observation_type=gym.spaces.Box(0.0, 1.0, (len(_wifi_modes_rates),)))
     def success_probability(self, snr: float, *args, **kwargs) -> np.ndarray:
         return 0.5 * (1 + erf(2 * (snr - self._wifi_modes_snrs)))

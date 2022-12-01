@@ -173,8 +173,8 @@ example observation function that provides approximated collision probability in
 .. code-block:: python
 
     @observation()
-    def pc(self, n_wifi, *args, **kwargs):
-        return 0.154887 * np.log(1.03102 * n_wifi)
+    def success_probability(self, snr, *args, **kwargs):
+        return 0.5 * (1 + erf(2 * (snr - self._wifi_modes_snrs)))
 
 Note that the observation function can take parameters that are specified in the observation space.
 ``BaseExt`` methods will automatically pass the given observation to the function to allow
@@ -185,9 +185,9 @@ and returned type in the decorator:
 
 .. code-block:: python
 
-    @observation(observation_name='pc', observation_type=gym.spaces.Box(0.0, 1.0, (1,)))
-    def collision_probability(self, n_wifi: int, *args, **kwargs) -> float:
-        return 0.154887 * np.log(1.03102 * n_wifi)
+    @observation(observation_name='success_probability', observation_type=gym.spaces.Box(0.0, 1.0, (1,)))
+    def ps(self, snr: float, *args, **kwargs) -> float:
+        return 0.5 * (1 + erf(2 * (snr - self._wifi_modes_snrs)))
 
 Full source code of the IEEE 802.11ax extension can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/exts/ieee_802_11_ax.py>`_.
 
