@@ -28,13 +28,12 @@ we can provide full access to JAX's jit functionality, which boosts the agents p
    )
 
    env = gym.make('WifiSimulator-v1')
+   state, _ = env.reset()
+   terminated = False
 
-   state = env.reset()
-   done = False
-
-   while not done:
+   while not terminated:
        action = rlib.sample(**state)
-       state, reward, done, info = env.step(action)
+       state, reward, terminated, *_ = env.step(action)
 
 
 Integrated IEEE 802.11ax support

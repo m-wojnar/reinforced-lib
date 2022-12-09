@@ -11,7 +11,7 @@ implement your own with the help of this short guide.
 Key concepts
 ------------
 
-There are two main benefits of using extensions:
+There are three main benefits of using extensions:
 
 #. Automatic initialization of agents - en extensions can provide default arguments that can be used to
    initialize an agent. For example, if we would like to create the ``wifi.ParticleFilter``
@@ -51,6 +51,37 @@ There are two main benefits of using extensions:
            }
            ext_type=IEEE_802_11_ax,
        )
+
+#. Simplification of parameter passing - extensions allow automatic matching observations returned by the environment
+   to the appropriate methods of the agent. The code snippet below shows the use of the library to select the next
+   action without using any extension:
+
+   .. code-block:: python
+
+       action = rl.sample(
+           update_observations={
+               'action': action,
+               'n_successful': ns,
+               'n_failed': nf,
+               'time': t,
+               'power': p,
+               'cw': cw,
+               'min_snrs':  min_snrs
+           },
+           sample_observations={
+               'time': t,
+               'power': p,
+               'rates': rates,
+               'min_snrs':  min_snrs
+           }
+       )
+
+   The code below is equivalent to the above, but uses the properly defined
+   ``IEEE_802_11_ax`` :ref:`extension <IEEE 802.11ax>` extension:
+
+   .. code-block:: python
+
+       action = rl.sample(**observations)
 
 #. Filling missing parameters - some of parameters required by the agent can be filled with known values or
    calculated based on a set of basic observations. For example, a ``sample`` method of the ``wifi.ParticleFilter``
