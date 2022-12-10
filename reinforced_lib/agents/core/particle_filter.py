@@ -17,8 +17,8 @@ class ParticleFilterState(AgentState):
     ----------
     positions : array_like
         Positions of filter particles.
-    weights : array_like
-        Weights of filter particles.
+    logit_weights : array_like
+        Unormalized log weights of filter particles.
     last_measurement : float
         Time of the last update.
     """
@@ -45,12 +45,11 @@ def simple_resample(operands: Tuple[ParticleFilterState, PRNGKey]) -> ParticleFi
     """
 
     state, key = operands
-    logit_weights = state.logit_weights - jnp.max(state.logit_weights)
-    positions_idx = jax.random.categorical(key, logit_weights, shape=state.positions.shape)
+    positions_idx = jax.random.categorical(key, state.logit_weights, shape=state.positions.shape)
 
     return ParticleFilterState(
         positions=state.positions[positions_idx],
-        logit_weights=jnp.zeros_like(logit_weights),
+        logit_weights=jnp.zeros_like(state.logit_weights),
         last_measurement=state.last_measurement
     )
 
@@ -77,12 +76,8 @@ def effective_sample_size(state: ParticleFilterState, threshold: Scalar = 0.5) -
     .. [3] https://en.wikipedia.org/wiki/Effective_sample_size#Weighted_samples
     """
 
-    logit_weights = state.logit_weights - jnp.max(state.logit_weights)
-    weights = jnp.exp(logit_weights)
-    weights = weights / jnp.sum(weights)
-    sample_size = 1 / jnp.sum(weights ** 2)
-
-    return sample_size < state.positions.size * threshold
+    weights = jax.nn.softmax(state.logit_weights)
+    return 1 < jnp.sum(weights ** 2) * state.positions.size * threshold
 
 
 def simple_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, *args) -> ParticleFilterState:
@@ -136,7 +131,7 @@ def linear_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, t
         Updated filter state.
     """
 
-    return simple_transition(state, key, scale * (state.last_measurement - time))
+    return simple_transition(state, key, scale * (time - state.last_measurement))
 
 
 def affine_transition(state: ParticleFilterState, key: PRNGKey, scale: Array, time: Scalar) -> ParticleFilterState:
@@ -161,7 +156,7 @@ def affine_transition(state: ParticleFilterState, key: PRNGKey, scale: Array, ti
         Updated filter state.
     """
 
-    return simple_transition(state, key, scale[0] * (state.last_measurement - time) + scale[1])
+    return simple_transition(state, key, scale[0] * (time - state.last_measurement) + scale[1])
 
 
 class ParticleFilter:
@@ -292,7 +287,6 @@ class ParticleFilter:
             resample_criterion_fn: Callable[[ParticleFilterState], bool],
             transition_fn: Callable[[ParticleFilterState, PRNGKey, Numeric, Scalar], ParticleFilterState],
             time: Scalar,
-            measurement_time: Scalar,
             scale: Numeric
     ) -> ParticleFilterState:
         """
@@ -337,8 +331,6 @@ class ParticleFilter:
 
         time : float
             Current time.
-        measurement_time : float
-            Last measurement time.
         scale : float or array_like
             Scale of the random movement of particles.
 
@@ -357,7 +349,7 @@ class ParticleFilter:
         return ParticleFilterState(
             positions=state.positions,
             logit_weights=state.logit_weights,
-            last_measurement=measurement_time
+            last_measurement=time
         )
 
     @staticmethod

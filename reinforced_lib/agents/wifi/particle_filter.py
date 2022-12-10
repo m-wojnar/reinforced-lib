@@ -126,8 +126,8 @@ class ParticleFilter(BaseAgent):
             time: Scalar,
             power: Scalar,
             cw: jnp.int32,
-            scale: Scalar,
-            min_snrs: Array
+            min_snrs: Array,
+            scale: Scalar
     ) -> ParticleFilterState:
         """
         Updates the state of the agent after performing some action and receiving a reward.
@@ -150,10 +150,10 @@ class ParticleFilter(BaseAgent):
             Power used during the transmission [dBm].
         cw : int
             Contention Window used during the transmission.
-        scale : float
-            Velocity of the random movement of particles.
         min_snrs : array_like
             Minimal SNR value that is required for a successful transmission for each MCS [dBm].
+        scale : float
+            Velocity of the random movement of particles.
 
         Returns
         -------
@@ -166,7 +166,6 @@ class ParticleFilter(BaseAgent):
             key=key,
             observation=(action, n_successful, n_failed, power, cw, min_snrs),
             time=time,
-            measurement_time=time,
             scale=scale
         )
 
@@ -211,14 +210,7 @@ class ParticleFilter(BaseAgent):
         _, snr_sample = pf.sample(state, key)
         p_s = success_probability_fn(min_snrs, snr_sample + power)
 
-        action = jnp.argmax(p_s * rates)
-        state = ParticleFilterState(
-            positions=state.positions,
-            logit_weights=state.logit_weights,
-            last_measurement=time
-        )
-
-        return state, action
+        return state, jnp.argmax(p_s * rates)
 
     @staticmethod
     def _observation_fn(
@@ -241,31 +233,18 @@ class ParticleFilter(BaseAgent):
             Updated state of the agent.
         """
 
-        def on_success(operands: Tuple) -> ParticleFilterState:
-            state, n, cw, p_s = operands
-            return ParticleFilterState(
-                positions=state.positions,
-                logit_weights=state.logit_weights + n * jnp.log(p_s * (1 - 1 / cw)),
-                last_measurement=state.last_measurement
-            )
-
-        def on_failure(operands: Tuple) -> ParticleFilterState:
-            state, n, cw, p_s = operands
-            return ParticleFilterState(
-                positions=state.positions,
-                logit_weights=state.logit_weights + n * jnp.log(1 - p_s * (1 - 1 / cw)),
-                last_measurement=state.last_measurement
-            )
-
         success_probability_fn = jax.vmap(ParticleFilter._success_probability, in_axes=[None, 0])
 
         action, n_successful, n_failed, power, cw, min_snrs = observation
         p_s = success_probability_fn(min_snrs[action], state.positions + power)
 
-        state = jax.lax.cond(n_successful > 0, on_success, lambda op: op[0], (state, n_successful, cw, p_s))
-        state = jax.lax.cond(n_failed > 0, on_failure, lambda op: op[0], (state, n_failed, cw, p_s))
-
-        return state
+        return ParticleFilterState(
+            positions=state.positions,
+            logit_weights=state.logit_weights +
+                          jnp.where(n_successful > 0, n_successful * jnp.log(p_s * (1 - 1 / cw)), 0) +
+                          jnp.where(n_failed > 0, n_failed * jnp.log(1 - p_s * (1 - 1 / cw)), 0),
+            last_measurement=state.last_measurement
+        )
 
     @staticmethod
     def _success_probability(min_snr: Scalar, observed_snr: Scalar) -> Scalar:
