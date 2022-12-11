@@ -1,6 +1,6 @@
 import gym.spaces
 import numpy as np
-from jax.scipy.special import erf
+from jax.scipy.stats import norm
 
 from reinforced_lib.exts import BaseExt, observation, parameter
 
@@ -92,7 +92,7 @@ class IEEE_802_11_ax(BaseExt):
 
     @observation(observation_type=gym.spaces.Box(0.0, 1.0, (len(_wifi_modes_rates),)))
     def success_probability(self, snr: float, *args, **kwargs) -> np.ndarray:
-        return 0.5 * (1 + erf(2 * (snr - self._wifi_modes_snrs)))
+        return norm.cdf(snr, loc=self._wifi_modes_snrs, scale=1 / np.sqrt(8))
 
     @observation(observation_type=gym.spaces.Discrete(len(_wifi_modes_rates)))
     def action(self, mcs: int, *args, **kwargs) -> int:

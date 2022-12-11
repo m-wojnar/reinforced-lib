@@ -5,7 +5,7 @@ import gym.spaces
 import jax
 import jax.numpy as jnp
 from chex import Array, PRNGKey, Scalar
-from jax.scipy.special import erf
+from jax.scipy.stats import norm
 
 from reinforced_lib.agents import BaseAgent
 from reinforced_lib.agents.core.particle_filter import ParticleFilter as ParticleFilterBase
@@ -238,11 +238,13 @@ class ParticleFilter(BaseAgent):
         action, n_successful, n_failed, power, cw, min_snrs = observation
         p_s = success_probability_fn(min_snrs[action], state.positions + power)
 
+        weights_update = jnp.where(n_successful > 0, n_successful * jnp.log(p_s * (1 - 1 / cw)), 0) + \
+                         jnp.where(n_failed > 0, n_failed * jnp.log(1 - p_s * (1 - 1 / cw)), 0)
+        logit_weights = state.logit_weights + weights_update
+
         return ParticleFilterState(
             positions=state.positions,
-            logit_weights=state.logit_weights +
-                          jnp.where(n_successful > 0, n_successful * jnp.log(p_s * (1 - 1 / cw)), 0) +
-                          jnp.where(n_failed > 0, n_failed * jnp.log(1 - p_s * (1 - 1 / cw)), 0),
+            logit_weights=logit_weights - jnp.nanmax(logit_weights),
             last_measurement=state.last_measurement
         )
 
@@ -264,4 +266,4 @@ class ParticleFilter(BaseAgent):
             Probability of a successful transmission.
         """
 
-        return 0.5 * (1 + erf(2 * (observed_snr - min_snr)))
+        return norm.cdf(observed_snr, loc=min_snr, scale=1 / jnp.sqrt(8))
