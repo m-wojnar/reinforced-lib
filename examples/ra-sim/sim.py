@@ -6,9 +6,7 @@ import gym
 import jax
 import jax.numpy as jnp
 from chex import dataclass, Array, Numeric, PRNGKey, Scalar
-from jax.scipy.special import erf
-
-from reinforced_lib.exts import IEEE_802_11_ax
+from jax.scipy.stats import norm
 
 
 gym.envs.registration.register(
@@ -47,7 +45,7 @@ def distance_to_snr(distance: Numeric) -> Numeric:
 
 
 def success_probability(snr: Scalar, mcs: jnp.int32) -> Scalar:
-    return 0.5 * (1 + erf(2 * (snr - MIN_SNRS[mcs])))
+    return norm.cdf(snr, loc=MIN_SNRS[mcs], scale=1 / jnp.sqrt(8))
 
 
 def collision_probability(n_wifi: jnp.int32) -> Scalar:
@@ -76,7 +74,7 @@ def ra_sim(
         total_frames: jnp.int32
 ) -> Env:
 
-    phy_rates = jnp.array(IEEE_802_11_ax()._wifi_phy_rates)
+    phy_rates = jnp.array([6.8, 13.6, 20.4, 27.2, 40.8, 54.6, 61.3, 68.1, 81.8, 90.9, 101.8, 112.5])
 
     @jax.jit
     def init() -> Tuple[RASimState, Dict]:

@@ -14,18 +14,16 @@ from reinforced_lib.agents.core.particle_filter import ParticleFilterState, line
 
 class ParticleFilter(BaseAgent):
     """
-    Particle Filter agent designed for IEEE 802.11 environments. Implementation based on [2]_.
+    Particle Filter agent designed for IEEE 802.11ax environments. Implementation based on [2]_.
 
     Parameters
     ----------
-    n_mcs : int
-        Number of MCS modes.
-    min_snr : float
-        Minial approximated SNR value [dBm].
-    max_snr : float
-        Maximal approximated SNR value [dBm].
-    initial_power : float
-        Initial transmission power [dBm].
+    min_snr_init : float
+        Minial SNR value [dBm] in initial particles' distribution.
+    max_snr_init : float
+        Maximal SNR value [dBm] in initial particles' distribution.
+    default_power : float
+        Default transmission power [dBm].
     particles_num : int, default=1000
         Number of created particles.
     scale : float, default=10.0
@@ -37,22 +35,28 @@ class ParticleFilter(BaseAgent):
        for Wi-Fi 6 Dense Deployments. IEEE Access. 8. 168898-168909. 10.1109/ACCESS.2020.3023552.
     """
 
+    _wifi_modes_snrs = jnp.array([
+        4.12, 7.15, 10.05, 13.66,
+        16.81, 21.58, 22.80, 23.96,
+        28.66, 29.82, 33.82, 35.30
+    ])
+
     def __init__(
             self,
-            n_mcs: jnp.int32,
-            min_snr: Scalar,
-            max_snr: Scalar,
-            initial_power: Scalar,
+            default_power: Scalar,
+            min_snr_init: Scalar = 0.0,
+            max_snr_init: Scalar = 40.0,
             particles_num: jnp.int32 = 1000,
             scale: Scalar = 10.0
     ) -> None:
         assert scale > 0
         assert particles_num > 0
 
-        self.n_mcs = n_mcs
+        self.n_mcs = len(ParticleFilter._wifi_modes_snrs)
 
         self.pf = ParticleFilterBase(
-            initial_distribution_fn=lambda key, shape: jax.random.uniform(key, shape, minval=min_snr, maxval=max_snr) - initial_power,
+            initial_distribution_fn=lambda key, shape: 
+                jax.random.uniform(key, shape, minval=min_snr_init, maxval=max_snr_init) - default_power,
             positions_shape=(particles_num,),
             weights_shape=(particles_num,),
             scale=scale,
@@ -66,10 +70,9 @@ class ParticleFilter(BaseAgent):
     @staticmethod
     def parameters_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'n_mcs': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'min_snr': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
-            'max_snr': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
-            'initial_power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
+            'default_power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
+            'min_snr_init': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
+            'max_snr_init': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
             'particles_num': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'scale': gym.spaces.Box(0.0, jnp.inf, (1,))
         })
@@ -82,8 +85,7 @@ class ParticleFilter(BaseAgent):
             'n_failed': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
             'time': gym.spaces.Box(0.0, jnp.inf, (1,)),
             'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
-            'cw': gym.spaces.Discrete(32767),
-            'min_snrs': gym.spaces.Box(-jnp.inf, jnp.inf, (self.n_mcs,))
+            'cw': gym.spaces.Discrete(32767)
         })
 
     @property
@@ -91,8 +93,7 @@ class ParticleFilter(BaseAgent):
         return gym.spaces.Dict({
             'time': gym.spaces.Box(0.0, jnp.inf, (1,)),
             'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
-            'rates': gym.spaces.Box(0.0, jnp.inf, (self.n_mcs,)),
-            'min_snrs': gym.spaces.Box(-jnp.inf, jnp.inf, (self.n_mcs,))
+            'rates': gym.spaces.Box(0.0, jnp.inf, (self.n_mcs,))
         })
 
     @property
@@ -126,7 +127,6 @@ class ParticleFilter(BaseAgent):
             time: Scalar,
             power: Scalar,
             cw: jnp.int32,
-            min_snrs: Array,
             scale: Scalar
     ) -> ParticleFilterState:
         """
@@ -150,8 +150,6 @@ class ParticleFilter(BaseAgent):
             Power used during the transmission [dBm].
         cw : int
             Contention Window used during the transmission.
-        min_snrs : array_like
-            Minimal SNR value that is required for a successful transmission for each MCS [dBm].
         scale : float
             Velocity of the random movement of particles.
 
@@ -164,7 +162,7 @@ class ParticleFilter(BaseAgent):
         return self.pf.update(
             state=state,
             key=key,
-            observation=(action, n_successful, n_failed, power, cw, min_snrs),
+            observation=(action, n_successful, n_failed, power, cw),
             time=time,
             scale=scale
         )
@@ -176,8 +174,7 @@ class ParticleFilter(BaseAgent):
             time: Scalar,
             power: Scalar,
             rates: Array,
-            min_snrs: Array,
-            pf: ParticleFilterBase,
+            pf: ParticleFilterBase
     ) -> Tuple[ParticleFilterState, jnp.int32]:
         """
         Selects next action based on current agent state.
@@ -194,8 +191,6 @@ class ParticleFilter(BaseAgent):
             Power used during the transmission [dBm].
         rates : array_like
             Transmission data rates corresponding to each MCS [Mb/s].
-        min_snrs : array_like
-            Minimal SNR value that is required for a successful transmission for each MCS [dBm].
         pf : ParticleFilterBase
             Instance of the base ParticleFilter class.
 
@@ -205,10 +200,8 @@ class ParticleFilter(BaseAgent):
             Tuple containing updated agent state and selected action.
         """
 
-        success_probability_fn = jax.vmap(ParticleFilter._success_probability, in_axes=[0, None])
-
         _, snr_sample = pf.sample(state, key)
-        p_s = success_probability_fn(min_snrs, snr_sample + power)
+        p_s = ParticleFilter._success_probability(snr_sample + power)
 
         return state, jnp.argmax(p_s * rates)
 
@@ -225,7 +218,7 @@ class ParticleFilter(BaseAgent):
         state : ParticleFilterState
             Current state of the agent.
         observation : tuple
-            Tuple containing ``action``, ``n_successful``, ``n_failed``, ``power``, ``cw``, and ``min_snrs``.
+            Tuple containing ``action``, ``n_successful``, ``n_failed``, ``power``, and ``cw``.
 
         Returns
         -------
@@ -233,10 +226,8 @@ class ParticleFilter(BaseAgent):
             Updated state of the agent.
         """
 
-        success_probability_fn = jax.vmap(ParticleFilter._success_probability, in_axes=[None, 0])
-
-        action, n_successful, n_failed, power, cw, min_snrs = observation
-        p_s = success_probability_fn(min_snrs[action], state.positions + power)
+        action, n_successful, n_failed, power, cw = observation
+        p_s = jax.vmap(ParticleFilter._success_probability)(state.positions + power)[:, action]
 
         weights_update = jnp.where(n_successful > 0, n_successful * jnp.log(p_s * (1 - 1 / cw)), 0) + \
                          jnp.where(n_failed > 0, n_failed * jnp.log(1 - p_s * (1 - 1 / cw)), 0)
@@ -249,21 +240,19 @@ class ParticleFilter(BaseAgent):
         )
 
     @staticmethod
-    def _success_probability(min_snr: Scalar, observed_snr: Scalar) -> Scalar:
+    def _success_probability(observed_snr: Scalar) -> Array:
         """
         Calculates approximated probability of a successful transmission for a given minimal and observed SNR.
 
         Parameters
         ----------
-        min_snr : float
-            Minimal SNR value that is required for a successful transmission [dBm].
         observed_snr : float
             Observed SNR value [dBm].
 
         Returns
         -------
         prob : float
-            Probability of a successful transmission.
+            Probability of a successful transmission for all MCS values.
         """
 
-        return norm.cdf(observed_snr, loc=min_snr, scale=1 / jnp.sqrt(8))
+        return norm.cdf(observed_snr, loc=ParticleFilter._wifi_modes_snrs, scale=1 / jnp.sqrt(8))

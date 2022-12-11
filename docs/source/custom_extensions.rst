@@ -23,10 +23,7 @@ There are three main benefits of using extensions:
        rl = rfl.RLib(
            agent_type=ParticleFilter,
            agent_params={
-               'n_mcs': 12,
-               'min_snr': 0.0,
-               'max_snr': 40.0,
-               'initial_power': 16.0206
+               'default_power': 16.0206
            }
        )
 
@@ -47,7 +44,7 @@ There are three main benefits of using extensions:
        rl = rfl.RLib(
            agent_type=ParticleFilter,
            agent_params={
-               'initial_power': 21.0
+               'default_power': 16.0206
            }
            ext_type=IEEE_802_11_ax,
        )
@@ -65,14 +62,12 @@ There are three main benefits of using extensions:
                'n_failed': nf,
                'time': t,
                'power': p,
-               'cw': cw,
-               'min_snrs':  min_snrs
+               'cw': cw
            },
            sample_observations={
                'time': t,
                'power': p,
-               'rates': rates,
-               'min_snrs':  min_snrs
+               'rates': rates
            }
        )
 
@@ -99,8 +94,7 @@ There are three main benefits of using extensions:
            'n_failed': 0,
            'power': 16.0206,
            'cw': 15,
-           'rates': jnp.array([7.3, 14.6, 21.9, 29.3, 43.9, 58.5, 65.8, 73.1, 87.8, 97.5, 109.7, 121.9]),
-           'min_snrs': jnp.array([0.5, 3.4, 6.5, 9.4, 13.1, 16.9, 18.9, 20.6, 24.1, 25.8, 31.7, 33.7]),
+           'rates': jnp.array([7.3, 14.6, 21.9, 29.3, 43.9, 58.5, 65.8, 73.1, 87.8, 97.5, 109.7, 121.9])
        }
        action = rl.sample(**observations)
 
@@ -129,8 +123,7 @@ There are three main benefits of using extensions:
            'n_successful': 10,
            'n_failed': 0,
            'power': 16.0206,
-           'cw': 15,
-           'min_snrs': jnp.array([1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0]),
+           'cw': 15
        }
        action = rl.sample(**observations)
 
@@ -175,7 +168,7 @@ arguments:
 .. code-block:: python
 
     @parameter()
-    def initial_power(self):
+    def default_power(self):
         return 16.0206
 
 We can also specify type of the returned value in the OpenAI Gym format. It will help the library to check if
@@ -184,7 +177,7 @@ a given value type is compatible with the argument type required by the agent:
 .. code-block:: python
 
     @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-    def initial_power(self) -> float:
+    def default_power(self) -> float:
         return 16.0206
 
 Note that name of the function must match name of the argument required by the agent. If there already exists
@@ -193,19 +186,22 @@ the decorator:
 
 .. code-block:: python
 
-    @parameter(parameter_name='initial_power', parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    @parameter(parameter_name='default_power', parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
     def default_pow(self) -> float:
         return 16.0206
 
 We define the *observation functions* analogous to parameter functions. The only differences are that we use
 the ``@observation`` decorator and that the implemented method takes additional parameters. Below is an
-example observation function that provides approximated collision probability in dense IEEE 802.11ax networks:
+example observation function that provides reward calculated as approximated throughput in the IEEE 802.11ax networks:
 
 .. code-block:: python
 
     @observation()
-    def success_probability(self, snr, *args, **kwargs):
-        return 0.5 * (1 + erf(2 * (snr - self._wifi_modes_snrs)))
+    def reward(self, mcs, n_successful, n_failed, *args, **kwargs):
+        if n_successful + n_failed > 0:
+            return self._wifi_modes_rates[mcs] * n_successful / (n_successful + n_failed)
+        else:
+            return 0.0
 
 Note that the observation function can take parameters that are specified in the observation space.
 ``BaseExt`` methods will automatically pass the given observation to the function to allow
@@ -216,9 +212,12 @@ and returned type in the decorator:
 
 .. code-block:: python
 
-    @observation(observation_name='success_probability', observation_type=gym.spaces.Box(0.0, 1.0, (1,)))
-    def ps(self, snr: float, *args, **kwargs) -> float:
-        return 0.5 * (1 + erf(2 * (snr - self._wifi_modes_snrs)))
+    @observation(observation_name='reward', observation_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    def custom_reward(self, mcs: int, n_successful: int, n_failed: int, *args, **kwargs) -> float:
+        if n_successful + n_failed > 0:
+            return self._wifi_modes_rates[mcs] * n_successful / (n_successful + n_failed)
+        else:
+            return 0.0
 
 Full source code of the IEEE 802.11ax extension can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/exts/ieee_802_11_ax.py>`_.
 

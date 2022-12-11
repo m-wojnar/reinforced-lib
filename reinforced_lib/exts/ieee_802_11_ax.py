@@ -1,6 +1,5 @@
 import gym.spaces
 import numpy as np
-from jax.scipy.stats import norm
 
 from reinforced_lib.exts import BaseExt, observation, parameter
 
@@ -48,51 +47,13 @@ class IEEE_802_11_ax(BaseExt):
         121.9
     ], dtype=np.float32)
 
-    _wifi_phy_rates = np.array([
-        6.8,
-        13.6,
-        20.4,
-        27.2,
-        40.8,
-        54.6,
-        61.3,
-        68.1,
-        81.8,
-        90.9,
-        101.8,
-        112.5
-    ], dtype=np.float32)
-
-    _wifi_modes_snrs = np.array([
-        10.613624240405125,
-        10.647249582547907,
-        10.660723984151614,
-        10.682584060100158,
-        11.151267538857537,
-        15.413200906170632,
-        16.735812667249125,
-        18.09117593040658,
-        21.80629059204096,
-        23.33182497361092,
-        29.78890607654747,
-        31.750234694079595
-    ], dtype=np.float32)
-
     @observation(observation_type=gym.spaces.Box(0.0, np.inf, (len(_wifi_modes_rates),)))
     def rates(self, *args, **kwargs) -> np.ndarray:
         return self._wifi_modes_rates
 
-    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (len(_wifi_modes_snrs),)))
-    def min_snrs(self, *args, **kwargs) -> np.ndarray:
-        return self._wifi_modes_snrs
-
     @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (len(_wifi_modes_rates),)))
     def context(self, *args, **kwargs) -> np.ndarray:
         return self.rates()
-
-    @observation(observation_type=gym.spaces.Box(0.0, 1.0, (len(_wifi_modes_rates),)))
-    def success_probability(self, snr: float, *args, **kwargs) -> np.ndarray:
-        return norm.cdf(snr, loc=self._wifi_modes_snrs, scale=1 / np.sqrt(8))
 
     @observation(observation_type=gym.spaces.Discrete(len(_wifi_modes_rates)))
     def action(self, mcs: int, *args, **kwargs) -> int:
@@ -101,26 +62,18 @@ class IEEE_802_11_ax(BaseExt):
     @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
     def reward(self, mcs: int, n_successful: int, n_failed: int, *args, **kwargs) -> float:
         if n_successful + n_failed > 0:
-            return self._wifi_phy_rates[mcs] * n_successful / (n_successful + n_failed)
+            return self._wifi_modes_rates[mcs] * n_successful / (n_successful + n_failed)
         else:
             return 0.0
-
-    @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
-    def n_arms(self) -> int:
-        return self.n_mcs()
 
     @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
     def n_mcs(self) -> int:
         return len(self._wifi_modes_rates)
 
-    @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-    def min_snr(self) -> float:
-        return 0.0
+    @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
+    def n_arms(self) -> int:
+        return self.n_mcs()
 
     @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-    def max_snr(self) -> float:
-        return 40.0
-
-    @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-    def initial_power(self) -> float:
+    def default_power(self) -> float:
         return 16.0206
