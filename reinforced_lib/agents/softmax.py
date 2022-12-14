@@ -155,11 +155,10 @@ class Softmax(BaseAgent):
         """
 
         r = jnp.where(state.n == 1, reward, state.r)
-        mask = jnp.ones_like(state.H, dtype=jnp.bool_).at[action].set(False)
         pi = jax.nn.softmax(state.H / tau)
 
         return SoftmaxState(
-            H=state.H + lr * (reward - r) * jnp.where(mask, pi, 1 - pi),
+            H=state.H + lr * (reward - r) * (jnp.zeros_like(state.H).at[action].set(1) - pi),
             r=r + (reward - r) * jnp.where(alpha == 0, 1 / state.n, alpha),
             n=state.n + 1
         )
