@@ -17,9 +17,9 @@ class UCBState(AgentState):
     Attributes
     ----------
     R : array_like
-        Sum of rewards obtained for each arm
+        Sum of the rewards obtained for each arm.
     N : array_like
-        Number of tries for each arm
+        Number of tries for each arm.
     """
 
     R: Array
@@ -27,17 +27,19 @@ class UCBState(AgentState):
 
 
 class UCB(BaseAgent):
-    """
-    UCB agent with optional discounting.
+    r"""
+    UCB agent with optional discounting. The main idea behind this algorithm is to introduce a preference factor
+    in its policy, so that the selection of the next action is based on both the current estimation of the
+    action-value function and the uncertainty of this estimation.
 
     Parameters
     ----------
     n_arms : int
-        Number of bandit arms.
+        Number of bandit arms. :math:`N \in \mathbb{N}_{+}`.
     c : float
-        Degree of exploration.
+        Degree of exploration. :math:`c \geq 0`.
     gamma : float, default=1.0
-        If less than one, discounted UCB algorithm [5]_ is used. ``gamma`` must be in (0, 1].
+        If less than one, a discounted UCB algorithm [5]_ is used. :math:`\gamma \in (0, 1]`.
 
     References
     ----------
@@ -89,18 +91,19 @@ class UCB(BaseAgent):
             n_arms: jnp.int32
     ) -> UCBState:
         """
-        Creates and initializes instance of the UCB agent.
+        Creates and initializes instance of the UCB agent for ``n_arms`` arms.  The sum of the rewards is set to zero
+        and the number of tries is set to one for each arm.
 
         Parameters
         ----------
         key : PRNGKey
             A PRNG key used as the random key.
         n_arms : int
-            Number of contextual bandit arms.
+            Number of bandit arms.
 
         Returns
         -------
-        state : UCBState
+        UCBState
             Initial state of the UCB agent.
         """
 
@@ -117,8 +120,16 @@ class UCB(BaseAgent):
         reward: Scalar,
         gamma: Scalar
     ) -> UCBState:
-        """
-        Updates the state of the agent after performing some action and receiving a reward.
+        r"""
+        In a stationary case, the sum of the rewards for a given arm is increased by reward :math:`r` obtained after
+        step :math:`t` and the number of tries for the corresponding arm is incremented. In a non-stationary case,
+        the update follows the equations:
+
+        .. math::
+          \begin{gather}
+            R_{t + 1}(a) = \mathbb{1}_{A_t = a} r + \gamma R_t(a) , \\
+            N_{t + 1}(a) = \mathbb{1}_{A_t = a} + \gamma N_t(a).
+          \end{gather}
 
         Parameters
         ----------
@@ -129,7 +140,7 @@ class UCB(BaseAgent):
         action : int
             Previously selected action.
         reward : float
-            Reward as a result of previous action.
+            Reward collected by the agent after taking the previous action.
         gamma : float
             Discount factor.
 
@@ -150,8 +161,16 @@ class UCB(BaseAgent):
         key: PRNGKey,
         c: Scalar
     ) -> Tuple[UCBState, jnp.int32]:
-        """
-        Selects next action based on current agent state.
+        r"""
+        UCB agent follows the policy:
+
+        .. math::
+          A = \operatorname*{argmax}_{a \in \mathscr{A}} \left[ Q(a) + c \sqrt{\frac{\ln \left( {\sum_{a' \in \mathscr{A}}} N(a') \right) }{N(a)}} \right] .
+
+        where :math:`\mathscr{A}` is a set of all actions and :math:`Q` is calculated as :math:`Q(a) = \frac{R(a)}{N(a)}`.
+        The second component of the sum represents a sort of upper bound on the value of :math:`Q`, where :math:`c`
+        behaves like a confidence interval and the square root - like an approximation of the :math:`Q` function
+        estimation uncertainty. Note that the UCB policy is deterministic.
 
         Parameters
         ----------
@@ -165,7 +184,7 @@ class UCB(BaseAgent):
         Returns
         -------
         tuple[UCBState, jnp.int32]
-            Tuple containing updated agent state and selected action.
+            Tuple containing the updated agent state and the selected action.
         """
 
         Q = state.R / state.N

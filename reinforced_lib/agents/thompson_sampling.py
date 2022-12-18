@@ -12,7 +12,7 @@ from reinforced_lib.agents import BaseAgent, AgentState
 @dataclass
 class ThompsonSamplingState(AgentState):
     """
-    Container for the state of the Thompson Sampling agent.
+    Container for the state of the Thompson sampling agent.
 
     Attributes
     ----------
@@ -30,19 +30,22 @@ class ThompsonSamplingState(AgentState):
 
 
 class ThompsonSampling(BaseAgent):
-    """
-    Contextual Thompson Sampling agent with exponential smoothing. Implementation inspired by [1]_.
+    r"""
+    Contextual Bernoulli Thompson sampling agent with the exponential smoothing. The implementation is inspired by [4]_.
+    Thompson sampling is based on a beta distribution with parameters related to the number of successful and
+    failed attempts. Higher values of the parameters decrease the entropy of the distribution while changing
+    the ratio of the parameters shifts the expected value.
 
     Parameters
     ----------
     n_arms : int
-        Number of bandit arms.
+        Number of bandit arms. :math:`N \in \mathbb{N}_{+}`.
     decay : float, default=1.0
-        Smoothing factor (decay = 0.0 means no smoothing).
+        Decay rate, if equals to zero, smoothing is not applied. :math:`w \geq 0`.
 
     References
     ----------
-    .. [1] Krotov, Alexander & Kiryanov, Anton & Khorov, Evgeny. (2020). Rate Control With Spatial Reuse
+    .. [4] Krotov, Alexander & Kiryanov, Anton & Khorov, Evgeny. (2020). Rate Control With Spatial Reuse
        for Wi-Fi 6 Dense Deployments. IEEE Access. 8. 168898-168909. 10.1109/ACCESS.2020.3023552.
     """
 
@@ -84,8 +87,10 @@ class ThompsonSampling(BaseAgent):
 
     @staticmethod
     def init(key: PRNGKey, n_arms: jnp.int32) -> ThompsonSamplingState:
-        """
-        Creates and initializes instance of the Thompson Sampling agent.
+        r"""
+        Creates and initializes instance of the Thompson sampling agent for ``n_arms`` arms. The :math:`\mathbf{\alpha}`
+        and :math:`\mathbf{\beta}` vectors are set to zero to create a non-informative prior distribution.
+        The ``last_decay`` array is also set to zero.
 
         Parameters
         ----------
@@ -96,8 +101,8 @@ class ThompsonSampling(BaseAgent):
 
         Returns
         -------
-        state : ThompsonSamplingState
-            Initial state of the Thompson Sampling agent.
+        ThompsonSamplingState
+            Initial state of the Thompson sampling agent.
         """
 
         return ThompsonSamplingState(
@@ -116,13 +121,23 @@ class ThompsonSampling(BaseAgent):
             time: Scalar,
             decay: Scalar
     ) -> ThompsonSamplingState:
-        """
-        Updates the state of the agent after performing some action and receiving a reward.
+        r"""
+        Thompson sampling can be adjusted to non-stationary environments by exponential smoothing of values of
+        vectors :math:`\mathbf{\alpha}` and :math:`\mathbf{\beta}` which increases the entropy of a distribution
+        over time. Given a result of trial :math:`s`, we apply the following equations for each action :math:`a`:
+
+        .. math::
+          \begin{gather}
+            \mathbf{\alpha}_{t + 1}(a) = \mathbf{\alpha}_t(a) e^{\frac{-\Delta t}{w}} + \mathbb{1}_{A = a} \cdot s , \\
+            \mathbf{\beta}_{t + 1}(a) = \mathbf{\beta}_t(a) e^{\frac{-\Delta t}{w}} + \mathbb{1}_{A = a} \cdot (1 - s) ,
+          \end{gather}
+
+        where :math:`\Delta t` is the time elapsed since the last action selection and :math:`w` is the decay rate.
 
         Parameters
         ----------
         state : ThompsonSamplingState
-            Current state of agent.
+            Current state of the agent.
         key : PRNGKey
             A PRNG key used as the random key.
         action : int
@@ -134,11 +149,11 @@ class ThompsonSampling(BaseAgent):
         time : float
             Current time.
         decay : float
-            Smoothing factor.
+            Decay rate.
 
         Returns
         -------
-        state : ThompsonSamplingState
+        ThompsonSamplingState
             Updated agent state.
         """
 
@@ -158,8 +173,16 @@ class ThompsonSampling(BaseAgent):
             context: Array,
             decay: Scalar
     ) -> Tuple[ThompsonSamplingState, jnp.int32]:
-        """
-        Selects next action based on current agent state.
+        r"""
+        The Thompson sampling policy is stochastic. The algorithm draws :math:`q_a` from the distribution
+        :math:`\operatorname{Beta}(1 + \mathbf{\alpha}(a), 1 + \mathbf{\beta}(a))` for each arm :math:`a`.
+        The next action is selected as:
+
+        .. math::
+          A = \operatorname*{argmax}_{a \in \mathscr{A}} q_a r_a ,
+
+        where :math:`r_a` is contextual information for the arm :math:`a`, and :math:`\mathscr{A}` is a set
+        of all actions.
 
         Parameters
         ----------
@@ -172,12 +195,12 @@ class ThompsonSampling(BaseAgent):
         context : array_like
             One-dimensional array of features for each arm.
         decay : float
-            Smoothing factor.
+            Decay rate.
 
         Returns
         -------
         tuple[ThompsonSamplingState, int]
-            Tuple containing updated agent state and selected action.
+            Tuple containing the updated agent state and the selected action.
         """
 
         state = ThompsonSampling._decay_all(state, time, decay)
@@ -193,7 +216,7 @@ class ThompsonSampling(BaseAgent):
             decay: Scalar
     ) -> ThompsonSamplingState:
         """
-        Applies exponential smoothing for parameters related to a given action.
+        Applies exponential smoothing for the parameters related to a given action.
 
         Parameters
         ----------
@@ -204,11 +227,11 @@ class ThompsonSampling(BaseAgent):
         time : float
             Current time.
         decay : float
-            Smoothing factor.
+            Decay rate.
 
         Returns
         -------
-        state : ThompsonSamplingState
+        ThompsonSamplingState
             Updated agent state.
         """
 
@@ -227,7 +250,7 @@ class ThompsonSampling(BaseAgent):
             decay: Scalar
     ) -> ThompsonSamplingState:
         """
-        Applies exponential smoothing for parameters of all arms.
+        Applies exponential smoothing for the parameters of all arms.
 
         Parameters
         ----------
@@ -236,11 +259,11 @@ class ThompsonSampling(BaseAgent):
         time : float
             Current time.
         decay : float
-            Smoothing factor.
+            Decay rate.
 
         Returns
         -------
-        state : ThompsonSamplingState
+        ThompsonSamplingState
             Updated agent state.
         """
 

@@ -8,13 +8,13 @@ from chex import dataclass, PRNGKey
 @dataclass
 class AgentState:
     """
-    Base class of a container for the state of agents.
+    Base class for agent state containers.
     """
 
 
 class BaseAgent(ABC):
     """
-    Container for functions of the agent, observation spaces, and action space.
+    Base interface of agents.
     """
 
     @staticmethod
@@ -39,7 +39,7 @@ class BaseAgent(ABC):
     @abstractmethod
     def sample(state: AgentState, key: PRNGKey, *args, **kwargs) -> Tuple[AgentState, Any]:
         """
-        Selects next action based on current agent state.
+        Selects the next action based on the current agent state.
         """
 
         pass
@@ -48,7 +48,7 @@ class BaseAgent(ABC):
     @abstractmethod
     def parameters_space() -> gym.spaces.Dict:
         """
-        Parameters required by the constructor in OpenAI Gym format.
+        Parameters space of the agent constructor in the OpenAI Gym format.
         Type of returned value is required to be ``gym.spaces.Dict``.
         """
 
@@ -58,7 +58,7 @@ class BaseAgent(ABC):
     @abstractmethod
     def update_observation_space(self) -> gym.spaces.Space:
         """
-        Parameters required by the 'update' method in OpenAI Gym format.
+        Observation space of the ``update`` method in the OpenAI Gym format.
         """
 
         pass
@@ -67,7 +67,7 @@ class BaseAgent(ABC):
     @abstractmethod
     def sample_observation_space(self) -> gym.spaces.Space:
         """
-        Parameters required by the 'sample' method in OpenAI Gym format.
+        Observation space by the ``sample`` method in the OpenAI Gym format.
         """
 
         pass
@@ -76,7 +76,7 @@ class BaseAgent(ABC):
     @abstractmethod
     def action_space(self) -> gym.spaces.Space:
         """
-        Action returned by the agent in OpenAI Gym format.
+        Action space of the agent in the OpenAI Gym format.
         """
 
         pass

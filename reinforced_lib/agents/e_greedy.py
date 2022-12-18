@@ -17,9 +17,9 @@ class EGreedyState(AgentState):
     Attributes
     ----------
     Q : array_like
-        Quality values for each arm
+        Action-value function estimates for each arm.
     N : array_like
-        Number of tries for each arm
+        Number of tries for each arm.
     """
 
     Q: Array
@@ -27,19 +27,21 @@ class EGreedyState(AgentState):
 
 
 class EGreedy(BaseAgent):
-    """
-    Epsilon-greedy agent with optional optimistic start behaviour and exponential recency-weighted average update.
+    r"""
+    Epsilon-greedy agent with an optimistic start behavior and optional exponential recency-weighted average update.
+    It selects a random action from a set of all actions :math:`\mathscr{A}` with probability
+    :math:`\epsilon` (exploration), otherwise it chooses the currently best action (exploitation).
 
     Parameters
     ----------
     n_arms : int
-        Number of bandit arms.
+        Number of bandit arms. :math:`N \in \mathbb{N}_{+}`.
     e : float
-        Experiment rate (epsilon). ``e`` must be in [0, 1].
+        Experiment rate (epsilon). :math:`\epsilon \in [0, 1]`.
     optimistic_start : float, default=0.0
-        If non-zero than it is interpreted as the optimistic start to encourage exploration.
+        Interpreted as the optimistic start to encourage exploration in the early stages.
     alpha : float, default=0.0
-        If non-zero than exponential recency-weighted average is used to update Q values. ``alpha`` must be in [0, 1].
+        If non-zero, exponential recency-weighted average is used to update :math:`Q` values. :math:`\alpha \in [0, 1]`.
     """
 
     def __init__(
@@ -89,20 +91,21 @@ class EGreedy(BaseAgent):
             optimistic_start: Scalar
     ) -> EGreedyState:
         """
-        Creates and initializes instance of the e-greedy agent.
+        Creates and initializes instance of the e-greedy agent for ``n_arms`` arms. Action-value function estimates are
+        set to ``optimistic_start`` value and the number of tries is one for each arm.
 
         Parameters
         ----------
         key : PRNGKey
             A PRNG key used as the random key.
         n_arms : int
-            Number of contextual bandit arms.
+            Number of bandit arms.
         optimistic_start : float
-            If non-zero than it is interpreted as the optimistic start to encourage exploration.
+            Interpreted as the optimistic start to encourage exploration in the early stages.
 
         Returns
         -------
-        state : EGreedyState
+        EGreedyState
             Initial state of the e-greedy agent.
         """
 
@@ -119,21 +122,24 @@ class EGreedy(BaseAgent):
         reward: Scalar,
         alpha: Scalar
     ) -> EGreedyState:
-        """
-        Updates the state of the agent after performing some action and receiving a reward.
+        r"""
+        In a stationary case, the action-value estimate for a given arm is updated as
+        :math:`Q_{t + 1} = Q_t + \frac{1}{t} \lbrack R_t - Q_t \rbrack` after receiving reward :math:`R_t` at step
+        :math:`t` and the number of tries for the corresponding arm is incremented. In a non-stationary case,
+        the update follows the equation :math:`Q_{t + 1} = Q_t + \alpha \lbrack R_t - Q_t \rbrack`.
 
         Parameters
         ----------
         state : EGreedyState
-            Current state of agent.
+            Current state of the agent.
         key : PRNGKey
             A PRNG key used as the random key.
         action : int
             Previously selected action.
         reward : float
-            Reward as a result of previous action.
+            Reward collected by the agent after taking the previous action.
         alpha : float
-            Exponential recency-weighted average factor (used when ``alpha > 0``).
+            Exponential recency-weighted average factor (used when :math:`\alpha > 0`).
 
         Returns
         -------
@@ -163,8 +169,15 @@ class EGreedy(BaseAgent):
         key: PRNGKey,
         e: Scalar
     ) -> Tuple[EGreedyState, jnp.int32]:
-        """
-        Selects next action based on current agent state.
+        r"""
+        Epsilon-greedy agent follows the policy:
+
+        .. math::
+          A =
+          \begin{cases}
+            \operatorname*{argmax}_{a \in \mathscr{A}} Q(a) & \text{with probability } 1 - \epsilon , \\
+            \text{random action} & \text{with probability } \epsilon . \\
+          \end{cases}
 
         Parameters
         ----------
@@ -178,7 +191,7 @@ class EGreedy(BaseAgent):
         Returns
         -------
         tuple[EGreedyState, jnp.int32]
-            Tuple containing updated agent state and selected action.
+            Tuple containing the updated agent state and the selected action.
         """
 
         epsilon_key, choice_key = jax.random.split(key)

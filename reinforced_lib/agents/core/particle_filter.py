@@ -11,14 +11,14 @@ from reinforced_lib.agents import AgentState
 @dataclass
 class ParticleFilterState(AgentState):
     """
-    Container for the state of the Particle Filter.
+    Container for the state of the particle filter agent.
 
     Attributes
     ----------
     positions : array_like
-        Positions of filter particles.
+        Positions of the particles.
     logit_weights : array_like
-        Unormalized log weights of filter particles.
+        Unormalized log weights of the particles.
     last_measurement : float
         Time of the last update.
     """
@@ -30,17 +30,16 @@ class ParticleFilterState(AgentState):
 
 def simple_resample(operands: Tuple[ParticleFilterState, PRNGKey]) -> ParticleFilterState:
     """
-    Samples new particles positions from categorical distribution based on weights.
-    Sets all weights to be equal.
+    Samples new particle positions from a categorical distribution with particle weights, then sets all weights equal.
 
     Parameters
     ----------
     operands : tuple[ParticleFilterState, PRNGKey]
-        Tuple containing filter state and a PRNG key.
+        Tuple containing the filter state and a PRNG key.
 
     Returns
     -------
-    state : ParticleFilterState
+    ParticleFilterState
         Updated filter state.
     """
 
@@ -55,25 +54,25 @@ def simple_resample(operands: Tuple[ParticleFilterState, PRNGKey]) -> ParticleFi
 
 
 def effective_sample_size(state: ParticleFilterState, threshold: Scalar = 0.5) -> bool:
-    """
-    Calculates effective sample size [3]_. If ESS is smaller than number of samples * threshold,
-    than resampling is necessary.
+    r"""
+    Calculates the effective sample size [1]_ (ESS). If ESS is smaller than the number of samples times threshold,
+    than a resampling is necessary.
 
     Parameters
     ----------
     state : ParticleFilterState
         Current state of the filter.
     threshold : float, default=0.5
-        Threshold value used to decide if resampling is necessary.
+        Threshold value used to decide if a resampling is necessary. :math:`thr \in (0, 1)`.
 
     Returns
     -------
-    perform_resampling : bool
-        Information whether resampling should be performed.
+    bool
+        Information whether a resampling should be performed.
 
     References
     ----------
-    .. [3] https://en.wikipedia.org/wiki/Effective_sample_size#Weighted_samples
+    .. [1] https://en.wikipedia.org/wiki/Effective_sample_size#Weighted_samples
     """
 
     weights = jax.nn.softmax(state.logit_weights)
@@ -81,9 +80,9 @@ def effective_sample_size(state: ParticleFilterState, threshold: Scalar = 0.5) -
 
 
 def simple_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, *args) -> ParticleFilterState:
-    """
-    Performs simple movement of particles positions based on normal distribution with
-    ``mean = 0`` and ``standard deviation = scale``.
+    r"""
+    Performs simple movement of the particle positions according to a normal distribution with
+    :math:`\mu = 0` and :math:`\sigma = scale`.
 
     Parameters
     ----------
@@ -92,11 +91,11 @@ def simple_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, *
     key : PRNGKey
         A PRNG key used as the random key.
     scale : float
-        Scale of the random movement of particles.
+        Scale of a random movement of particles. :math:`scale > 0`.
 
     Returns
     -------
-    state : ParticleFilterState
+    ParticleFilterState
         Updated filter state.
     """
 
@@ -110,9 +109,9 @@ def simple_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, *
 
 
 def linear_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, time: Scalar) -> ParticleFilterState:
-    """
-    Performs movement of particles positions based on normal distribution with
-    ``mean = 0`` and ``standard deviation = scale * (last_measurement - time)``.
+    r"""
+    Performs movement of the particle positions according to a normal distribution with :math:`\mu = 0` and
+    :math:`\sigma = scale \cdot \Delta t`, where :math:`\Delta t` is the time elapsed since the last update.
 
     Parameters
     ----------
@@ -121,13 +120,13 @@ def linear_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, t
     key : PRNGKey
         A PRNG key used as the random key.
     scale : float
-        Scale of the random movement of particles.
+        Scale of a random movement of particles. :math:`scale > 0`.
     time : float
         Current time.
 
     Returns
     -------
-    state : ParticleFilterState
+    ParticleFilterState
         Updated filter state.
     """
 
@@ -135,9 +134,10 @@ def linear_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, t
 
 
 def affine_transition(state: ParticleFilterState, key: PRNGKey, scale: Array, time: Scalar) -> ParticleFilterState:
-    """
-    Performs movement of particles positions based on normal distribution with
-    ``mean = 0`` and ``standard deviation = scale_a * (last_measurement - time) + scale_b``.
+    r"""
+    Performs movement of the particle positions according to a normal distribution with :math:`\mu = 0` and
+    :math:`\sigma = scale_0 \cdot \Delta t + scale_1`, where :math:`\Delta t` is the time elapsed since
+    the last update.
 
     Parameters
     ----------
@@ -146,13 +146,13 @@ def affine_transition(state: ParticleFilterState, key: PRNGKey, scale: Array, ti
     key : PRNGKey
         A PRNG key used as the random key.
     scale : array_like
-        Scale of the random movement of particles.
+        Scale of a random movement of particles. :math:`scale_0, scale_1 > 0`.
     time : float
         Current time.
 
     Returns
     -------
-    state : ParticleFilterState
+    ParticleFilterState
         Updated filter state.
     """
 
@@ -161,51 +161,51 @@ def affine_transition(state: ParticleFilterState, key: PRNGKey, scale: Array, ti
 
 class ParticleFilter:
     """
-    Particle Filter (Sequential Monte Carlo) algorithm estimating
+    Particle filter (sequential Monte Carlo) algorithm estimating the
     internal environment state given noisy or partial observations.
 
     Parameters
     ----------
     initial_distribution_fn : callable
-        Function that samples initial particles positions.
-            - ``key``: PRNG key used as the random key (`PRNGKey`).
+        Function that samples the initial particle positions; takes two positional arguments:
+            - ``key``: a PRNG key used as a random key (`PRNGKey`).
             - ``shape``: shape of the sample (`Shape`).
 
-        Returns initial particles positions (`Array`).
+        Returns the initial particle positions (`Array`).
 
     positions_shape : array_like
-        Shape of the particles positions array.
+        Shape of the particle positions array.
     weights_shape : array_like
-        Shape of the particles weights array.
+        Shape of the particle weights array.
     scale : float or array_like
-        Scale of the random movement of particles.
+        Scale of a random movement of the particles.
     observation_fn : callable
-        Function that updates particles based on the observation of the environment, takes two positional arguments:
-            - ``state``: state of the filter (`ParticleFilterState`).
-            - ``observation``: observation of the environment (`any`).
+        Function that updates particles based on an observation from the environment; takes two positional arguments:
+            - ``state``: the state of the filter (`ParticleFilterState`).
+            - ``observation``: an observation from the environment (`any`).
         
-        Returns updated state of the filter (`ParticleFilterState`).
+        Returns the updated state of the filter (`ParticleFilterState`).
     
     resample_fn : callable, default=particle_filter.simple_resample
-        Function that performs resampling of particles, takes one positional argument:
-            - ``operands``: tuple containing filter state and a PRNG key (`tuple[ParticleFilterState, PRNGKey]`).
+        Function that performs resampling of the particles; takes one positional argument:
+            - ``operands``: a tuple containing the filter state and a PRNG key (`tuple[ParticleFilterState, PRNGKey]`).
         
-        Returns updated state of the filter (`ParticleFilterState`).
+        Returns the updated state of the filter (`ParticleFilterState`).
     
     resample_criterion_fn : callable, default=particle_filter.effective_sample_size
-        Function that checks if resampling is necessary, takes one positional argument:
-            - ``state``: state of the filter (`ParticleFilterState`).
+        Function that checks if a resampling is necessary; takes one positional argument:
+            - ``state``: the state of the filter (`ParticleFilterState`).
         
-        Returns information whether resampling should be performed (`bool`).
+        Returns an information whether a resampling should be performed (`bool`).
     
     transition_fn : callable, default=particle_filter.simple_transition
-        Function that updates particles positions, takes four positional arguments:
-            - ``state``: state of the filter (`ParticleFilterState`).
-            - ``key``: a PRNG key used as the random key (`PRNGKey`).
-            - ``scale``: scale of the random movement of particles (`float or array_like`).
-            - ``time``: current time (`float`).
+        Function that updates the particle positions; takes four positional arguments:
+            - ``state``: the state of the filter (`ParticleFilterState`).
+            - ``key``: a PRNG key used as a random key (`PRNGKey`).
+            - ``scale``: scale of a random movement of the particles (`float or array_like`).
+            - ``time``: the current time (`float`).
         
-        Returns updated state of the filter (`ParticleFilterState`).
+        Returns the updated state of the filter (`ParticleFilterState`).
     """
 
     def __init__(
@@ -247,27 +247,27 @@ class ParticleFilter:
             weights_shape: Shape
     ) -> ParticleFilterState:
         """
-        Creates and initializes instance of the Particle Filter.
+        Creates and initializes an instance of the particle filter.
 
         Parameters
         ----------
         key : PRNGKey
             A PRNG key used as the random key.
         initial_distribution_fn : callable
-            Function that samples initial particles positions.
-                - ``key``: PRNG key used as the random key (`PRNGKey`).
+            Function that samples the initial particle positions.
+                - ``key``: PRNG key used as a random key (`PRNGKey`).
                 - ``shape``: shape of the sample (`Shape`).
 
-            Returns initial particles positions (`Array`).
+            Returns the initial particle positions (`Array`).
 
         positions_shape : array_like
-            Shape of the particles positions array.
+            Shape of the particle positions array.
         weights_shape : array_like
-            Shape of the particles weights array.
+            Shape of the particle weights array.
 
         Returns
         -------
-        state : ParticleFilterState
+        ParticleFilterState
             Initial state of the Particle Filter.
         """
 
@@ -290,8 +290,8 @@ class ParticleFilter:
             scale: Numeric
     ) -> ParticleFilterState:
         """
-        Updates the state of the filter based on the observation of the environment,
-        performs resampling (if necessary) and transition of particles.
+        Updates the state of the filter based on an observation from the environment, then
+        performs resampling (if necessary) and transition of the particles.
 
         Parameters
         ----------
@@ -300,43 +300,41 @@ class ParticleFilter:
         key : PRNGKey
             A PRNG key used as the random key.
         observation_fn : callable
-            Function that updates particles based on the observation of the environment, takes two positional arguments:
-                - ``state``: state of the filter (`ParticleFilterState`).
-                - ``observation``: observation of the environment (`any`).
-            
-            Returns updated state of the filter (`ParticleFilterState`).
+            Function that updates particles based on an observation from the environment; takes two positional arguments:
+                - ``state``: the state of the filter (`ParticleFilterState`).
+                - ``observation``: an observation from the environment (`any`).
+
+            Returns the updated state of the filter (`ParticleFilterState`).
         
         observation : any
-            Observation of the environment.
-        resample_fn : callable
-            Function that performs resampling of particles, takes one positional argument:
-                - ``operands``: tuple containing filter state and a PRNG key (`tuple[ParticleFilterState, PRNGKey]`).
-            
-            Returns updated state of the filter (`ParticleFilterState`).
-        
-        resample_criterion_fn : callable
-            Function that checks if resampling is necessary, takes one positional argument:
-                - ``state``: state of the filter (`ParticleFilterState`).
-            
-            Returns information whether resampling should be performed (`bool`).
+            An observation from the environment.
+        resample_fn : callable, default=particle_filter.simple_resample
+            Function that performs resampling of the particles; takes one positional argument:
+                - ``operands``: a tuple containing the filter state and a PRNG key (`tuple[ParticleFilterState, PRNGKey]`).
 
-        transition_fn : callable
-            Function that updates particles positions, takes four positional arguments:
-                - ``state``: state of the filter (`ParticleFilterState`).
-                - ``key``: a PRNG key used as the random key (`PRNGKey`).
-                - ``scale``: scale of the random movement of particles (`float or array_like`).
-                - ``time``: current time (`float`).
-            
-            Returns updated state of the filter (`ParticleFilterState`).
+            Returns the updated state of the filter (`ParticleFilterState`).
+
+        resample_criterion_fn : callable, default=particle_filter.effective_sample_size
+            Function that checks if a resampling is necessary; takes one positional argument:
+                - ``state``: the state of the filter (`ParticleFilterState`).
+
+            Returns an information whether a resampling should be performed (`bool`).
+
+        transition_fn : callable, default=particle_filter.simple_transition
+            Function that updates the particle positions; takes four positional arguments:
+                - ``state``: the state of the filter (`ParticleFilterState`).
+                - ``key``: a PRNG key used as a random key (`PRNGKey`).
+                - ``scale``: scale of a random movement of the particles (`float or array_like`).
+                - ``time``: the current time (`float`).
 
         time : float
             Current time.
         scale : float or array_like
-            Scale of the random movement of particles.
+            Scale of a random movement of the particles.
 
         Returns
         -------
-        state : ParticleFilterState
+        ParticleFilterState
             Updated filter state.
         """
 
@@ -358,7 +356,7 @@ class ParticleFilter:
             key: PRNGKey
     ) -> Tuple[ParticleFilterState, Numeric]:
         """
-        Samples estimated environment state based on the current filter state.
+        Samples the estimated environment state from a categorical distribution with particle weights.
 
         Parameters
         ----------
@@ -370,7 +368,7 @@ class ParticleFilter:
         Returns
         -------
         tuple[ParticleFilterState, float or array_like]
-            Tuple containing filter state and estimated state.
+            Tuple containing the filter state and the estimated environment state.
         """
 
         return state, state.positions[jax.random.categorical(key, state.logit_weights)]

@@ -11,7 +11,7 @@ from reinforced_lib.agents import BaseAgent, AgentState
 
 @dataclass
 class SoftmaxState(AgentState):
-    """
+    r"""
     Container for the state of the Softmax agent.
 
     Attributes
@@ -19,7 +19,7 @@ class SoftmaxState(AgentState):
     H : array_like
         Preference for each arm.
     r : float
-        Average of all obtained rewards.
+        Average of all obtained rewards :math:`\bar{R}`.
     n : int
         Number of the step.
     """
@@ -30,24 +30,25 @@ class SoftmaxState(AgentState):
 
 
 class Softmax(BaseAgent):
-    """
-    Softmax agent with baseline and optional exponential recency-weighted average update.
-    Algorithms policy can be controlled by temperature parameter. Implementation inspired by [4]_.
+    r"""
+    Softmax agent with baseline and optional exponential recency-weighted average update. It learns a preference
+    function :math:`H`, which indicates a preference of selecting one arm over others. Algorithms policy can be
+    controlled by temperature parameter :math:`\tau`. The implementation is inspired by [3]_.
 
     Parameters
     ----------
     n_arms : int
-        Number of bandit arms.
+        Number of bandit arms. :math:`N \in \mathbb{N}_{+}`.
     lr : float
-        Step size. ``lr`` must be greater than 0.
+        Step size. :math:`lr > 0`.
     alpha : float, default=0.0
-        If non-zero than exponential recency-weighted average is used to update Q values. ``alpha`` must be in [0, 1].
+        If non-zero, exponential recency-weighted average is used to update :math:`\bar{R}`. :math:`\alpha \in [0, 1]`.
     tau : float, default=1.0
-        Temperature parameter. ``tau`` must be greater than 0.
+        Temperature parameter. :math:`\tau > 0`.
 
     References
     ----------
-    .. [4]  Sutton, R. S., Barto, A. G. (2018). Reinforcement Learning: An Introduction. The MIT Press. 37-40.
+    .. [3]  Sutton, R. S., Barto, A. G. (2018). Reinforcement Learning: An Introduction. The MIT Press. 37-40.
     """
 
     def __init__(
@@ -96,19 +97,21 @@ class Softmax(BaseAgent):
             key: PRNGKey,
             n_arms: jnp.int32
     ) -> SoftmaxState:
-        """
-        Creates and initializes instance of the Softmax agent.
+        r"""
+        Creates and initializes instance of the Softmax agent for ``n_arms`` arms. Preferences :math:`H` for each arm
+        are set to zero, as well as the average of all rewards :math:`\bar{R}`. The number of the step :math:`n` is
+        initialized to one.
 
         Parameters
         ----------
         key : PRNGKey
             A PRNG key used as the random key.
         n_arms : int
-            Number of contextual bandit arms.
+            Number of bandit arms.
 
         Returns
         -------
-        state : SoftmaxState
+        SoftmaxState
             Initial state of the Softmax agent.
         """
 
@@ -128,23 +131,37 @@ class Softmax(BaseAgent):
         alpha: Scalar,
         tau: Scalar
     ) -> SoftmaxState:
-        """
-        Updates the state of the agent after performing some action and receiving a reward.
+        r"""
+        Preferences :math:`H` can be learned by the stochastic gradient ascent. The softmax algorithm search
+        for such a set of preferences that maximizes the expected reward :math:`\mathbb{E}[R]`.
+        The updates of :math:`H` for each action :math:`a` are calculated as:
+
+        .. math::
+          H_{t + 1}(a) = H_t(a) + \alpha (R_t - \bar{R}_t)(\mathbb{1}_{A_t = a} - \pi_t(a)),
+
+        where :math:`\bar{R_t}` is the average of all rewards up to but not including step :math:`t`
+        (by definition :math:`\bar{R}_1 = R_1`). The derivation of given formula can be found in [3]_.
+
+        In the stationary case, :math:`\bar{R_t}` can be calculated as
+        :math:`\bar{R}_{t + 1} = \bar{R}_t + \frac{1}{t} \lbrack R_t - \bar{R}_t \rbrack`. To improve the
+        algorithm's performance in the non-stationary case, we apply
+        :math:`\bar{R}_{t + 1} = \bar{R}_t + \alpha \lbrack R_t - \bar{R}_t \rbrack` with the constant
+        step size :math:`\alpha`.
 
         Parameters
         ----------
         state : SoftmaxState
-            Current state of agent.
+            Current state of the agent.
         key : PRNGKey
             A PRNG key used as the random key.
         action : int
             Previously selected action.
         reward : float
-            Reward as a result of previous action.
+            Reward collected by the agent after taking the previous action.
         lr : float
             Step size.
         alpha : float
-            Exponential recency-weighted average factor (used when ``alpha > 0``).
+            Exponential recency-weighted average factor (used when :math:`\alpha > 0`).
         tau : float
             Temperature parameter.
 
@@ -169,8 +186,12 @@ class Softmax(BaseAgent):
         key: PRNGKey,
         tau: Scalar
     ) -> Tuple[SoftmaxState, jnp.int32]:
-        """
-        Selects next action based on current agent state.
+        r"""
+        The policy of the Softmax algorithm is stochastic. The algorithm draws the next action from the softmax
+        distribution. The probability of selecting action :math:`i` is calculated as:
+
+        .. math::
+          softmax(H)_i = \frac{\exp(H_i / \tau)}{\sum_{h \in H} \exp(h / \tau)} .
 
         Parameters
         ----------
@@ -184,7 +205,7 @@ class Softmax(BaseAgent):
         Returns
         -------
         tuple[SoftmaxState, jnp.int32]
-            Tuple containing updated agent state and selected action.
+            Tuple containing the updated agent state and the selected action.
         """
 
         return state, jax.random.categorical(key, state.H / tau)

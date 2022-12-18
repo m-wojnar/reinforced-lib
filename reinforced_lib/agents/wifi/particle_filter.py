@@ -13,21 +13,23 @@ from reinforced_lib.agents.core.particle_filter import ParticleFilterState, line
 
 
 class ParticleFilter(BaseAgent):
-    """
-    Particle Filter agent designed for IEEE 802.11ax environments. Implementation based on [2]_.
+    r"""
+    Particle filter agent designed for the IEEE 802.11ax environments. The implementation is based on [2]_.
+    The latent state of the filter is the channel condition described by the parameter :math:`\theta = \gamma − P_{tx}`
+    (in logarithmic scale) where :math:`\gamma` is SINR and :math:`P_{tx}` is the current transmission power.
 
     Parameters
     ----------
     min_snr_init : float
-        Minial SNR value [dBm] in initial particles' distribution.
+        Minial SINR value [dBm] in the initial particle distribution.
     max_snr_init : float
-        Maximal SNR value [dBm] in initial particles' distribution.
+        Maximal SINR value [dBm] in the initial particle distribution.
     default_power : float
         Default transmission power [dBm].
     particles_num : int, default=1000
-        Number of created particles.
+        Number of created particles. :math:`N \in \mathbb{N}_{+}`.
     scale : float, default=10.0
-        Velocity of the random movement of particles.
+        Velocity of a random movement of the particles. :math:`scale > 0`.
 
     References
     ----------
@@ -55,7 +57,7 @@ class ParticleFilter(BaseAgent):
         self.n_mcs = len(ParticleFilter._wifi_modes_snrs)
 
         self.pf = ParticleFilterBase(
-            initial_distribution_fn=lambda key, shape: 
+            initial_distribution_fn=lambda key, shape:
                 jax.random.uniform(key, shape, minval=min_snr_init, maxval=max_snr_init) - default_power,
             positions_shape=(particles_num,),
             weights_shape=(particles_num,),
@@ -102,7 +104,9 @@ class ParticleFilter(BaseAgent):
 
     def init(self, key: PRNGKey) -> ParticleFilterState:
         """
-        Creates and initializes instance of the Particle Filter agent.
+        Creates and initializes an instance of the particle filter agent with ``particles_num`` particles.
+        Particle positions are dawn from a uniform distribution from ``min_snr_init`` to ``max_snr_init``,
+        and particle weights are set equal.
 
         Parameters
         ----------
@@ -111,8 +115,8 @@ class ParticleFilter(BaseAgent):
 
         Returns
         -------
-        state : ParticleFilterState
-            Initial state of the Particle Filter agent.
+        ParticleFilterState
+            Initial state of the particle filter agent.
         """
 
         return self.pf.init(key)
@@ -129,13 +133,25 @@ class ParticleFilter(BaseAgent):
             cw: jnp.int32,
             scale: Scalar
     ) -> ParticleFilterState:
-        """
-        Updates the state of the agent after performing some action and receiving a reward.
+        r"""
+        The weight of the particle :math:`i` at step :math:`t + 1` is updated based on observation :math:`(r, s)`:
+
+        .. math::
+          p_{t + 1, i} =
+          \begin{cases}
+            p_{t, i} \cdot P(s | r, \gamma) (1 - P_c) & \text{if } s = 1 , \\
+            p_{t, i} \cdot (1 - P(s | r, \gamma)) (1 - P_c) & \text{otherwise} ,
+          \end{cases}
+
+        where :math:`r` is the data rate used during the transmission, :math:`s` indicates if the transmission was
+        successful, :math:`\gamma` is SINR, :math:`P(s | r, \gamma)` is the probability of transmission success
+        conditioned by the data rate used and current SINR, and :math:`P_c` is the probability of unsuccessful
+        transmission due to collision estimated as :math:`1 / CW` (contention window).
 
         Parameters
         ----------
         state : ParticleFilterState
-            Current state of agent.
+            Current state of the agent.
         key : PRNGKey
             A PRNG key used as the random key.
         action : int
@@ -149,13 +165,13 @@ class ParticleFilter(BaseAgent):
         power : float
             Power used during the transmission [dBm].
         cw : int
-            Contention Window used during the transmission.
+            Contention window used during the transmission.
         scale : float
-            Velocity of the random movement of particles.
+            Velocity of a random movement of particles.
 
         Returns
         -------
-        state : ParticleFilterState
+        ParticleFilterState
             Updated agent state.
         """
 
@@ -176,8 +192,15 @@ class ParticleFilter(BaseAgent):
             rates: Array,
             pf: ParticleFilterBase
     ) -> Tuple[ParticleFilterState, jnp.int32]:
-        """
-        Selects next action based on current agent state.
+        r"""
+        The algorithm draws :math:`\theta` from the categorical distribution according to the particles positions
+        and weights. Then it calculates the corresponding SINR value :math:`\gamma = \theta + P_{tx}`.
+        Next MCS is selected as:
+
+        .. math::
+          A = \operatorname*{argmax}_{i} P(1 | r_i, \gamma) r_i ,
+
+        where :math:`r_i` is the data rate of MCS :math:`i`.
 
         Parameters
         ----------
@@ -197,7 +220,7 @@ class ParticleFilter(BaseAgent):
         Returns
         -------
         tuple[ParticleFilterState, int]
-            Tuple containing updated agent state and selected action.
+            Tuple containing the updated agent state and the selected action.
         """
 
         _, snr_sample = pf.sample(state, key)
@@ -211,7 +234,7 @@ class ParticleFilter(BaseAgent):
             observation: Tuple[jnp.int32, jnp.int32, jnp.int32, Scalar, jnp.int32, Array]
     ) -> ParticleFilterState:
         """
-        Updates particles weights based on the observation of the environment.
+        Updates particles weights based on the observation from the environment.
 
         Parameters
         ----------
@@ -222,7 +245,7 @@ class ParticleFilter(BaseAgent):
 
         Returns
         -------
-        state : ParticleFilterState
+        ParticleFilterState
             Updated state of the agent.
         """
 
@@ -242,16 +265,16 @@ class ParticleFilter(BaseAgent):
     @staticmethod
     def _success_probability(observed_snr: Scalar) -> Array:
         """
-        Calculates approximated probability of a successful transmission for a given minimal and observed SNR.
+        Calculates an approximated probability of a successful transmission given the observed SINR value.
 
         Parameters
         ----------
         observed_snr : float
-            Observed SNR value [dBm].
+            Observed SINR value [dBm].
 
         Returns
         -------
-        prob : float
+        float
             Probability of a successful transmission for all MCS values.
         """
 
