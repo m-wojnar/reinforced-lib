@@ -3,26 +3,26 @@
 Custom loggers
 ==============
 
-Loggers are a very helpful tool to visualize and analyze running algorithm or watch the training process. You can
-monitor observations passed to the agent, the agents state, and basic metrics in real time.
+Loggers are a very helpful tool for visualizing and analyzing the running algorithm or watching the training process.
+You can monitor observations passed to the agent, the agents' state, and basic metrics in real time.
 
 
 Customizing loggers
 -------------------
 
 To create your own extension, you should inherit from the :ref:`abstract class <BaseLogger>` ``BaseLogger``.
-We will present adding custom logger on the example of the ``CsvLogger`` :ref:`logger <CsvLogger>` .
+We will present creating a custom logger on the example of the ``CsvLogger`` :ref:`logger <CsvLogger>`:
 
 .. code-block:: python
 
     class CsvLogger(BaseLogger)
 
-Firstly, we must define a loggers constructor. ``__init__`` function can take any arguments that can be later passed
+First, we must define a loggers constructor. ``__init__`` function can take any arguments that can be passed later
 by the ``loggers_params`` parameter in the ``RLib`` :ref:`class <RLib class>` constructor, but remember to always
-include the ``**kwargs`` in the arguments list. Values provided in ``loggers_params`` are passed to instances
-of all loggers listed in the ``loggers_type`` parameter, so it is very important to choose parameter names carefully.
-For example constructor parameters of the ``PlotsLogger`` start with prefix ``plots_*`` and parameters of the
-``CsvLogger`` start with ``csv_*``. Below is an example constructor of the ``CsvLogger``:
+include the ``**kwargs`` in the arguments list. The values provided in ``loggers_params`` are passed to instances
+of all loggers listed in ``loggers_type``, so it is very important to choose parameter names carefully.
+For example, constructor parameters of ``PlotsLogger`` start with the prefix ``plots_*`` and parameters of
+``CsvLogger`` start with ``csv_*``. Below is an example constructor of ``CsvLogger``:
 
 .. code-block:: python
 
@@ -39,9 +39,9 @@ For example constructor parameters of the ``PlotsLogger`` start with prefix ``pl
         self._columns_values = {}
         self._columns_names = []
 
-``BaseLogger`` :ref:`class <BaseLogger>` offers overwriting the ``init`` method which can be used to initialize
-logger attributes given the list of all sources. For example the ``CsvLogger`` creates list of all sources names
-and writes header to the output file in that method:
+``BaseLogger`` :ref:`class <BaseLogger>` offers overwriting the ``init`` method used to initialize the logger
+attributes given the list of all sources (selected values to log). For example, ``CsvLogger`` creates a list of
+all sources names and writes a header with the names to the output file in the ``init`` method:
 
 .. code-block:: python
 
@@ -50,9 +50,9 @@ and writes header to the output file in that method:
         header = ','.join(self._columns_names)
         self._file.write(f'{header}\n')
 
-There is one more useful method that can be used to finalize loggers work - the ``finish`` method. It is a
-recommended way to save data, close opened files, show generated plots or perform some clean up. The ``finish``
-method is called automatically when instance of the ``RLib`` class is deleted. You can also force the finalization
+There is one more useful method that can be used to finalize the logger's work - the ``finish`` method. It is a
+recommended way to save data, close opened files, show generated plots, or perform some cleanup. The ``finish``
+method is called automatically when an instance of the ``RLib`` class is deleted. You can also force the finalization
 by calling ``rl.finish()``.
 
 .. code-block:: python
@@ -61,10 +61,10 @@ by calling ``rl.finish()``.
         self._file.close()
 
 Now we can move on to the core methods of the custom logger, which are ``log_scalar``, ``log_array``, ``log_dict``,
-and ``log_other``. These methods are used to log scalar values, arrays, dictionaries and other objects accordingly.
-The ``LogsObserver`` :ref:`class <LogsObserver>` is responsible for passing logged values to appropriate methods.
-We have to overwrite mentioned methods to allow our logger to log values of a given type. Fox example, let's look
-at the ``log_scalar`` and the ``log_other`` methods of the ``CsvLogger``:
+and ``log_other``. These methods are used to log scalar values, arrays, dictionaries, and other objects accordingly.
+The ``LogsObserver`` :ref:`class <LogsObserver>` is responsible for passing logged values to the appropriate methods.
+We have to overwrite the mentioned methods to allow our logger to log values of a given type. Fox example, let us look
+at the ``log_scalar`` and ``log_other`` methods of ``CsvLogger``:
 
 .. code-block:: python
 
@@ -78,23 +78,23 @@ at the ``log_scalar`` and the ``log_other`` methods of the ``CsvLogger``:
         self._columns_values[self.source_to_name(source)] = f"\"{json.dumps(value)}\""
         self._save()
 
-These are very simple methods that logs scalars and values of other types. The ``log_scalar`` function just takes
-raw scalar and saves it with protected method ``_save`` of the ``CsvLogger``. Similarly, the ``log_other`` function
-converts a given value to the JSON format and then calls ``_save``. Note that both methods use ``source_to_name``
-of the ``BaseLogger`` that converts source to the string. If the source is a string (just a name of an observation,
-state or metric), the method returns that string. Otherwise if the source is a tuple ``(str, SourceType)``,
+These are very simple methods that log scalars and values of other types. The ``log_scalar`` function just takes the
+raw scalar and saves it with a protected method ``_save`` of ``CsvLogger``. Similarly, the ``log_other`` function
+converts a given value to the JSON format and then calls ``_save``. Note that both methods use the ``source_to_name``
+method of ``BaseLogger`` that converts that source to a string. If the source is a string (just a name of an
+observation, state, or metric), the method returns that string. Otherwise, if the source is a tuple ``(str, SourceType)``,
 the function returns string ``"[name]-[source type name]"``.
 
-If the logger is not able to log a value of some type (for example it could be hard to plot a dictionary or a custom
-object), we do not have to implement corresponding ``log_*`` method. If the user will try to log a value of that
+If the logger is not able to log a value of some type (for example, it could be hard to plot a dictionary or a custom
+object), we do not have to implement the corresponding ``log_*`` method. If the user will try to log a value of that
 type with this logger, it will raise the ``UnsupportedLogTypeError`` :ref:`exception <Exceptions>`.
 
 
 Template logger
 ---------------
 
-Here is the above code in one piece. You can copy-paste it and use as an inspiration to create your own logger.
-Full source code of the ``CsvLogger`` can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/logs/csv_logger.py>`_.
+Here is the above code in one piece. You can copy-paste it and use it as an inspiration to create your own logger.
+The full source code of the ``CsvLogger`` can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/logs/csv_logger.py>`_.
 
 .. code-block:: python
 
