@@ -18,7 +18,7 @@ Source = Union[Tuple[str, SourceType], str]
 
 class BaseLogger(ABC):
     """
-    Container for functions of the logger. Provides simple interface for defining custom loggers.
+    Container for functions of a logger. Provides simple interface for defining custom loggers.
     """
 
     def __init__(self, **kwargs):
@@ -26,19 +26,19 @@ class BaseLogger(ABC):
 
     def init(self, sources: List[Source]) -> None:
         """
-        Initializes logger given the list of all sources.
+        Initializes the logger given the list of all sources.
 
         Parameters
         ----------
         sources : list[Source]
-            List containing all sources for the logger.
+            List containing the sources to log.
         """
 
         pass
 
     def finish(self) -> None:
         """
-        Used to finalize loggers work, for example save data ot show plots.
+        Finalizes the loggers work, for example, saves data or shows plots.
         """
 
         pass
@@ -102,13 +102,18 @@ class BaseLogger(ABC):
     @staticmethod
     def source_to_name(source: Source) -> str:
         """
-        Converts source to a string name. If source is a string itself, it returns that string.
-        Otherwise, it returns string in the format "name-sourcetype" (e.g. "action-metric").
+        Converts a source to the string. If source is a string itself, it returns that string.
+        Otherwise, it returns string in the format "name-sourcetype" (e.g., "action-metric").
 
         Parameters
         ----------
         source : Source
             Source of the logged value.
+
+        Returns
+        -------
+        str
+            Name of the source.
         """
 
         if isinstance(source, tuple):

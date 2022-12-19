@@ -30,13 +30,13 @@ AMPDU_SIZES = jnp.array([3, 6, 9, 12, 18, 25, 28, 31, 37, 41, 41, 41])
 DEFAULT_NOISE = -93.97
 DEFAULT_TX_POWER = 16.0206
 
-# LogDistance channel model
+# log-distance channel model
 # https://www.nsnam.org/docs/models/html/propagation.html#logdistancepropagationlossmodel
 REFERENCE_SNR = DEFAULT_TX_POWER - DEFAULT_NOISE
 REFERENCE_LOSS = 46.6777
 EXPONENT = 3.0
 
-# experimentally selected values to match the ns-3 simulations results
+# empirically selected values to match the ns-3 simulations results
 MIN_SNRS = jnp.array([12.10, 12.10, 12.10, 12.10, 12.25, 16.25, 17.50, 19.00, 22.80, 24.50, 30.75, 32.75])
 
 
@@ -132,11 +132,13 @@ def ra_sim(
 
 class RASimEnv(gym.Env):
     """
-    Simple Rate Adaptation Simulator for IEEE 802.11ax networks. Calculates if packet has been transmitted
-    successfully based on approximated success probability for a given distance and SNR (according to the
-    LogDistance channel model) and approximated collision probability (calculated experimentally).
-    Environment simulates Wi-Fi networks with 20 MHz width channel, guard interval set to 3200 ns,
-    1 spatial stream, and the packet is treated as indivisible.
+    Ra-sim simulator for the IEEE 802.11ax networks. Calculates if packet has been transmitted
+    successfully based on the approximated success probability based on the current distance
+    (transformed to the signal-to-noise ratio (SNR) according to the log-distance channel model)
+    and approximated collision probability (derived empirically). The environment simulates
+    the IEEE 802.11ax networks with the following settings: a guard interval is equal to 3200 ns,
+    channel width is 20 MHz, 1 spatial stream is used, and the packets are treated as indivisible
+    with Aggregated MAC Protocol Data Unit (A-MPDU) batches of frames of size 1500 B.
     """
 
     def __init__(self) -> None:
@@ -169,13 +171,14 @@ class RASimEnv(gym.Env):
         Parameters
         ----------
         seed : int
-            An integer used as the random key.
+            Integer used as the random key.
         options : dict
-            Dictionary containing simulation parameters, i.e. `initial_position`, `n_wifi`, `simulation_time`, `velocity`.
+            Dictionary containing simulation parameters, i.e. ``initial_position``, ``n_wifi``,
+            ``simulation_time``, ``velocity``.
 
         Returns
         -------
-        state : tuple[dict, dict]
+        tuple[dict, dict]
             Initial environment state.
         """
 
@@ -199,7 +202,7 @@ class RASimEnv(gym.Env):
 
     def step(self, action: int) -> Tuple[gym.spaces.Dict, float, bool, bool, Dict]:
         """
-        Performs one step in the environment and returns new environment state.
+        Performs one step of the environment and returns new environment state.
 
         Parameters
         ----------
@@ -208,8 +211,8 @@ class RASimEnv(gym.Env):
 
         Returns
         -------
-        out : tuple[dict, float, bool, bool, dict]
-            Environment state after performing a step, reward, and info about termination.
+        tuple[dict, float, bool, bool, dict]
+            Environment state after performing an action (i.e., observations, reward, and info about termination).
         """
 
         step_key, self.key = jax.random.split(self.key)

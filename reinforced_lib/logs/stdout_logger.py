@@ -21,12 +21,12 @@ class StdoutLogger(BaseLogger):
 
     def init(self, sources: List[Source]) -> None:
         """
-        Creates list of all sources names.
+        Creates a list of all sources names.
 
         Parameters
         ----------
         sources : list[Source]
-            List containing all sources for the logger.
+            List containing all sources to log.
         """
 
         self._names = list(map(self.source_to_name, sources))
@@ -90,7 +90,7 @@ class StdoutLogger(BaseLogger):
 
     def log_other(self, source: Source, value: Any) -> None:
         """
-        Logs a value as a JSON [2]_ string.
+        Logs an object as a JSON [2]_ string.
 
         Parameters
         ----------
@@ -104,7 +104,7 @@ class StdoutLogger(BaseLogger):
 
     def _print(self, source: Source, value: Any) -> None:
         """
-        Print a new row to the standard output if there is any value update.
+        Prints a new row to the standard output if there is any value update.
 
         Parameters
         ----------

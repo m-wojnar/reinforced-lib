@@ -11,9 +11,9 @@ from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpa
 
 class BaseExt(ABC):
     """
-    Container for domain-specific knowledge and functions for a given environment. Provides transformation
-    from observation functions and observation space to agents update and sample spaces. Stores default
-    argument values for agents initialization.
+    Container for a domain-specific knowledge and functions for a given environment. Provides the transformation
+    from the observation functions and the observation space to the agents update and sample spaces. Stores the
+    default argument values for agents initialization.
     """
 
     def __init__(self) -> None:
@@ -33,7 +33,7 @@ class BaseExt(ABC):
     @abstractmethod
     def observation_space(self) -> gym.spaces.Space:
         """
-        Basic observations of the environment in the OpenAI Gym format.
+        Basic observations of the environment in OpenAI Gym format.
         """
 
         pass
@@ -45,22 +45,23 @@ class BaseExt(ABC):
             user_parameters: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
-        Composes agent initialization parameters from the parameters passed by the user and default values defined
-        in parameter functions. Returns dictionary with parameters fitting the agents parameters space.
+        Composes agent initialization parameters from parameters passed by the user and default values
+        defined in the parameter functions. Returns a dictionary with the parameters fitting the agents
+        parameters space.
 
         Parameters
         ----------
         agent_type : type, optional
-            Type of selected agent.
+            Type of the selected agent.
         agent_parameters_space : gym.spaces.Dict, optional
-            Parameters required by the agents' constructor in the OpenAI Gym format.
+            Parameters required by the agents' constructor in OpenAI Gym format.
         user_parameters : dict, optional
             Parameters provided by the user.
 
         Returns
         -------
-        parameters : dict
-            Dictionary with constructor parameters for the agent.
+        dict
+            Dictionary with the initialization parameters for the agent.
         """
 
         if agent_parameters_space is None:
@@ -101,15 +102,15 @@ class BaseExt(ABC):
             agent_sample_space: gym.spaces.Space = None
     ) -> None:
         """
-        Create functions that transform environment observations and values provided by observation functions to agents
-        update and sample spaces values.
+        Create functions that transform environment observations and values provided by the observation functions
+        to the agents update and sample space.
 
         Parameters
         ----------
         agent_update_space : gym.spaces.Space, optional
-            Observations required by the agents ``update`` function in the OpenAI Gym format.
+            Observations required by the agents ``update`` function in OpenAI Gym format.
         agent_sample_space : gym.spaces.Space, optional
-            Observations required by the agents ``sample`` function in the OpenAI Gym format.
+            Observations required by the agents ``sample`` function in OpenAI Gym format.
         """
 
         self._update_space_transform = self._transform_spaces(self.observation_space, agent_update_space)
@@ -122,8 +123,8 @@ class BaseExt(ABC):
             accessor: Union[str, int] = None
     ) -> Callable:
         """
-        Creates function that transforms environment observations and values provided by observation functions to
-        a given space values.
+        Creates function that transforms environment observations and values provided by the observation
+        functions to a given space.
 
         Parameters
         ----------
@@ -136,7 +137,7 @@ class BaseExt(ABC):
 
         Returns
         -------
-        func : Callable
+        Callable
             Function that transforms values from ``in_space`` to ``out_space``.
         """
 
@@ -262,8 +263,8 @@ class BaseExt(ABC):
 
         Returns
         -------
-        observation : any
-            Selected observation from extension observation space.
+        any
+            Selected observation from the extension observation space.
         """
 
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
@@ -294,7 +295,7 @@ class BaseExt(ABC):
 
         Returns
         -------
-        observation : any
+        any
             Selected observation.
         """
 
@@ -308,7 +309,7 @@ class BaseExt(ABC):
     def _dict_transform(self, observations: Dict[str, Callable], accessor: Union[str, int], *args, **kwargs) -> Dict:
         """
         Returns a dictionary filled with appropriate environment observations and values provided by
-        observation functions.
+        the observation functions.
 
         Parameters
         ----------
@@ -323,7 +324,7 @@ class BaseExt(ABC):
 
         Returns
         -------
-        observations : dict
+        dict
             Dictionary with functions providing observations.
         """
 
@@ -332,7 +333,8 @@ class BaseExt(ABC):
 
     def _tuple_transform(self, observations: List[Callable], accessor: Union[str, int], *args, **kwargs) -> Tuple:
         """
-        Returns a tuple filled with appropriate environment observations and values provided by observation functions.
+        Returns a tuple filled with appropriate environment observations and values provided by
+        the observation functions.
 
         Parameters
         ----------
@@ -347,7 +349,7 @@ class BaseExt(ABC):
 
         Returns
         -------
-        observations : tuple
+        tuple
             Tuple with functions providing observations.
         """
 
@@ -356,8 +358,8 @@ class BaseExt(ABC):
 
     def transform(self, *args, **kwargs) -> Tuple[Any, Any]:
         """
-        Transforms environment observations and values provided by observation functions to agent observation
-        and sample spaces values.
+        Transforms environment observations and values provided by the observation functions to
+        the agent observation and sample spaces.
 
         Parameters
         ----------
@@ -368,7 +370,7 @@ class BaseExt(ABC):
 
         Returns
         -------
-        observations : tuple[any, any]
+        tuple[any, any]
             Agents update and sample observations.
         """
 

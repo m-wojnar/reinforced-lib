@@ -22,23 +22,23 @@ class RLib:
     Parameters
     ----------
     agent_type : type, optional
-        Type of selected agent. Must inherit from the ``BaseAgent`` class.
+        Type of the selected agent. Must inherit from the ``BaseAgent`` class.
     agent_params : dict, optional
-        Parameters of selected agent.
+        Parameters of the selected agent.
     ext_type : type, optional
-        Type of selected extension. Must inherit from the ``BaseExt`` class.
+        Type of the selected extension. Must inherit from the ``BaseExt`` class.
     ext_params : dict, optional
-        Parameters of selected extension.
+        Parameters of the selected extension.
     loggers_type : type or list[type], optional
-        Types of selected logging modules. Must inherit from the ``BaseLogger`` class.
+        Types of the selected logging modules. Must inherit from the ``BaseLogger`` class.
     loggers_sources : Source or list[Source], optional
-        Names (and types) of selected sources.
+        Sources to log.
     loggers_params : dict, optional
-        Parameters of selected loggers.
+        Parameters of the selected loggers.
     no_ext_mode : bool, default=False
-        Pass observations directly to the agent (don't use the Extensions module).
+        Pass observations directly to the agent (do not use the extensions).
     save_directory : str, default=None
-        Path to a user specified directory where the save() method will store experiment checkpoints.
+        Path to a user specified directory where the ``save`` method will store the experiment checkpoints.
         If none specified, utilizes the home directory.
     """
 
@@ -93,22 +93,22 @@ class RLib:
 
     def finish(self) -> None:
         """
-        Used to explicitly finalize the library work. In particular, it finishes loggers work.
+        Used to explicitly finalize the library work. In particular, it finishes the loggers work.
         """
 
         self._logs_observer.finish_loggers()
 
     def set_agent(self, agent_type: type, agent_params: Dict = None) -> None:
         """
-        Initializes agent of type ``agent_type`` with parameters ``agent_params``. The agent type must inherit from
-        the ``BaseAgent class``. The agent type cannot be changed after the first agent instance is initialized.
+        Initializes an agent of type ``agent_type`` with parameters ``agent_params``. The agent type must inherit from
+        the ``BaseAgent class``. The agent type cannot be changed after the first agent instance has been initialized.
 
         Parameters
         ----------
         agent_type : type
-            Type of selected agent. Must inherit from the ``BaseAgent`` class.
+            Type of the selected agent. Must inherit from the ``BaseAgent`` class.
         agent_params : dict, optional
-            Parameters of selected agent.
+            Parameters of the selected agent.
         """
 
         if len(self._agents_states) > 0:
@@ -130,15 +130,16 @@ class RLib:
 
     def set_ext(self, ext_type: type, ext_params: Dict = None) -> None:
         """
-        Initializes extension of type ``ext_type`` with parameters ``ext_params``. The extension type must inherit from
-        the ``BaseExt`` class. The extension type cannot be changed after the first agent instance is initialized.
+        Initializes an extension of type ``ext_type`` with parameters ``ext_params``. The extension type must inherit
+        from the ``BaseExt`` class. The extension type cannot be changed after the first agent instance has been
+        initialized.
 
         Parameters
         ----------
         ext_type : type
-            Type of selected extension. Must inherit from the ``BaseExt`` class.
+            Type of selected the extension. Must inherit from the ``BaseExt`` class.
         ext_params : dict, optional
-            Parameters of selected extension.
+            Parameters of the selected extension.
         """
 
         if self._no_ext_mode:
@@ -169,22 +170,23 @@ class RLib:
             loggers_params: Dict[str, Any] = None
     ) -> None:
         """
-        Initializes loggers that log environment observations, agents state or training metrics.
-        ``loggers_types`` and ``loggers_sources`` arguments can be objects of appropriate types or lists of object.
-        If user passes two objects or lists of the same lengths, function initializes modules with corresponding 
-        types and names. If user passes one object (or list with only one object) and list of multiple objects, 
-        function broadcasts passed objects. ``loggers_sources`` items can be names of the logger sources (e.g. "action")
-        or tuples containing the name and the ``SourceType`` (e.g. ``("action", SourceType.OBSERVATION)``).
-        If the name itself is inconclusive, behaviour depends on the implementation of the logger.
+        Initializes loggers that log observations from the environment, agents state, or training metrics.
+        ``loggers_types`` and ``loggers_sources`` arguments can be objects of the appropriate types or a lists
+        of objects. If the user passes two objects or lists of the same lengths, function initializes the modules
+        with the corresponding types and names. If the user passes one object (or list with only one object)
+        and a list with multiple objects, function broadcasts the passed objects. The ``loggers_sources`` items
+        can be names of the logger sources (e.g. "action") or tuples containing the name and the ``SourceType``
+        (e.g., ``("action", SourceType.OBSERVATION)``). If the name itself is inconclusive, behaviour depends
+        on the implementation of the logger.
 
         Parameters
         ----------
         loggers_types : type or list[type]
-            Types of selected logging modules.
+            Types of the selected logging modules.
         loggers_sources : Source or list[Source]
-            Names of selected observations.
+            Sources to log.
         loggers_params : dict, optional
-            Parameters of selected logging modules.
+            Parameters of the selected logging modules.
         """
 
         if len(self._agents_states) > 0:
@@ -217,12 +219,12 @@ class RLib:
     @property
     def observation_space(self) -> gym.spaces.Space:
         """
-        Returns observation space of selected extension or agent (if ``no_ext_mode`` is enabled).
+        Returns the observation space of the selected extension (or agent, if ``no_ext_mode`` is set).
 
         Returns
         -------
-        space : gym.spaces.Space
-            Observation space of selected extension or agent.
+        gym.spaces.Space
+            Observation space of the selected extension or agent.
         """
 
         if self._no_ext_mode:
@@ -242,12 +244,12 @@ class RLib:
     @property
     def action_space(self) -> gym.spaces.Space:
         """
-        Returns action space of selected agent.
+        Returns the action space of the selected agent.
 
         Returns
         -------
-        space : gym.spaces.Space
-            Action space of selected agent.
+        gym.spaces.Space
+            Action space of the selected agent.
         """
 
         if not self._agent:
@@ -257,17 +259,17 @@ class RLib:
 
     def init(self, seed: int = 42) -> int:
         """
-        Initializes new instance of the agent.
+        Initializes a new instance of the agent.
 
         Parameters
         ----------
         seed : int, default=42
-            A number used to initialize the JAX pseudo-random number generator.
+            Number used to initialize the JAX pseudo-random number generator.
 
         Returns
         -------
-        id : int
-            The identifier of created instance.
+        int
+            Identifier of the created instance.
         """
 
         agent_id = len(self._agents_states)
@@ -287,17 +289,17 @@ class RLib:
             **kwargs
     ) -> Any:
         """
-        Takes the extension state as input, updates the agent state, and returns the next action selected by
-        the agent. If ``no_ext_mode`` is disabled, observations are passed by args and kwargs (observations must
-        match selected extension observation space). If ``no_ext_mode`` is enabled, observations must be passed
-        by ``update_observations`` and ``sample_observations`` parameters (observations must match agents
+        Takes the extension state as an input, updates the agent state, and returns the next action selected by
+        the agent. If ``no_ext_mode`` is disabled, observations are passed by args and kwargs (the observations must
+        match the extension observation space). If ``no_ext_mode`` is enabled, observations must be passed
+        by the ``update_observations`` and ``sample_observations`` parameters (the observations must match agents
         ``update_observation_space`` and ``sample_observation_space``). If there are no agent instance initialized,
         the method automatically initializes the first instance.
 
         Parameters
         ----------
         agent_id : int, default=0
-            The identifier of agent instance.
+            The identifier of the agent instance.
         *args : tuple
             Extension observations.
         update_observations : dict or tuple or any, optional
@@ -309,7 +311,7 @@ class RLib:
 
         Returns
         -------
-        action : Any
+        any
             Action selected by the agent.
         """
 
@@ -384,19 +386,18 @@ class RLib:
 
     def save(self, path: str = None) -> str:
         """
-        Saves the state of the experiment to a file in lz4 format. For each agent both the state and the
-        initialization parameters are saved. The environment extension, and loggers settings are saved as well
-        to fully reconstruct the experiment.
+        Saves the state of the experiment to a file in lz4 format. For each agent both the state and the initialization
+        parameters are saved. The extension and loggers settings are saved as well to fully reconstruct the experiment.
 
         Parameters
         ----------
         path : str, optional
-            Path to the checkpoint file. If none specified, saves to the path specified by the ``save_directory``
-            class parameter. If ``.pkl.lz4`` extension not detected, it will be appended automatically.
+            Path to the checkpoint file. If none specified, saves to the path specified by ``save_directory``.
+            If ``.pkl.lz4`` suffix is not detected, it will be appended automatically.
         
         Returns
         -------
-        path : str
+        str
             Path to the saved checkpoint file.
         """
 
@@ -443,9 +444,9 @@ class RLib:
         path : str
             Path to the checkpoint file.
         agent_params : Dict[str, Any], optional
-            Dictionary of altered agents parameters with their new values, by default None
+            Dictionary of altered agents parameters with their new values, by default None.
         ext_params : Dict[str, Any], optional
-            Dictionary of altered extension parameters with their new values, by default None
+            Dictionary of altered extension parameters with their new values, by default None.
         restore_loggers : bool, default=True
             Flag indicating if the method should restore loggers settings.
         """

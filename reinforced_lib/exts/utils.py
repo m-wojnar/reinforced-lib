@@ -6,12 +6,12 @@ import numpy as np
 
 class ObservationInfo(NamedTuple):
     """
-    Description of the function that provides one of the values from the observation space.
+    Description of the observation function that provides one of the values from the agent observation space.
 
     Attributes
     ----------
     name : str
-        Name of the provided value.
+        Name of the provided observation.
     type : gym.spaces.Space
         Type of the provided value in OpenAI Gym format.
     """
@@ -22,7 +22,7 @@ class ObservationInfo(NamedTuple):
 
 class ParameterInfo(NamedTuple):
     """
-    Description of the function that provides one of the parameters of the agent constructor.
+    Description of the parameter function that provides one of the parameters of the agent constructor.
 
     Attributes
     ----------
@@ -38,19 +38,19 @@ class ParameterInfo(NamedTuple):
 
 def observation(observation_name: str = None, observation_type: gym.spaces.Space = None) -> Callable:
     """
-    Decorator used to annotate functions that provide one of the values from the observation space.
+    Decorator used to annotate the observation functions.
 
     Parameters
     ----------
     observation_name : str, optional
-        Name of the provided value.
+        Name of the provided observation.
     observation_type : gym.spaces.Space, optional
         Type of the provided value in OpenAI Gym format.
 
     Returns
     -------
-    func : Callable
-        Function that returns provided value.
+    Callable
+        Function that returns the appropriate observation.
     """
 
     def decorator(function):
@@ -63,7 +63,7 @@ def observation(observation_name: str = None, observation_type: gym.spaces.Space
 
 def parameter(parameter_name: str = None, parameter_type: gym.spaces.Space = None) -> Callable:
     """
-    Decorator used to annotate functions that provide one of the parameters of the agent constructor.
+    Decorator used to annotate the parameter functions.
 
     Parameters
     ----------
@@ -74,8 +74,8 @@ def parameter(parameter_name: str = None, parameter_type: gym.spaces.Space = Non
 
     Returns
     -------
-    func : Callable
-        Function that returns provided parameter.
+    Callable
+        Function that returns the appropriate parameter.
     """
 
     def decorator(function):
@@ -88,7 +88,7 @@ def parameter(parameter_name: str = None, parameter_type: gym.spaces.Space = Non
 
 def test_box(a: gym.spaces.Space, b: gym.spaces.Box) -> bool:
     """
-    Tests if space ``a`` is identical to gym.space.Box space ``b``.
+    Tests if the space ``a`` is identical to the gym.space.Box space ``b``.
 
     Parameters
     ----------
@@ -99,7 +99,7 @@ def test_box(a: gym.spaces.Space, b: gym.spaces.Box) -> bool:
 
     Returns
     -------
-    identical : bool
+    bool
         Result of the comparison.
     """
 
@@ -112,7 +112,7 @@ def test_box(a: gym.spaces.Space, b: gym.spaces.Box) -> bool:
 
 def test_discrete(a: gym.spaces.Space, b: gym.spaces.Discrete) -> bool:
     """
-    Tests if space ``a`` is identical to gym.space.Discrete space ``b``.
+    Tests if the space ``a`` is identical to the gym.space.Discrete space ``b``.
 
     Parameters
     ----------
@@ -123,7 +123,7 @@ def test_discrete(a: gym.spaces.Space, b: gym.spaces.Discrete) -> bool:
 
     Returns
     -------
-    identical : bool
+    bool
         Result of the comparison.
     """
 
@@ -134,7 +134,7 @@ def test_discrete(a: gym.spaces.Space, b: gym.spaces.Discrete) -> bool:
 
 def test_multi_binary(a: gym.spaces.Space, b: gym.spaces.MultiBinary) -> bool:
     """
-    Tests if space ``a`` is identical to gym.space.MultiBinary space ``b``.
+    Tests if the space ``a`` is identical to the gym.space.MultiBinary space ``b``.
 
     Parameters
     ----------
@@ -145,7 +145,7 @@ def test_multi_binary(a: gym.spaces.Space, b: gym.spaces.MultiBinary) -> bool:
 
     Returns
     -------
-    identical : bool
+    bool
         Result of the comparison.
     """
 
@@ -155,7 +155,7 @@ def test_multi_binary(a: gym.spaces.Space, b: gym.spaces.MultiBinary) -> bool:
 
 def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> bool:
     """
-    Tests if space ``a`` is identical to gym.space.MultiDiscrete space ``b``.
+    Tests if the space ``a`` is identical to the gym.space.MultiDiscrete space ``b``.
 
     Parameters
     ----------
@@ -166,7 +166,7 @@ def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> boo
 
     Returns
     -------
-    identical : bool
+    bool
         Result of the comparison.
     """
 
@@ -177,7 +177,7 @@ def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> boo
 
 def test_space(a: gym.spaces.Space, b: gym.spaces.Space) -> bool:
     """
-    Tests if space ``a`` is identical to space ``b``.
+    Tests if the space ``a`` is identical to the space ``b``.
 
     Parameters
     ----------
@@ -188,7 +188,7 @@ def test_space(a: gym.spaces.Space, b: gym.spaces.Space) -> bool:
 
     Returns
     -------
-    identical : bool
+    bool
         Result of the comparison.
     """
 

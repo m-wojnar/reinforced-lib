@@ -26,9 +26,9 @@ class IncorrectTypeError(Exception):
     Parameters
     ----------
     provided_type : type, optional
-        Type provided by user.
+        Type provided by the user.
     expected_module : str, optional
-        Name of the module that provided type should match.
+        Name of the module that ``provided_type`` should match.
     """
 
     def __init__(self, provided_type: type = None, expected_module: str = None) -> None:
@@ -46,7 +46,7 @@ class IncorrectAgentTypeError(IncorrectTypeError):
     Parameters
     ----------
     provided_type : type
-        Type provided by user.
+        Type provided by the user.
     """
 
     def __init__(self, provided_type: type) -> None:
@@ -60,7 +60,7 @@ class IncorrectExtensionTypeError(IncorrectTypeError):
     Parameters
     ----------
     provided_type : type
-        Type provided by user.
+        Type provided by the user.
     """
 
     def __init__(self, provided_type: type) -> None:
@@ -74,25 +74,16 @@ class IncorrectLoggerTypeError(IncorrectTypeError):
     Parameters
     ----------
     provided_type : type
-        Type provided by user.
+        Type provided by the user.
     """
 
     def __init__(self, provided_type: type) -> None:
         super().__init__(provided_type, 'logger')
 
 
-class IncorrectAgentParametersError(Exception):
-
-    def __init__(self, agent_id: int = None) -> None:
-        self.agent_id = agent_id if agent_id else ''
-
-    def __str__(self) -> str:
-        return f'Agent {self.agent_id} has been already defined with different parameters. Agent load failed.'
-
-
 class ForbiddenOperationError(Exception):
     """
-    Raised when user is trying to perform forbidden operation.
+    Raised when the user is trying to perform forbidden operation.
     """
 
     def __str__(self) -> str:
@@ -101,7 +92,7 @@ class ForbiddenOperationError(Exception):
 
 class ForbiddenAgentChangeError(ForbiddenOperationError):
     """
-    Raised when user is trying to change the agent type after the first agent instance is initialized.
+    Raised when the user is trying to change the agent type after the first agent instance has been initialized.
     """
 
     def __str__(self) -> str:
@@ -110,7 +101,7 @@ class ForbiddenAgentChangeError(ForbiddenOperationError):
 
 class ForbiddenExtensionChangeError(ForbiddenOperationError):
     """
-    Raised when user is trying to change the extension type after the first agent instance is initialized.
+    Raised when the user is trying to change the extension type after the first agent instance has been initialized.
     """
 
     def __str__(self) -> str:
@@ -119,7 +110,7 @@ class ForbiddenExtensionChangeError(ForbiddenOperationError):
 
 class ForbiddenExtensionSetError(ForbiddenOperationError):
     """
-    Raised when user is trying to set extension type when ``no_ext_mode`` is enabled.
+    Raised when the user is trying to set the extension type when ``no_ext_mode`` is enabled.
     """
 
     def __str__(self) -> str:
@@ -128,7 +119,7 @@ class ForbiddenExtensionSetError(ForbiddenOperationError):
 
 class ForbiddenLoggerSetError(ForbiddenOperationError):
     """
-    Raised when user is trying to add new logger after the first training or sampling step has been made.
+    Raised when the user is trying to add a new logger after the first step has been made.
     """
 
     def __str__(self) -> str:
@@ -137,7 +128,7 @@ class ForbiddenLoggerSetError(ForbiddenOperationError):
 
 class IncorrectSpaceError(Exception):
     """
-    Raised when unknown space is provided, for example custom OpenAI Gym space.
+    Raised when an unknown space is provided, for example a custom OpenAI Gym space.
     """
 
     def __str__(self) -> str:
@@ -146,7 +137,7 @@ class IncorrectSpaceError(Exception):
 
 class IncompatibleSpacesError(Exception):
     """
-    Raised when observation spaces of two different modules are not compatible.
+    Raised when the observation spaces of two different modules are not compatible.
 
     Parameters
     ----------
@@ -167,7 +158,7 @@ class IncompatibleSpacesError(Exception):
 
 class NoDefaultParameterError(Exception):
     """
-    Raised when extension does not define default parameter value for the agent.
+    Raised when the extension does not define a default parameter value for the agent.
 
     Parameters
     ----------
@@ -191,7 +182,7 @@ class NoDefaultParameterError(Exception):
 
 class UnsupportedLogTypeError(Exception):
     """
-    Raised when user is trying to log values that are not supported by the logger.
+    Raised when the user is trying to log values that are not supported by the logger.
 
     Parameters
     ----------
@@ -211,12 +202,12 @@ class UnsupportedLogTypeError(Exception):
 
 class IncorrectSourceTypeError(IncorrectTypeError):
     """
-    Raised when provided source is not a correct source type (``Union[Tuple[str, SourceType], str]``).
+    Raised when the provided source is not a correct source type (i.e., ``Union[Tuple[str, SourceType], str]``).
 
     Parameters
     ----------
     provided_type : type
-        Type provided by user.
+        Type provided by the user.
     """
 
     def __init__(self, provided_type: type) -> None:

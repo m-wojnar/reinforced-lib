@@ -24,7 +24,7 @@ def run(episodes: int, seed: int) -> None:
         ext_type=RecommenderSystemExt,
         loggers_type=PlotsLogger,
         loggers_sources=[('action', SourceType.METRIC), ('cumulative', SourceType.METRIC)],
-        loggers_params={'scatter': True}
+        loggers_params={'plots_scatter': True}
     )
     rl.init(seed)
 

@@ -40,12 +40,12 @@ class CsvLogger(BaseLogger):
 
     def init(self, sources: List[Source]) -> None:
         """
-        Creates list of all sources names and writes header to the output file.
+        Creates a list of all source names and writes the header to the output file.
 
         Parameters
         ----------
         sources : list[Source]
-            List containing all sources for the logger.
+            List containing all sources to log.
         """
 
         self._columns_names = list(map(self.source_to_name, sources))
@@ -61,7 +61,7 @@ class CsvLogger(BaseLogger):
 
     def log_scalar(self, source: Source, value: Scalar) -> None:
         """
-        Logs a scalar as the standard value in a column.
+        Logs a scalar as a standard value in a column.
 
         Parameters
         ----------
@@ -107,7 +107,7 @@ class CsvLogger(BaseLogger):
 
     def log_other(self, source: Source, value: Any) -> None:
         """
-        Logs a value as a JSON [2]_ string.
+        Logs an object as a JSON [2]_ string.
 
         Parameters
         ----------
@@ -128,7 +128,7 @@ class CsvLogger(BaseLogger):
 
     def _save(self) -> None:
         """
-        Writes new row to the output file if values for all columns has already been filled.
+        Writes a new row to the output file if the values for all columns has already been filled.
         """
 
         if len(self._columns_values) == len(self._columns_names):

@@ -5,14 +5,14 @@ from reinforced_lib.exts import IEEE_802_11_ax
 
 class ResultsManager:
     """
-    Collects the agent's statistics and performance results while running a simulation.
+    Collects the agent's statistics and the performance results while running a simulation.
 
     Parameters
     ----------
     ra_sim_args : dict
         Arguments passed to the simulator.
     seed : int
-         An integer used as the random key.
+        Integer used as the random key.
     """
 
     def __init__(self, ra_sim_args: Dict[str, Any], seed: int) -> None:
@@ -38,7 +38,7 @@ class ResultsManager:
 
     def update(self, action: int, state: Dict[str, Any]) -> None:
         """
-        Updates simulation statistics.
+        Updates the simulation statistics.
 
         Parameters
         ----------
@@ -72,12 +72,12 @@ class ResultsManager:
 
     def summary(self) -> Tuple[str, float, float, float]:
         """
-        Calculates simulation summary and returns results.
+        Calculates the simulation summaries and returns results.
 
         Returns
         -------
-        results : tuple[str, float, float, float]
-            Tuple containing all results in CSV format, mean MCS, mean data rate and estimated mean throughput.
+        tuple[str, float, float, float]
+            Tuple containing results in CSV format, mean MCS, mean data rate, and estimated mean throughput.
         """
 
         mean_mcs = self.mcs_sum / self.packets_num

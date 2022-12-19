@@ -11,22 +11,21 @@ from reinforced_lib.logs import BaseLogger, Source
 
 
 class PlotsLogger(BaseLogger):
-    """
-    Logger that presents and saves values as line plots. Offers smoothing of the curve and multiple curves
-    in a single plot while for arrays.
+    r"""
+    Logger that presents and saves values as a line plots. Offers smoothing of the curve and plotting
+    multiple curves in a single chart (while logging arrays).
 
     Parameters
     ----------
     plots_dir : str, default="~"
-        Output directory for plots.
+        Output directory for the plots.
     plots_ext : str, default="svg"
-        Extension of saved plots.
+        Extension of the saved plots.
     plots_smoothing : float, default=0.6
-        Weight of the exponential moving average (EMA/EWMA) [3]_ used for smoothing.
-        Weight must be in [0, 1).
-    scatter : bool, default=False
-        Set to `True` if you want a scatter plot instead of a line plot. `plots_smoothing` parameter does
-        not apply to scatter plot.
+        Weight of the exponential moving average (EMA/EWMA) [3]_ used for smoothing. :math:`\alpha \in [0, 1)`.
+    plots_scatter : bool, default=False
+        Set to ``True`` if you want to generate a scatter plot instead of a line plot.
+        ``plots_smoothing`` parameter does not apply to the scatter plots.
 
     References
     ----------
@@ -38,7 +37,7 @@ class PlotsLogger(BaseLogger):
         plots_dir: str = None,
         plots_ext: str = 'svg',
         plots_smoothing: Scalar = 0.6,
-        scatter: bool = False,
+        plots_scatter: bool = False,
         **kwargs
     ) -> None:
         super().__init__(**kwargs)
@@ -46,7 +45,7 @@ class PlotsLogger(BaseLogger):
         self._plots_dir = plots_dir if plots_dir else os.path.expanduser("~")
         self._plots_ext = plots_ext
         self._plots_smoothing = plots_smoothing
-        self._scatter = scatter
+        self._plots_scatter = plots_scatter
 
         assert 1 > self._plots_smoothing >= 0
 
@@ -55,20 +54,20 @@ class PlotsLogger(BaseLogger):
 
     def init(self, sources: List[Source]) -> None:
         """
-        Creates list of all sources names.
+        Creates a list of all sources names.
 
         Parameters
         ----------
         sources : list[Source]
-            List containing all sources for the logger.
+            List containing all sources to log.
         """
 
         self._plots_names = list(map(self.source_to_name, sources))
 
     def finish(self) -> None:
         """
-        Shows generated plots and saves them to the output directory with specified extension
-        (names of files follow the pattern ``"rlib-plot-[source]-[date]-[time].[ext]"``).
+        Shows the generated plots and saves them to the output directory with the specified extension
+        (the names of the files follow the pattern ``"rlib-plot-[source]-[date]-[time].[ext]"``).
         """
 
         def lineplot(values: List, alpha: Scalar = 1.0, label: bool = False) -> None:
@@ -99,7 +98,7 @@ class PlotsLogger(BaseLogger):
         for name, values in self._plots_values.items():
             filename = f'rlib-plot-{name}-{now.strftime("%Y%m%d")}-{now.strftime("%H%M%S")}.{self._plots_ext}'
 
-            if self._scatter:
+            if self._plots_scatter:
                 scatterplot(values, True)
             else:
                 smoothed = self._exponential_moving_average(values, self._plots_smoothing)
@@ -114,14 +113,14 @@ class PlotsLogger(BaseLogger):
     @staticmethod
     def _exponential_moving_average(values: List, weight: Scalar) -> List:
         """
-        Calculates exponential moving average (EMA/EWMA) [3]_ to smooth plotted values.
+        Calculates the exponential moving average (EMA/EWMA) [3]_ to smooth the plotted values.
 
         Parameters
         ----------
         values : array_like
             Original values.
         weight : float
-            Weight of the EMA, must be in [0, 1).
+            Weight of the EMA.
 
         Returns
         -------
@@ -138,7 +137,7 @@ class PlotsLogger(BaseLogger):
 
     def log_scalar(self, source: Source, value: Scalar) -> None:
         """
-        Adds the given scalar to plots values.
+        Adds a given scalar to the plots values.
 
         Parameters
         ----------
@@ -152,7 +151,7 @@ class PlotsLogger(BaseLogger):
 
     def log_array(self, source: Source, value: Array) -> None:
         """
-        Adds the given array to plots values.
+        Adds a given array to the plots values.
 
         Parameters
         ----------

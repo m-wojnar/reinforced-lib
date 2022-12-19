@@ -10,8 +10,8 @@ from reinforced_lib.utils.exceptions import IncorrectLoggerTypeError, IncorrectS
 
 class LogsObserver:
     """
-    Class responsible for managing singleton instances of loggers, initialization and finalization of loggers,
-    and passing logged values to appropriate loggers and methods.
+    Class responsible for managing a singleton instances of the loggers, initialization and finalization
+    of the loggers, and passing the logged values to the appropriate loggers and methods.
     """
 
     def __init__(self) -> None:
@@ -24,16 +24,16 @@ class LogsObserver:
 
     def add_logger(self, source: Source, logger_type: type, logger_params: Dict[str, Any]) -> None:
         """
-        Initializes singleton instance of the logger and connects given source with that logger.
+        Initializes a singleton instance of the logger and connects a given source with that logger.
 
         Parameters
         ----------
         source : Source
             Source to connect.
         logger_type : type
-            Type of selected loger.
+            Type of the selected loger.
         logger_params : dict
-            Parameters of selected logger.
+            Parameters of the selected logger.
         """
 
         if not issubclass(logger_type, BaseLogger):
@@ -72,7 +72,7 @@ class LogsObserver:
 
     def finish_loggers(self):
         """
-        Finalizes work of all loggers by calling their ``finish`` method.
+        Finalizes the work of all loggers by calling their ``finish`` method.
         """
 
         for logger in self._loggers_sources.keys():
@@ -80,7 +80,7 @@ class LogsObserver:
 
     def update_observations(self, observations: Any) -> None:
         """
-        Passes new observations to loggers.
+        Passes new observations to the loggers.
 
         Parameters
         ----------
@@ -95,7 +95,7 @@ class LogsObserver:
 
     def update_agent_state(self, agent_state: BaseAgent) -> None:
         """
-        Passes the agent state to loggers.
+        Passes the agent state to the loggers.
 
         Parameters
         ----------
@@ -122,14 +122,14 @@ class LogsObserver:
     @staticmethod
     def _update(loggers: Dict[BaseLogger, List[str]], get_value: Callable) -> None:
         """
-        Passes values to appropriate loggers and the appropriate method based on the type and source of the value.
+        Passes values to the appropriate loggers and method based on the type and the source of the value.
 
         Parameters
         ----------
         loggers : dict
-            Dictionary with loggers instances and connected sources.
+            Dictionary with the loggers instances and the connected sources.
         get_value : callable
-            Function that gets selected value from given observations, state ot metrics.
+            Function that gets the selected value from the observations, state, or metrics.
         """
 
         for logger, sources in loggers.items():

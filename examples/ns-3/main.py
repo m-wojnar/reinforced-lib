@@ -43,7 +43,7 @@ def run(
         seed: int
 ) -> None:
     """
-    Run example simulation in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
+    Run a simulation in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
 
     Parameters
     ----------
@@ -56,11 +56,11 @@ def run(
     mem_size : int
         Shared memory size in bytes.
     scenario : str
-        Name of the selected simulation.
+        Name of the selected scenario.
     ns3_path : str
-        Path to the ns-3 simulator location.
+        Path to the ns-3 location.
     seed : int
-        A number used to initialize the JAX and the ns-3 pseudo-random number generator.
+        Number used to initialize the JAX and the ns-3 pseudo-random number generator.
 
     References
     ----------

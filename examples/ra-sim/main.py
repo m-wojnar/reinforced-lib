@@ -14,19 +14,19 @@ from reinforced_lib.exts import IEEE_802_11_ax
 
 def run(ra_sim_args: Dict[str, Any], seed: int) -> Tuple[str, float, float, float]:
     """
-    Run example simulation in the Rate Adaptation Simulator.
+    Run a simulation in the ra-sim simulator.
 
     Parameters
     ----------
     ra_sim_args : dict
         Arguments passed to the simulator.
     seed : int
-         An integer used as the random key.
+        Integer used as the random key.
 
     Returns
     -------
-    results : tuple[str, float, float, float]
-        Tuple containing all results in CSV format, mean MCS, mean data rate and estimated mean throughput.
+    tuple[str, float, float, float]
+        Tuple containing results in CSV format, mean MCS, mean data rate, and estimated mean throughput.
     """
 
     rl = RLib(
