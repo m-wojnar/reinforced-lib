@@ -56,31 +56,31 @@ that can be easily used, thanks to the topmost module, which ensures a simple an
     :width: 500
     :alt: Reinforced-lib architecture schema
 
-API Module
-~~~~~~~~~~
+The API module
+~~~~~~~~~~~~~~
 
 The API module is the top layer of the library; it exposes a simple and intuitive interface that makes the library easy
 to use. There are several important methods, one of them is responsible for creating a new agent. Another takes the
 observations from the environment as input, updates the state of the agent, and returns the next action proposed by the agent.
 The last two methods are used to persist the state of the agent by storing it in memory.
 
-Extensions Module
-~~~~~~~~~~~~~~~~~
+The extensions Module
+~~~~~~~~~~~~~~~~~~~~~
 
 The Extensions module consists of containers with domain-specific knowledge and ensures the proper use of universal agents
 implemented in **Reinforced-lib**. If a specific problem is implemented in the form of an extension, the module infers and
 provides the appropriate data to the agent, and at the same time requires adequate, corresponding values from the user.
 
-Agents Module
-~~~~~~~~~~~~~
+The agents Module
+~~~~~~~~~~~~~~~~~
 
 The Agents module is a collection of universal algorithms, which are called "agents" in RL community. Each agent has
 a similar API to communicate with the Extensions module, which ensures its versatility and expandability. In this release
 of **Reinforced-lib** we focused on the `multi-armed bandit problem <https://en.wikipedia.org/wiki/Multi-armed_bandit>`_,
 hence the imlemented agents are related to this task.
 
-Logging Module
-~~~~~~~~~~~~~~
+The logging Module
+~~~~~~~~~~~~~~~~~~
 
 The Logging module is responsible for collecting data from other modules and observing their state in real time.
 It also has great potential in using the library to create new RL agents - it can be used to develop, evaluate,
