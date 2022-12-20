@@ -4,15 +4,15 @@ Custom agents
 =============
 
 Although our library provides a palette of already implemented :ref:`agents <Agents>`, one might want to
-add a personalised one to the collection. This guide is here to help you with that task.
+add a personalised one to the collection. This guide is to help you with that task.
 
 
 Customizing agents
 ------------------
 
 To fully benefit from the Reinforced-lib features, including the JAX jit optimization, your agent
-should inherit from the :ref:`abstract class <BaseAgent>` ``BaseAgent``. We will present adding
-custom agent on a simple example of epsilon-greedy agent:
+should inherit from the :ref:`abstract class <BaseAgent>` ``BaseAgent``. We will present adding a
+custom agent on a simple example of the epsilon-greedy agent:
 
 .. code-block:: python
 
@@ -22,7 +22,7 @@ Firstly, we need to define a state of our agent, which in our case will hold
 
     * constant experiment rate (e),
     * quality values of each arm (Q),
-    * number of each arms tries (N),
+    * number of each arms' tries (N),
 
 and will inherit from AgentState:
 
@@ -96,7 +96,7 @@ Next, we can define the Epsilon-greedy agent, which will have 3 static methods:
             lambda: (state, jnp.argmax(state.Q))
         )
 
-Having defined those static methods, we can implement the class constructor:
+Having defined these static methods, we can define the class constructor:
 
 .. code-block:: python
     
@@ -118,8 +118,8 @@ Having defined those static methods, we can implement the class constructor:
         self.update = jax.jit(partial(self.update))
         self.sample = jax.jit(partial(self.sample, e=e))
 
-Lastly, we must specify the parameters spaces that each of the implemented method takes.
-It will help the library to automatically infer the necessary parameters from the environment.
+Lastly, we must specify the parameters' spaces that each of the implemented method takes.
+It enables the library to automatically infer the necessary parameters from the environment.
 
 .. code-block:: python
 
@@ -261,12 +261,13 @@ to create your own agent.
 Sum up
 ------
 
-To sum up everything one more time:
+To sum everything up one more time:
 
 1. Custom agent inherits from the `BaseAgent``
 2. We implement the abstract methods *init()*, *update()* and *sample()*
-3. We use *jax.jit()* to optimize the agents performance
-4. We provide the required parameters in format of *OpenAI Gym* spaces
+3. We use *jax.jit()* to optimize the agent's performance
+4. We provide the required parameters in a format of *OpenAI Gym* spaces
 
-The built-in implementation of the epsilon-greedy agent with addition of optional optimistic start and exponential
-recency-weighted average update can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/agents/e_greedy.py>`_.
+The built-in implementation of the epsilon-greedy agent with an addition of optional optimistic start and an exponential
+recency-weighted average update can be found
+`here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/agents/e_greedy.py>`_.
