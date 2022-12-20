@@ -29,12 +29,12 @@ we can provide full access to the JAX's jit functionality, which boosts the agen
    )
 
    env = gym.make('WifiSimulator-v1')
-   env_state = env.reset()
+   env_state, _ = env.reset()
 
    terminated = False
    while not terminated:
       action = rlib.sample(**env_state)
-      env_state, reward, done, info = env.step(action)
+      env_state, reward, terminated, *_ = env.step(action)
 
 
 Integrated IEEE 802.11ax support
@@ -64,14 +64,14 @@ to use. There are several important methods, one of them is responsible for crea
 observations from the environment as input, updates the state of the agent, and returns the next action proposed by the agent.
 The last two methods are used to persist the state of the agent by storing it in memory.
 
-The extensions Module
+The extensions module
 ~~~~~~~~~~~~~~~~~~~~~
 
 The Extensions module consists of containers with domain-specific knowledge and ensures the proper use of universal agents
 implemented in **Reinforced-lib**. If a specific problem is implemented in the form of an extension, the module infers and
 provides the appropriate data to the agent, and at the same time requires adequate, corresponding values from the user.
 
-The agents Module
+The agents module
 ~~~~~~~~~~~~~~~~~
 
 The Agents module is a collection of universal algorithms, which are called "agents" in RL community. Each agent has
@@ -79,7 +79,7 @@ a similar API to communicate with the Extensions module, which ensures its versa
 of **Reinforced-lib** we focused on the `multi-armed bandit problem <https://en.wikipedia.org/wiki/Multi-armed_bandit>`_,
 hence the imlemented agents are related to this task.
 
-The logging Module
+The logging module
 ~~~~~~~~~~~~~~~~~~
 
 The Logging module is responsible for collecting data from other modules and observing their state in real time.
