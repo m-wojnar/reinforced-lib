@@ -16,24 +16,25 @@ we can provide full access to JAX's jit functionality, which boosts the agents p
 
 .. code-block:: python
 
-   import gym
-
-   import reinforced_lib as rfl
+   from reinforced_lib import RLib
    from reinforced_lib.agents import ThompsonSampling
    from reinforced_lib.exts import IEEE_802_11_ax
 
-   rlib = rfl.RLib(
-       agent_type=ThompsonSampling,
-       ext_type=IEEE_802_11_ax
+   import gym
+
+
+   rlib = RLib(
+      agent_type=ThompsonSampling,
+      ext_type=IEEE_802_11_ax
    )
 
    env = gym.make('WifiSimulator-v1')
-   state, _ = env.reset()
-   terminated = False
+   env_state = env.reset()
 
+   terminated = False
    while not terminated:
-       action = rlib.sample(**state)
-       state, reward, terminated, *_ = env.step(action)
+      action = rlib.sample(**env_state)
+      env_state, reward, done, info = env.step(action)
 
 
 Integrated IEEE 802.11ax support
@@ -42,6 +43,61 @@ Integrated IEEE 802.11ax support
 Library design is distinctly influenced by the desire to support research in Wi-Fi. It can be a tool for
 researchers to optimize the Wi-Fi protocols with built-in RL algorithms and provided IEEE 802.11ax environment
 extension.
+
+Modular architecture
+--------------------
+
+The whole library has a modular architecture, which makes it a flexible, universal, and easy-to-use. Key parts of
+the library are placed in separate modules and connected in a standardized way to provide versatility and the
+possibility to extend individual modules in the future.
+
+**Reinforced-lib** can be well characterized by it's modular architecture which makes the library flexible, universal,
+and easy-to-use. Its key parts are placed in separate modules and connected in a standardized way to provide versatility
+and the possibility to extend individual modules in the future. Nevertheless, Reinforced-lib is a single piece of software
+that can be easily used, thanks to the topmost module, which ensures a simple and common interface for all agents.
+
+.. image:: ../resources/architecture.jpg
+    :width: 500
+    :alt: Reinforced-lib architecture schema
+
+.. _api_architecture:
+
+API module
+~~~~~~~~~~
+
+The API module is the top layer of the library; it exposes a simple and intuitive interface that makes the library easy
+to use. There are several important methods, one of them is responsible for creating a new agent. Another takes the
+observations from the environment as input, updates the state of the agent, and returns the next action proposed by the agent.
+The last two methods are used to persist the state of the agent by storing it in memory.
+
+.. _extensions_architecture:
+
+Extensions module
+~~~~~~~~~~~~~~~~~
+
+The Extensions module consists of containers with domain-specific knowledge and ensures the proper use of universal agents
+implemented in **Reinforced-lib**. If a specific problem is implemented in the form of an extension, the module infers and
+provides the appropriate data to the agent, and at the same time requires adequate, corresponding values from the user.
+
+.. _agents_architecture:
+
+Agents module
+~~~~~~~~~~~~~
+
+The Agents module is a collection of universal algorithms, which are called "agents" in RL community. Each agent has
+a similar API to communicate with the Extensions module, which ensures its versatility and expandability. In this release
+of **Reinforced-lib** we focused on the `multi-armed bandit problem <https://en.wikipedia.org/wiki/Multi-armed_bandit>`_,
+hence the imlemented agents are related to this task.
+
+.. _logging_architecture:
+
+Logging module
+~~~~~~~~~~~~~~
+
+The Logging module is responsible for collecting data from other modules and observing their state in real time.
+It also has great potential in using the library to create new RL agents - it can be used to develop, evaluate,
+and debug new agents by observing decisions they make; record and visualize how environment state changes in time;
+or provide a simple way to obtain a training summary, metrics, and logs.
 
 
 Table of Contents

@@ -42,32 +42,46 @@ You can also install the development dependencies if you want to build the docum
 Basic usage
 -----------
 
-The vital interface of  :ref:`Reinforced-lib <reinforced-lib>` is the :ref:`class <RLib Class>` ``Rlib``,
-which abstracts the agent-environment interaction. In basic use case, you only need to provide an appropriate agent
-with an environment extension related to your problem domain and the library will take care of the rest.
+The vital benefit of using :ref:`Reinforced-lib <reinforced-lib>` is the simplification of RL training loop. Thanks to
+the :ref:`class <RLib Class>` ``Rlib``, we do not need to worry about the agent initialization nor passing the environment
+observations to the agent. The library will take care of these tedious tasks. Below we present the basic training loop with
+all the simplifications provided by :ref:`Reinforced-lib <reinforced-lib>`.
+
+.. code-block:: python
+
+    from reinforced_lib import RLib
+    from reinforced_lib.agents import ThompsonSampling
+    from reinforced_lib.exts import IEEE_802_11_ax
+
+    rlib = RLib(
+        agent_type=ThompsonSampling,
+        ext_type=IEEE_802_11_ax
+    )
+
+After the necessary imports, we create an instance of :ref:`class <RLib Class>` ``Rlib``. We provide the chosen agent type and
+the extension appropriate for the problem. This extension will help the agent to infer necessary information from the
+environment. You can learn more about extensions in the :ref:`Custom extensions <custom_extensions>` section.
 
 .. code-block:: python
 
     import gym
 
-    import reinforced_lib as rfl
-    from reinforced_lib.agents import ThompsonSampling
-    from reinforced_lib.exts import IEEE_802_11_ax
-
-    rlib = rfl.RLib(
-        agent_type=ThompsonSampling,
-        ext_type=IEEE_802_11_ax
-    )
-
     env = gym.make('WifiSimulator-v1')
+    env_state = env.reset()
 
-    state = env.reset()
-    done = False
+Next, we import OpenAI gym, make an environment, and reset it to an initial state.
 
-    while not done:
-        action = rlib.sample(**state)
-        state, reward, done, info = env.step(action)
+.. code-block:: python
 
+    terminated = False
+    while not terminated:
+        action = rlib.sample(**env_state)
+        env_state, reward, done, info = env.step(action)
+
+We can now define the training loop. The boolen ``terminated`` flag controls when to stop taching the agent.
+Inside the loop, we call the ``rlib.sample()`` method which passes environment observations to the agent, updates agent's
+internal state and returns an action proposed by the agent's policy. We apply the returned action in the environment to get
+it's altered state, reward, information about whether this state is terminal and some additional info.
 
 Logging
 -------
@@ -208,15 +222,3 @@ You can change as many parameters we want. The provided example is constrained o
 parameters alteration, but you can modify extension parameters in the same way. You can even control the
 the loggers behaviour with the flag ``restore_loggers`` (more on loggers in the :ref:`Logging module <Logging module>`
 section).
-
-
-Modular architecture
---------------------
-
-The whole library has a modular architecture, which makes it a flexible, universal, and easy-to-use. Key parts of
-the library are placed in separate modules and connected in a standardized way to provide versatility and the
-possibility to extend individual modules in the future.
-
-.. image:: ../resources/architecture.jpg
-    :width: 500
-    :alt: Reinforced-lib architecture schema
