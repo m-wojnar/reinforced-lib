@@ -15,7 +15,7 @@ def read_file(filename: str) -> str:
 
 setup(
     name='reinforced-lib',
-    version='0.1.2',
+    version='0.2.0',
     packages=find_packages(include=[
         'reinforced_lib', 
         'reinforced_lib.*'
@@ -26,7 +26,7 @@ setup(
     long_description_content_type='text/markdown',
     author='Maksymilian Wojnar and Wojciech Ciężobka',
     url='https://github.com/m-wojnar/reinforced-lib',
-    download_url='https://github.com/m-wojnar/reinforced-lib/archive/refs/tags/v0.1.2.tar.gz',
+    download_url='https://github.com/m-wojnar/reinforced-lib/archive/refs/tags/v0.2.0.tar.gz',
     keywords='machine-learning, reinforcement-learning, reinforcement-learning-agent, jax',
     python_requires='>=3.8, <4',
     install_requires=read_requirements('requirements/requirements.txt'),
