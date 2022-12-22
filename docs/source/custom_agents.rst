@@ -3,22 +3,22 @@
 Custom agents
 =============
 
-Although our library provides a palette of already implemented :ref:`agents <Agents>`, one might want to
-add a personalised one to the collection. This guide is to help you with that task.
+Although our library provides a palette of already implemented :ref:`agents <Agents>`, you might want to
+add a personalised one to the collection. This guide is to help you with this task.
 
 
 Customizing agents
 ------------------
 
-To fully benefit from the Reinforced-lib features, including the JAX jit optimization, your agent
-should inherit from the :ref:`abstract class <BaseAgent>` ``BaseAgent``. We will present adding a
+To fully benefit from Reinforced-lib features, including JAX jit optimization, your agent
+should inherit from the :ref:`abstract class <BaseAgent>` ``BaseAgent``. We present adding a
 custom agent on a simple example of the epsilon-greedy agent:
 
 .. code-block:: python
 
     class EGreedy(BaseAgent)
 
-Firstly, we need to define a state of our agent, which in our case will hold
+Firstly, we need to define the state of our agent, which in our case will hold
 
     * constant experiment rate (e),
     * quality values of each arm (Q),
@@ -118,12 +118,12 @@ Having defined these static methods, we can define the class constructor:
         self.update = jax.jit(partial(self.update))
         self.sample = jax.jit(partial(self.sample, e=e))
 
-Lastly, we must specify the parameters' spaces that each of the implemented method takes.
-It enables the library to automatically infer the necessary parameters from the environment.
+Lastly, we must specify the parameter spaces that each of the implemented methods take.
+This enables the library to automatically infer the necessary parameters from the environment.
 
 .. code-block:: python
 
-    # Parameters required by the agents constructor in OpenAI Gym format. 
+    # Parameters required by the agent constructor in OpenAI Gym format.
     # Type of returned value is required to be gym.spaces.Dict.
     @staticmethod
     def parameters_space() -> gym.spaces.Dict:
@@ -263,10 +263,10 @@ Sum up
 
 To sum everything up one more time:
 
-1. Custom agent inherits from the `BaseAgent``
-2. We implement the abstract methods *init()*, *update()* and *sample()*
-3. We use *jax.jit()* to optimize the agent's performance
-4. We provide the required parameters in a format of *OpenAI Gym* spaces
+1. Custom agent inherits from the `BaseAgent`.
+2. We implement the abstract methods *init()*, *update()* and *sample()*.
+3. We use *jax.jit()* to optimize the agent's performance.
+4. We provide the required parameters in the format of *OpenAI Gym* spaces.
 
 The built-in implementation of the epsilon-greedy agent with an addition of optional optimistic start and an exponential
 recency-weighted average update can be found

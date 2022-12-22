@@ -4,7 +4,7 @@ Environment extensions
 ======================
 
 This module is a set of environment extensions. You can either choose one of our built-in extensions or implement
-your extension with the help of :ref:`Custom extensions` guide.
+your extension with the help of the :ref:`Custom extensions` guide.
 
 
 BaseExt

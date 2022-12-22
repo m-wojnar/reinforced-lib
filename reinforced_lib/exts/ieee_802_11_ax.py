@@ -7,9 +7,9 @@ from reinforced_lib.exts import BaseExt, observation, parameter
 class IEEE_802_11_ax(BaseExt):
     """
     The IEEE 802.11ax [1]_ extension. Provides the data rates (in Mb/s) for consecutive modulation and coding
-    schemes (MCS), a reward calculated as an approximated throughput, and the default transmission power.
-    This extension is adapted to the IEEE 802.11ax network with the following settings: a guard interval is
-    equal to 3200 ns, channel width is 20 MHz, 1 spatial stream is used.
+    schemes (MCS), a reward calculated as the approximate throughput, and the default transmission power.
+    This extension is adapted to the IEEE 802.11ax network with the following settings: the guard interval is
+    equal to 3200 ns, channel width is 20 MHz, and 1 spatial stream is used.
 
     References
     ----------

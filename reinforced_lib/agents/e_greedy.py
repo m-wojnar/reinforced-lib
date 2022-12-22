@@ -11,8 +11,8 @@ from reinforced_lib.agents import BaseAgent, AgentState
 
 @dataclass
 class EGreedyState(AgentState):
-    """
-    Container for the state of the e-greedy agent.
+    r"""
+    Container for the state of the :math:`\epsilon`-greedy agent.
 
     Attributes
     ----------
@@ -90,8 +90,8 @@ class EGreedy(BaseAgent):
             n_arms: jnp.int32,
             optimistic_start: Scalar
     ) -> EGreedyState:
-        """
-        Creates and initializes instance of the e-greedy agent for ``n_arms`` arms. Action-value function estimates are
+        r"""
+        Creates and initializes instance of the :math:`\epsilon`-greedy agent for ``n_arms`` arms. Action-value function estimates are
         set to ``optimistic_start`` value and the number of tries is one for each arm.
 
         Parameters
@@ -106,7 +106,7 @@ class EGreedy(BaseAgent):
         Returns
         -------
         EGreedyState
-            Initial state of the e-greedy agent.
+            Initial state of the :math:`\epsilon`-greedy agent.
         """
 
         return EGreedyState(
@@ -123,9 +123,9 @@ class EGreedy(BaseAgent):
         alpha: Scalar
     ) -> EGreedyState:
         r"""
-        In a stationary case, the action-value estimate for a given arm is updated as
+        In the stationary case, the action-value estimate for a given arm is updated as
         :math:`Q_{t + 1} = Q_t + \frac{1}{t} \lbrack R_t - Q_t \rbrack` after receiving reward :math:`R_t` at step
-        :math:`t` and the number of tries for the corresponding arm is incremented. In a non-stationary case,
+        :math:`t` and the number of tries for the corresponding arm is incremented. In the non-stationary case,
         the update follows the equation :math:`Q_{t + 1} = Q_t + \alpha \lbrack R_t - Q_t \rbrack`.
 
         Parameters

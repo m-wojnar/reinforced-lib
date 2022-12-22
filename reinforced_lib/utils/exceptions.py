@@ -83,7 +83,7 @@ class IncorrectLoggerTypeError(IncorrectTypeError):
 
 class ForbiddenOperationError(Exception):
     """
-    Raised when the user is trying to perform forbidden operation.
+    Raised when the user performs a forbidden operation.
     """
 
     def __str__(self) -> str:
@@ -92,7 +92,7 @@ class ForbiddenOperationError(Exception):
 
 class ForbiddenAgentChangeError(ForbiddenOperationError):
     """
-    Raised when the user is trying to change the agent type after the first agent instance has been initialized.
+    Raised when the user changes the agent type after the first agent instance has been initialized.
     """
 
     def __str__(self) -> str:
@@ -101,7 +101,7 @@ class ForbiddenAgentChangeError(ForbiddenOperationError):
 
 class ForbiddenExtensionChangeError(ForbiddenOperationError):
     """
-    Raised when the user is trying to change the extension type after the first agent instance has been initialized.
+    Raised when the user changes the extension type after the first agent instance has been initialized.
     """
 
     def __str__(self) -> str:
@@ -110,7 +110,7 @@ class ForbiddenExtensionChangeError(ForbiddenOperationError):
 
 class ForbiddenExtensionSetError(ForbiddenOperationError):
     """
-    Raised when the user is trying to set the extension type when ``no_ext_mode`` is enabled.
+    Raised when the user sets the extension type when ``no_ext_mode`` is enabled.
     """
 
     def __str__(self) -> str:
@@ -119,7 +119,7 @@ class ForbiddenExtensionSetError(ForbiddenOperationError):
 
 class ForbiddenLoggerSetError(ForbiddenOperationError):
     """
-    Raised when the user is trying to add a new logger after the first step has been made.
+    Raised when the user adds a new logger after the first step has been made.
     """
 
     def __str__(self) -> str:
@@ -182,7 +182,7 @@ class NoDefaultParameterError(Exception):
 
 class UnsupportedLogTypeError(Exception):
     """
-    Raised when the user is trying to log values that are not supported by the logger.
+    Raised when the user logs values that are not supported by the logger.
 
     Parameters
     ----------

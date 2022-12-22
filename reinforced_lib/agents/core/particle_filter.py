@@ -18,7 +18,7 @@ class ParticleFilterState(AgentState):
     positions : array_like
         Positions of the particles.
     logit_weights : array_like
-        Unormalized log weights of the particles.
+        Unnormalized log weights of the particles.
     last_measurement : float
         Time of the last update.
     """
@@ -55,8 +55,8 @@ def simple_resample(operands: Tuple[ParticleFilterState, PRNGKey]) -> ParticleFi
 
 def effective_sample_size(state: ParticleFilterState, threshold: Scalar = 0.5) -> bool:
     r"""
-    Calculates the effective sample size [1]_ (ESS). If ESS is smaller than the number of samples times threshold,
-    than a resampling is necessary.
+    Calculates the effective sample size [1]_ (ESS). If ESS is smaller than the number of sample times threshold,
+    then a resampling is necessary.
 
     Parameters
     ----------
@@ -91,7 +91,7 @@ def simple_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, *
     key : PRNGKey
         A PRNG key used as the random key.
     scale : float
-        Scale of a random movement of particles. :math:`scale > 0`.
+        Scale of the random movement of particles. :math:`scale > 0`.
 
     Returns
     -------
@@ -120,7 +120,7 @@ def linear_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, t
     key : PRNGKey
         A PRNG key used as the random key.
     scale : float
-        Scale of a random movement of particles. :math:`scale > 0`.
+        Scale of the random movement of particles. :math:`scale > 0`.
     time : float
         Current time.
 
@@ -146,7 +146,7 @@ def affine_transition(state: ParticleFilterState, key: PRNGKey, scale: Array, ti
     key : PRNGKey
         A PRNG key used as the random key.
     scale : array_like
-        Scale of a random movement of particles. :math:`scale_0, scale_1 > 0`.
+        Scale of the random movement of particles. :math:`scale_0, scale_1 > 0`.
     time : float
         Current time.
 
@@ -178,7 +178,7 @@ class ParticleFilter:
     weights_shape : array_like
         Shape of the particle weights array.
     scale : float or array_like
-        Scale of a random movement of the particles.
+        Scale of the random movement of the particles.
     observation_fn : callable
         Function that updates particles based on an observation from the environment; takes two positional arguments:
             - ``state``: the state of the filter (`ParticleFilterState`).
@@ -196,13 +196,13 @@ class ParticleFilter:
         Function that checks if a resampling is necessary; takes one positional argument:
             - ``state``: the state of the filter (`ParticleFilterState`).
         
-        Returns an information whether a resampling should be performed (`bool`).
+        Returns information whether a resampling should be performed (`bool`).
     
     transition_fn : callable, default=particle_filter.simple_transition
         Function that updates the particle positions; takes four positional arguments:
             - ``state``: the state of the filter (`ParticleFilterState`).
             - ``key``: a PRNG key used as a random key (`PRNGKey`).
-            - ``scale``: scale of a random movement of the particles (`float or array_like`).
+            - ``scale``: scale of the random movement of the particles (`float or array_like`).
             - ``time``: the current time (`float`).
         
         Returns the updated state of the filter (`ParticleFilterState`).
@@ -318,19 +318,19 @@ class ParticleFilter:
             Function that checks if a resampling is necessary; takes one positional argument:
                 - ``state``: the state of the filter (`ParticleFilterState`).
 
-            Returns an information whether a resampling should be performed (`bool`).
+            Returns information whether a resampling should be performed (`bool`).
 
         transition_fn : callable, default=particle_filter.simple_transition
             Function that updates the particle positions; takes four positional arguments:
                 - ``state``: the state of the filter (`ParticleFilterState`).
                 - ``key``: a PRNG key used as a random key (`PRNGKey`).
-                - ``scale``: scale of a random movement of the particles (`float or array_like`).
+                - ``scale``: scale of the random movement of the particles (`float or array_like`).
                 - ``time``: the current time (`float`).
 
         time : float
             Current time.
         scale : float or array_like
-            Scale of a random movement of the particles.
+            Scale of the random movement of the particles.
 
         Returns
         -------

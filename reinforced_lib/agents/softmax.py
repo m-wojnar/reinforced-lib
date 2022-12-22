@@ -21,7 +21,7 @@ class SoftmaxState(AgentState):
     r : float
         Average of all obtained rewards :math:`\bar{R}`.
     n : int
-        Number of the step.
+        Step number.
     """
 
     H: Array
@@ -32,8 +32,8 @@ class SoftmaxState(AgentState):
 class Softmax(BaseAgent):
     r"""
     Softmax agent with baseline and optional exponential recency-weighted average update. It learns a preference
-    function :math:`H`, which indicates a preference of selecting one arm over others. Algorithms policy can be
-    controlled by temperature parameter :math:`\tau`. The implementation is inspired by [3]_.
+    function :math:`H`, which indicates a preference of selecting one arm over others. Algorithm policy can be
+    controlled by the temperature parameter :math:`\tau`. The implementation is inspired by the work of Sutton and Barto [3]_.
 
     Parameters
     ----------
@@ -99,7 +99,7 @@ class Softmax(BaseAgent):
     ) -> SoftmaxState:
         r"""
         Creates and initializes instance of the Softmax agent for ``n_arms`` arms. Preferences :math:`H` for each arm
-        are set to zero, as well as the average of all rewards :math:`\bar{R}`. The number of the step :math:`n` is
+        are set to zero, as well as the average of all rewards :math:`\bar{R}`. The step number :math:`n` is
         initialized to one.
 
         Parameters
@@ -132,7 +132,7 @@ class Softmax(BaseAgent):
         tau: Scalar
     ) -> SoftmaxState:
         r"""
-        Preferences :math:`H` can be learned by the stochastic gradient ascent. The softmax algorithm search
+        Preferences :math:`H` can be learned by stochastic gradient ascent. The softmax algorithm searches
         for such a set of preferences that maximizes the expected reward :math:`\mathbb{E}[R]`.
         The updates of :math:`H` for each action :math:`a` are calculated as:
 
@@ -145,7 +145,7 @@ class Softmax(BaseAgent):
         In the stationary case, :math:`\bar{R_t}` can be calculated as
         :math:`\bar{R}_{t + 1} = \bar{R}_t + \frac{1}{t} \lbrack R_t - \bar{R}_t \rbrack`. To improve the
         algorithm's performance in the non-stationary case, we apply
-        :math:`\bar{R}_{t + 1} = \bar{R}_t + \alpha \lbrack R_t - \bar{R}_t \rbrack` with the constant
+        :math:`\bar{R}_{t + 1} = \bar{R}_t + \alpha \lbrack R_t - \bar{R}_t \rbrack` with a constant
         step size :math:`\alpha`.
 
         Parameters

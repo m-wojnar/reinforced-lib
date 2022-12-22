@@ -4,7 +4,7 @@ Agents
 ======
 
 This module is a set of RL agents. You can either choose one of our built-in agents or implement
-your agent with the help of :ref:`Custom agents` guide.
+your agent with the help of the :ref:`Custom agents` guide.
 
 
 BaseAgent

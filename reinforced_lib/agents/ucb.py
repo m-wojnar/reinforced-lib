@@ -121,9 +121,9 @@ class UCB(BaseAgent):
         gamma: Scalar
     ) -> UCBState:
         r"""
-        In a stationary case, the sum of the rewards for a given arm is increased by reward :math:`r` obtained after
-        step :math:`t` and the number of tries for the corresponding arm is incremented. In a non-stationary case,
-        the update follows the equations:
+        In the stationary case, the sum of the rewards for a given arm is increased by reward :math:`r` obtained after
+        step :math:`t` and the number of tries for the corresponding arm is incremented. In the non-stationary case,
+        the update follows the equations
 
         .. math::
           \begin{gather}
@@ -162,7 +162,7 @@ class UCB(BaseAgent):
         c: Scalar
     ) -> Tuple[UCBState, jnp.int32]:
         r"""
-        UCB agent follows the policy:
+        UCB agent follows the policy
 
         .. math::
           A = \operatorname*{argmax}_{a \in \mathscr{A}} \left[ Q(a) + c \sqrt{\frac{\ln \left( {\sum_{a' \in \mathscr{A}}} N(a') \right) }{N(a)}} \right] .

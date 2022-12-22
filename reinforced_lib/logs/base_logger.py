@@ -18,7 +18,7 @@ Source = Union[Tuple[str, SourceType], str]
 
 class BaseLogger(ABC):
     """
-    Container for functions of a logger. Provides simple interface for defining custom loggers.
+    Container for functions of a logger. Provides a simple interface for defining custom loggers.
     """
 
     def __init__(self, **kwargs):
@@ -102,8 +102,8 @@ class BaseLogger(ABC):
     @staticmethod
     def source_to_name(source: Source) -> str:
         """
-        Converts a source to the string. If source is a string itself, it returns that string.
-        Otherwise, it returns string in the format "name-sourcetype" (e.g., "action-metric").
+        Converts the source to a string. If source is a string itself, it returns that string.
+        Otherwise, it returns a string in the format "name-sourcetype" (e.g., "action-metric").
 
         Parameters
         ----------

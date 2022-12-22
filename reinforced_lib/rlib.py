@@ -39,7 +39,7 @@ class RLib:
         Pass observations directly to the agent (do not use the extensions).
     save_directory : str, default=None
         Path to a user specified directory where the ``save`` method will store the experiment checkpoints.
-        If none specified, utilizes the home directory.
+        If none specified, uses the home directory.
     """
 
     def __init__(
@@ -93,7 +93,7 @@ class RLib:
 
     def finish(self) -> None:
         """
-        Used to explicitly finalize the library work. In particular, it finishes the loggers work.
+        Used to explicitly finalize the library's work. In particular, it finishes the logger's work.
         """
 
         self._logs_observer.finish_loggers()
@@ -137,7 +137,7 @@ class RLib:
         Parameters
         ----------
         ext_type : type
-            Type of selected the extension. Must inherit from the ``BaseExt`` class.
+            Type of selected extension. Must inherit from the ``BaseExt`` class.
         ext_params : dict, optional
             Parameters of the selected extension.
         """
@@ -171,12 +171,12 @@ class RLib:
     ) -> None:
         """
         Initializes loggers that log observations from the environment, agents state, or training metrics.
-        ``loggers_types`` and ``loggers_sources`` arguments can be objects of the appropriate types or a lists
-        of objects. If the user passes two objects or lists of the same lengths, function initializes the modules
+        ``loggers_types`` and ``loggers_sources`` arguments can be objects of appropriate types or lists
+        of objects. If the user passes two objects or lists of the same lengths, the function initializes the modules
         with the corresponding types and names. If the user passes one object (or list with only one object)
-        and a list with multiple objects, function broadcasts the passed objects. The ``loggers_sources`` items
-        can be names of the logger sources (e.g. "action") or tuples containing the name and the ``SourceType``
-        (e.g., ``("action", SourceType.OBSERVATION)``). If the name itself is inconclusive, behaviour depends
+        and a list with multiple objects, the function broadcasts the passed objects. The ``loggers_sources`` items
+        can be names of the logger sources (e.g., "action") or tuples containing the name and the ``SourceType``
+        (e.g., ``("action", SourceType.OBSERVATION)``). If the name itself is inconclusive, the behaviour depends
         on the implementation of the logger.
 
         Parameters
@@ -292,8 +292,8 @@ class RLib:
         Takes the extension state as an input, updates the agent state, and returns the next action selected by
         the agent. If ``no_ext_mode`` is disabled, observations are passed by args and kwargs (the observations must
         match the extension observation space). If ``no_ext_mode`` is enabled, observations must be passed
-        by the ``update_observations`` and ``sample_observations`` parameters (the observations must match agents
-        ``update_observation_space`` and ``sample_observation_space``). If there are no agent instance initialized,
+        by the ``update_observations`` and ``sample_observations`` parameters (the observations must match the agent's
+        ``update_observation_space`` and ``sample_observation_space``). If there are no agent instances initialized,
         the method automatically initializes the first instance.
 
         Parameters
@@ -303,9 +303,9 @@ class RLib:
         *args : tuple
             Extension observations.
         update_observations : dict or tuple or any, optional
-            Observations used when ``no_ext_mode`` is enabled (must match agents ``update_observation_space``).
+            Observations used when ``no_ext_mode`` is enabled (must match agent's ``update_observation_space``).
         sample_observations : dict or tuple or any, optional
-            Observations used when ``no_ext_mode`` is enabled (must match agents ``sample_observation_space``).
+            Observations used when ``no_ext_mode`` is enabled (must match agent's ``sample_observation_space``).
         **kwargs : dict
             Extension observations.
 
@@ -386,14 +386,14 @@ class RLib:
 
     def save(self, path: str = None) -> str:
         """
-        Saves the state of the experiment to a file in lz4 format. For each agent both the state and the initialization
+        Saves the state of the experiment to a file in lz4 format. For each agent, both the state and the initialization
         parameters are saved. The extension and loggers settings are saved as well to fully reconstruct the experiment.
 
         Parameters
         ----------
         path : str, optional
             Path to the checkpoint file. If none specified, saves to the path specified by ``save_directory``.
-            If ``.pkl.lz4`` suffix is not detected, it will be appended automatically.
+            If the ``.pkl.lz4`` suffix is not detected, it will be appended automatically.
         
         Returns
         -------
@@ -444,11 +444,11 @@ class RLib:
         path : str
             Path to the checkpoint file.
         agent_params : Dict[str, Any], optional
-            Dictionary of altered agents parameters with their new values, by default None.
+            Dictionary of altered agent parameters with their new values, by default None.
         ext_params : Dict[str, Any], optional
             Dictionary of altered extension parameters with their new values, by default None.
         restore_loggers : bool, default=True
-            Flag indicating if the method should restore loggers settings.
+            Flag indicating if the method should restore logger settings.
         """
         
         with lz4.frame.open(path, 'rb') as f:

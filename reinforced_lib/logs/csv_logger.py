@@ -118,9 +118,10 @@ class CsvLogger(BaseLogger):
 
         References
         ----------
-        .. [2] Pezoa, F., Reutter, J. L., Suarez, F., Ugarte, Mart&#237;n, & Vrgo&#269;c, Domagoj. (2016).
-           Foundations of JSON schema. In Proceedings of the 25th International Conference on World Wide Web
-           (pp. 263–273).
+        .. [2] Felipe Pezoa, Juan L. Reutter, Fernando Suarez, Martin Ugarte, and Domagoj Vrgoc. 2016.
+           Foundations of JSON Schema. In Proceedings of the 25th International Conference on World Wide Web
+           (WWW '16). International World Wide Web Conferences Steering Committee, Republic and Canton of Geneva,
+           CHE, 263–273. https://doi.org/10.1145/2872427.2883029
         """
 
         self._columns_values[self.source_to_name(source)] = f"\"{json.dumps(value)}\""

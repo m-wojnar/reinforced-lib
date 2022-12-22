@@ -21,7 +21,7 @@ class StdoutLogger(BaseLogger):
 
     def init(self, sources: List[Source]) -> None:
         """
-        Creates a list of all sources names.
+        Creates a list of all source names.
 
         Parameters
         ----------

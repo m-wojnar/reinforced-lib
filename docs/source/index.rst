@@ -12,7 +12,7 @@ Welcome to Reinforced-lib's documentation!
 **Reinforced-lib** is a Python library designed to support research and prototyping using reinforcement learning
 (RL) algorithms. The library can serve as a simple solution with ready to use RL workflows as well as
 an expandable framework with programmable behaviour. Thanks to the functional implementation of the library's core,
-we can provide full access to the JAX's jit functionality, which boosts the agent's performance significantly.
+we can provide full access to JAX's JIT functionality, which boosts the agent's performance significantly.
 
 .. code-block:: python
 
@@ -40,14 +40,14 @@ we can provide full access to the JAX's jit functionality, which boosts the agen
 Integrated IEEE 802.11ax support
 --------------------------------
 
-Library design is highly influenced by the desire to support research in Wi-Fi. It can be a tool for
-researchers to optimize the Wi-Fi protocols with built-in RL algorithms and provided IEEE 802.11ax environment
+The library's design is highly influenced by the desire to support research in Wi-Fi. It can be a tool for
+researchers to optimize Wi-Fi protocols with built-in RL algorithms and provided the IEEE 802.11ax environment
 extension.
 
 Modular architecture
 --------------------
 
-**Reinforced-lib** can be well characterized by it's modular architecture which makes the library flexible, universal,
+**Reinforced-lib** can be well characterized by its modular architecture which makes the library flexible, universal,
 and easy-to-use. Its key parts are placed in separate modules and connected in a standardized way to provide versatility
 and the possibility to extend individual modules in the future. Nevertheless, Reinforced-lib is a single piece of software
 that can be easily used, thanks to the topmost module, which ensures a simple and common interface for all agents.
@@ -67,22 +67,22 @@ The last two methods are used to persist the state of the agent by storing it in
 The extensions module
 ~~~~~~~~~~~~~~~~~~~~~
 
-The Extensions module consists of containers with domain-specific knowledge and ensures the proper use of universal agents
+The extensions module consists of containers with domain-specific knowledge and ensures the proper use of universal agents
 implemented in **Reinforced-lib**. If a specific problem is implemented in the form of an extension, the module infers and
 provides the appropriate data to the agent, and at the same time requires adequate, corresponding values from the user.
 
 The agents module
 ~~~~~~~~~~~~~~~~~
 
-The Agents module is a collection of universal algorithms, which are called "agents" in RL community. Each agent has
+The agents module is a collection of universal algorithms, which are called "agents" in the RL community. Each agent has
 a similar API to communicate with the Extensions module, which ensures its versatility and expandability. In this release
-of **Reinforced-lib** we focused on the `multi-armed bandit problem <https://en.wikipedia.org/wiki/Multi-armed_bandit>`_,
-hence the imlemented agents are related to this task.
+of **Reinforced-lib**, we focus on the `multi-armed bandit problem <https://en.wikipedia.org/wiki/Multi-armed_bandit>`_,
+hence the implemented agents are related to this task.
 
 The logging module
 ~~~~~~~~~~~~~~~~~~
 
-The Logging module is responsible for collecting data from other modules and observing their state in real time.
+The logging module is responsible for collecting data from other modules and observing their state in real time.
 It also has great potential in using the library to create new RL agents - it can be used to develop, evaluate,
 and debug new agents by observing decisions they make; record and visualize how environment state changes in time;
 or provide a simple way to obtain a training summary, metrics, and logs.

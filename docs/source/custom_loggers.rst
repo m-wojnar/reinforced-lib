@@ -3,7 +3,7 @@
 Custom loggers
 ==============
 
-Loggers are a very helpful tool for visualizing and analyzing the running algorithm or watching the training process.
+Loggers are a helpful tool for visualizing and analyzing the running algorithm or watching the training process.
 You can monitor observations passed to the agent, the agents' state, and basic metrics in real time.
 
 
@@ -17,10 +17,10 @@ We will present creating a custom logger on the example of the ``CsvLogger`` :re
 
     class CsvLogger(BaseLogger)
 
-First, we must define a loggers constructor. ``__init__`` function can take any arguments that can be passed later
+First, we must define a loggers constructor. The ``__init__`` function can take any arguments that can be passed later
 by the ``loggers_params`` parameter in the ``RLib`` :ref:`class <RLib class>` constructor, but remember to always
 include the ``**kwargs`` in the arguments list. The values provided in ``loggers_params`` are passed to instances
-of all loggers listed in ``loggers_type``, so it is very important to choose parameter names carefully.
+of all loggers listed in ``loggers_type``, so it is important to choose parameter names carefully.
 For example, constructor parameters of ``PlotsLogger`` start with the prefix ``plots_*`` and parameters of
 ``CsvLogger`` start with ``csv_*``. Below is an example constructor of ``CsvLogger``:
 
@@ -78,7 +78,7 @@ at the ``log_scalar`` and ``log_other`` methods of ``CsvLogger``:
         self._columns_values[self.source_to_name(source)] = f"\"{json.dumps(value)}\""
         self._save()
 
-These are very simple methods that log scalars and values of other types. The ``log_scalar`` function just takes the
+These are simple methods that log scalars and values of other types. The ``log_scalar`` function just takes the
 raw scalar and saves it with a protected method ``_save`` of ``CsvLogger``. Similarly, the ``log_other`` function
 converts a given value to the JSON format and then calls ``_save``. Note that both methods use the ``source_to_name``
 method of ``BaseLogger`` that converts that source to a string. If the source is a string (just a name of an
@@ -86,7 +86,7 @@ observation, state, or metric), the method returns that string. Otherwise, if th
 the function returns string ``"[name]-[source type name]"``.
 
 If the logger is not able to log a value of some type (for example, it could be hard to plot a dictionary or a custom
-object), we do not have to implement the corresponding ``log_*`` method. If the user will try to log a value of that
+object), we do not have to implement the corresponding ``log_*`` method. If the user tries to log a value of that
 type with this logger, it will raise the ``UnsupportedLogTypeError`` :ref:`exception <Exceptions>`.
 
 

@@ -13,7 +13,7 @@ Key concepts
 
 There are three main benefits of using extensions:
 
-#. Automatic initialization of agents - an extensions can provide default arguments that can be used to
+#. Automatic initialization of agents - an extension can provide default arguments that can be used to
    initialize an agent. For example, if we would like to create the ``wifi.ParticleFilter``
    :ref:`agent <Particle Filter (Wi-Fi)>` without using any extension, we would probably do it in the
    following way:
@@ -78,7 +78,7 @@ There are three main benefits of using extensions:
 
        action = rl.sample(**observations)
 
-#. Filling missing parameters - some of parameters required by the agent can be filled with known values or
+#. Filling missing parameters - some parameters required by the agent can be filled with known values or
    calculated based on a set of basic observations. For example, a ``sample`` method of the ``wifi.ParticleFilter``
    :ref:`agent <Particle Filter (Wi-Fi)>` requires transmission data rates for each MCS. These values can be found in
    the IEEE 802.11ax standard documentation. Below is a sample code that could be used to sample the next action from
@@ -123,7 +123,7 @@ There are three main benefits of using extensions:
            'n_failed': 0,
            'power': 16.0206,
            'cw': 15,
-           'rates': jnp.array([1., 2., 3., 4., 5., 6., 7., 8., 9.0, 10., 11., 12.])
+           'rates': jnp.array([1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12.])
        }
        action = rl.sample(**observations)
 
@@ -136,15 +136,15 @@ Customizing extensions
 ----------------------
 
 To create your own extension, you should inherit from the :ref:`abstract class <BaseExt>` ``BaseExt``. We
-present adding custom extension on an example of the ``IEEE_802_11_ax`` :ref:`extension <IEEE 802.11ax>` extension.
+present adding a custom extension using an example of the ``IEEE_802_11_ax`` :ref:`extension <IEEE 802.11ax>` extension.
 
 .. code-block:: python
 
     class IEEE_802_11_ax(BaseExt)
     
 First, we must specify the observation space of the extension. It is a basic set of environment observations
-that can be used the extension to compute missing values. Note that a complete set of all parameters is not
-necessarily required to use the extension - if agent does not require a given parameter and it is not used to
+that can be used by the extension to compute missing values. Note that a complete set of all parameters is not
+necessarily required to use the extension - if an agent does not require a given parameter and it is not used to
 compute missing values, the extension will ignore it. In the case of the IEEE 802.11ax environment, the observation
 space can look like this:
 
@@ -226,18 +226,18 @@ The full source code of the IEEE 802.11ax extension can be found `here <https://
 Rules and limitations
 ---------------------
 
-Extensions are very powerful mechanism that makes the Reinforced-lib easy to use. The ``BaseExt`` methods can handle
-complex and nested observation spaces, such as the
+Extensions are powerful mechanisms that make Reinforced-lib easy to use. The ``BaseExt`` methods can handle
+complex and nested observation spaces, such as these
 `example ones <https://github.com/m-wojnar/reinforced-lib/blob/main/test/exts/test_base_ext.py>`_.
-However, there are some rules and limitations that programmers and users must take into consideration:
+However, there are some rules and limitations that programmers and users must consider:
 
 * arguments and parameters provided by the user have higher priority than the default or calculated by the extension,
 * *parameter functions* cannot take any arguments (except ``self``),
-* you cannot use extension with a given agent if the agent requires a parameter that is not listed in the
+* you cannot use an extension with a given agent if the agent requires a parameter that is not listed in the
   extensions observation space or cannot be provided by an *observation function* - you have to add an observation
-  to the observation space, implement appropriate *observation function* or use the agent without any extension,
-* missing parameters filling is supported only if the type of the extension observation space and the type of agent
-  spaces can be matched - that means they both must be:
+  to the observation space, implement the appropriate *observation function* or use the agent without any extension,
+* missing parameter filling is supported only if the type of the extension observation space and the type of agent
+  space can be matched - that means they both must be:
 
   * a dict type - ``gym.spaces.Dict``,
   * or a "simple" type - ``gym.spaces.Box``, ``gym.spaces.Discrete``, ``gym.spaces.MultiBinary``, ``gym.spaces.MultiDiscrete``, ``gym.spaces.Space``,
@@ -247,8 +247,8 @@ However, there are some rules and limitations that programmers and users must ta
 * if spaces do not inherit from ``gym.spaces.Dict``, missing values are matched based on the type of the value,
   not the name, so the first function that type matches the agent space is chosen,
 * if an *observation function* requires some parameter and it is not provided by a named argument, ``BaseExt`` will
-  select the first (possibly nested) positional argument and pass it to the function, but if there will be no
-  positional arguments, library will raise an exception.
+  select the first (possibly nested) positional argument and pass it to the function, but if there are no
+  positional arguments, the library will raise an exception.
 
 
 How do extensions work?

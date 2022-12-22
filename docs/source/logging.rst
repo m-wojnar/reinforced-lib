@@ -4,7 +4,7 @@ Logging module
 ==============
 
 This module is a set of loggers. You can either choose one of our built-in loggers or implement
-your logger with the help of :ref:`Custom loggers` guide.
+your logger with the help of the :ref:`Custom loggers` guide.
 
 
 BaseLogger

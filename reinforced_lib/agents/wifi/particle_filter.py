@@ -14,14 +14,14 @@ from reinforced_lib.agents.core.particle_filter import ParticleFilterState, line
 
 class ParticleFilter(BaseAgent):
     r"""
-    Particle filter agent designed for the IEEE 802.11ax environments. The implementation is based on [2]_.
+    Particle filter agent designed for IEEE 802.11ax environments. The implementation is based on the work of Krotov et al. [2]_.
     The latent state of the filter is the channel condition described by the parameter :math:`\theta = \gamma − P_{tx}`
     (in logarithmic scale) where :math:`\gamma` is SINR and :math:`P_{tx}` is the current transmission power.
 
     Parameters
     ----------
     min_snr_init : float
-        Minial SINR value [dBm] in the initial particle distribution.
+        Minimal SINR value [dBm] in the initial particle distribution.
     max_snr_init : float
         Maximal SINR value [dBm] in the initial particle distribution.
     default_power : float
@@ -29,7 +29,7 @@ class ParticleFilter(BaseAgent):
     particles_num : int, default=1000
         Number of created particles. :math:`N \in \mathbb{N}_{+}`.
     scale : float, default=10.0
-        Velocity of a random movement of the particles. :math:`scale > 0`.
+        Velocity of the random movement of the particles. :math:`scale > 0`.
 
     References
     ----------
@@ -106,7 +106,7 @@ class ParticleFilter(BaseAgent):
         """
         Creates and initializes an instance of the particle filter agent with ``particles_num`` particles.
         Particle positions are dawn from a uniform distribution from ``min_snr_init`` to ``max_snr_init``,
-        and particle weights are set equal.
+        and particle weights are set to be equal.
 
         Parameters
         ----------
@@ -146,7 +146,7 @@ class ParticleFilter(BaseAgent):
         where :math:`r` is the data rate used during the transmission, :math:`s` indicates if the transmission was
         successful, :math:`\gamma` is SINR, :math:`P(s | r, \gamma)` is the probability of transmission success
         conditioned by the data rate used and current SINR, and :math:`P_c` is the probability of unsuccessful
-        transmission due to collision estimated as :math:`1 / CW` (contention window).
+        transmission due to a collision estimated as :math:`1 / CW` (contention window).
 
         Parameters
         ----------
@@ -157,17 +157,17 @@ class ParticleFilter(BaseAgent):
         action : int
             Previously selected action.
         n_successful : int
-            Number of successful tries.
+            Number of successful transmission attempts.
         n_failed : int
-            Number of failed tries.
+            Number of failed transmission attempts.
         time : float
             Current time [s].
         power : float
-            Power used during the transmission [dBm].
+            Power used prior to the transmission [dBm].
         cw : int
             Contention window used during the transmission.
         scale : float
-            Velocity of a random movement of particles.
+            Velocity of the random movement of particles.
 
         Returns
         -------
@@ -193,9 +193,9 @@ class ParticleFilter(BaseAgent):
             pf: ParticleFilterBase
     ) -> Tuple[ParticleFilterState, jnp.int32]:
         r"""
-        The algorithm draws :math:`\theta` from the categorical distribution according to the particles positions
+        The algorithm draws :math:`\theta` from the categorical distribution according to the particle positions
         and weights. Then it calculates the corresponding SINR value :math:`\gamma = \theta + P_{tx}`.
-        Next MCS is selected as:
+        Next, MCS is selected as
 
         .. math::
           A = \operatorname*{argmax}_{i} P(1 | r_i, \gamma) r_i ,

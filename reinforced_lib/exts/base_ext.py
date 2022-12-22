@@ -11,9 +11,9 @@ from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpa
 
 class BaseExt(ABC):
     """
-    Container for a domain-specific knowledge and functions for a given environment. Provides the transformation
-    from the observation functions and the observation space to the agents update and sample spaces. Stores the
-    default argument values for agents initialization.
+    Container for domain-specific knowledge and functions for a given environment. Provides the transformation
+    from the observation functions and the observation space to the agent update and sample spaces. Stores the
+    default argument values for agent initialization.
     """
 
     def __init__(self) -> None:
@@ -46,7 +46,7 @@ class BaseExt(ABC):
     ) -> Dict[str, Any]:
         """
         Composes agent initialization parameters from parameters passed by the user and default values
-        defined in the parameter functions. Returns a dictionary with the parameters fitting the agents
+        defined in the parameter functions. Returns a dictionary with the parameters fitting the agent
         parameters space.
 
         Parameters
@@ -103,14 +103,14 @@ class BaseExt(ABC):
     ) -> None:
         """
         Create functions that transform environment observations and values provided by the observation functions
-        to the agents update and sample space.
+        to the agent update and sample space.
 
         Parameters
         ----------
         agent_update_space : gym.spaces.Space, optional
-            Observations required by the agents ``update`` function in OpenAI Gym format.
+            Observations required by the agent ``update`` function in OpenAI Gym format.
         agent_sample_space : gym.spaces.Space, optional
-            Observations required by the agents ``sample`` function in OpenAI Gym format.
+            Observations required by the agent ``sample`` function in OpenAI Gym format.
         """
 
         self._update_space_transform = self._transform_spaces(self.observation_space, agent_update_space)
@@ -371,7 +371,7 @@ class BaseExt(ABC):
         Returns
         -------
         tuple[any, any]
-            Agents update and sample observations.
+            Agent update and sample observations.
         """
 
         return self._update_space_transform(*args, **kwargs), self._sample_space_transform(*args, **kwargs)

@@ -10,7 +10,7 @@ from reinforced_lib.utils.exceptions import IncorrectLoggerTypeError, IncorrectS
 
 class LogsObserver:
     """
-    Class responsible for managing a singleton instances of the loggers, initialization and finalization
+    Class responsible for managing singleton instances of the loggers, initialization and finalization
     of the loggers, and passing the logged values to the appropriate loggers and methods.
     """
 

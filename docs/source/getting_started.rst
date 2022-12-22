@@ -18,7 +18,7 @@ You can install the latest version of Reinforced-lib from PyPI via:
 From source 
 ~~~~~~~~~~~
 
-You can clone source code from our repository
+You can clone the source code from our repository
 
 .. code-block:: bash
 
@@ -42,9 +42,9 @@ You can also install the development dependencies if you want to build the docum
 Basic usage
 -----------
 
-The vital benefit of using :ref:`Reinforced-lib <reinforced-lib>` is a simplification the of RL training loop. Thanks to
+The vital benefit of using :ref:`Reinforced-lib <reinforced-lib>` is a simplification of the RL training loop. Thanks to
 the :ref:`class <RLib Class>` ``Rlib``, we do not need to worry about the agent initialization nor passing the environment
-observations to the agent. The library takes care of these tedious tasks. Below we present the basic training loop with
+observations to the agent. The library takes care of these tedious tasks. Below, we present the basic training loop with
 all the simplifications provided by :ref:`Reinforced-lib <reinforced-lib>`.
 
 .. code-block:: python
@@ -78,10 +78,10 @@ Next, we import OpenAI gym, make an environment, and reset it to an initial stat
         action = rlib.sample(**env_state)
         env_state, reward, done, info = env.step(action)
 
-We can now define the training loop. The boolen ``terminated`` flag controls when to stop training the agent.
-Inside the loop, we call the ``rlib.sample()`` method which passes the environment observations to the agent, updates agent's
-internal state and returns an action proposed by the agent's policy. We apply the returned action in the environment to get
-it's altered state, reward, information whether this state is terminal, and some additional info.
+We can now define the training loop. The boolean ``terminated`` flag controls when to stop training the agent.
+Inside the loop, we call the ``rlib.sample()`` method which passes the environment observations to the agent, updates
+the agent's internal state and returns an action proposed by the agent's policy. We apply the returned action in the
+environment to get its altered state, reward, information whether this state is terminal, and some additional info.
 
 Logging
 -------
@@ -112,9 +112,9 @@ You can easily change the logger type, add more sources, and customize the param
     )
 
 Note that ``n_successful`` is the observation name, ``alpha`` is name of the attribute of the ``ThompsonSampling``
-agent, and ``action`` is the name of the metric. You can mix sources names as long as it does not lead to the
-inconclusiveness. In the example above, it can be seen that ``action`` is both name of the observation and the metric.
-In this case you have to write the source name as a tuple containing a name and a type of the source ``(str, SourceType)``
+agent, and ``action`` is the name of the metric. You can mix sources names as long as it does not lead to
+inconclusiveness. In the example above, it can be seen that ``action`` is both the name of the observation and the metric.
+In this case, you have to write the source name as a tuple containing a name and the type of the source ``(str, SourceType)``
 as in the code above.
 
 You can also plug multiple loggers to one source:
@@ -146,7 +146,7 @@ will be used to log values for consecutive sources.
 Saving experiments
 ------------------
 
-``RLib`` :ref:`class <RLib Class>` provides an API for saving your experiment in a compressed ``.lz4`` format.
+The ``RLib`` :ref:`class <RLib Class>` provides an API for saving your experiment in a compressed ``.lz4`` format.
 You can later reconstruct the experiment state and continue from the exact point where you ended or you can
 alter some training parameters during the reloading process.
 
@@ -186,12 +186,12 @@ with the training, we load the whole experiment to a new RLib instance.
     # ...
 
 
-Dynamic parameters change
+Dynamic parameter change
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Another feature of the saving mechanism is that it allows us to dynamically change training parameters.
-Let's recall the above example and modify it a little. We now want to modify on-the-run the ``decay``
-parameter (responsible for the 'memory' of the thompson sampling agent).
+Let us recall the above example and modify it a little. We now want to modify on-the-fly the ``decay``
+parameter (responsible for the 'memory' of the Thompson sampling agent).
 
 .. code-block:: python
 
@@ -218,7 +218,7 @@ parameter (responsible for the 'memory' of the thompson sampling agent).
     # Continue the training with new parameters
     # ...
 
-You can change as many parameters we want. The provided example is constrained only to the agent's
-parameters alteration, but you can modify the extension's parameters in the same way. You can even control the
-the logger's behaviour with the flag ``restore_loggers`` (more on loggers in the :ref:`Logging module <Logging module>`
+We can change as many parameters we want. The provided example is constrained only to the agent's
+parameter alteration, but you can modify the extension's parameters in the same way. You can even control the
+the logger's behaviour with the flag ``restore_loggers`` (more on loggers in the :ref:`Logging module <The logging module>`
 section).

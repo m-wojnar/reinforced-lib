@@ -31,7 +31,7 @@ class ThompsonSamplingState(AgentState):
 
 class ThompsonSampling(BaseAgent):
     r"""
-    Contextual Bernoulli Thompson sampling agent with the exponential smoothing. The implementation is inspired by [4]_.
+    Contextual Bernoulli Thompson sampling agent with the exponential smoothing. The implementation is inspired by  the work of Krotov et al. [4]_.
     Thompson sampling is based on a beta distribution with parameters related to the number of successful and
     failed attempts. Higher values of the parameters decrease the entropy of the distribution while changing
     the ratio of the parameters shifts the expected value.
@@ -41,7 +41,7 @@ class ThompsonSampling(BaseAgent):
     n_arms : int
         Number of bandit arms. :math:`N \in \mathbb{N}_{+}`.
     decay : float, default=1.0
-        Decay rate, if equals to zero, smoothing is not applied. :math:`w \geq 0`.
+        Decay rate. If equal to zero, smoothing is not applied. :math:`w \geq 0`.
 
     References
     ----------
@@ -88,7 +88,7 @@ class ThompsonSampling(BaseAgent):
     @staticmethod
     def init(key: PRNGKey, n_arms: jnp.int32) -> ThompsonSamplingState:
         r"""
-        Creates and initializes instance of the Thompson sampling agent for ``n_arms`` arms. The :math:`\mathbf{\alpha}`
+        Creates and initializes an instance of the Thompson sampling agent for ``n_arms`` arms. The :math:`\mathbf{\alpha}`
         and :math:`\mathbf{\beta}` vectors are set to zero to create a non-informative prior distribution.
         The ``last_decay`` array is also set to zero.
 
@@ -176,7 +176,7 @@ class ThompsonSampling(BaseAgent):
         r"""
         The Thompson sampling policy is stochastic. The algorithm draws :math:`q_a` from the distribution
         :math:`\operatorname{Beta}(1 + \mathbf{\alpha}(a), 1 + \mathbf{\beta}(a))` for each arm :math:`a`.
-        The next action is selected as:
+        The next action is selected as
 
         .. math::
           A = \operatorname*{argmax}_{a \in \mathscr{A}} q_a r_a ,

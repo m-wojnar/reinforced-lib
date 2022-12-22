@@ -12,7 +12,7 @@ from reinforced_lib.logs import BaseLogger, Source
 
 class PlotsLogger(BaseLogger):
     r"""
-    Logger that presents and saves values as a line plots. Offers smoothing of the curve and plotting
+    Logger that presents and saves values as line plots. Offers smoothing of the curve and plotting
     multiple curves in a single chart (while logging arrays).
 
     Parameters
@@ -54,7 +54,7 @@ class PlotsLogger(BaseLogger):
 
     def init(self, sources: List[Source]) -> None:
         """
-        Creates a list of all sources names.
+        Creates a list of all source names.
 
         Parameters
         ----------
@@ -137,7 +137,7 @@ class PlotsLogger(BaseLogger):
 
     def log_scalar(self, source: Source, value: Scalar) -> None:
         """
-        Adds a given scalar to the plots values.
+        Adds a given scalar to the plot values.
 
         Parameters
         ----------
@@ -151,7 +151,7 @@ class PlotsLogger(BaseLogger):
 
     def log_array(self, source: Source, value: Array) -> None:
         """
-        Adds a given array to the plots values.
+        Adds a given array to the plot values.
 
         Parameters
         ----------

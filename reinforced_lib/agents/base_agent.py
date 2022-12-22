@@ -48,7 +48,7 @@ class BaseAgent(ABC):
     @abstractmethod
     def parameters_space() -> gym.spaces.Dict:
         """
-        Parameters space of the agent constructor in OpenAI Gym format.
+        Parameter space of the agent constructor in OpenAI Gym format.
         Type of returned value is required to be ``gym.spaces.Dict``.
         """
 
@@ -67,7 +67,7 @@ class BaseAgent(ABC):
     @abstractmethod
     def sample_observation_space(self) -> gym.spaces.Space:
         """
-        Observation space by the ``sample`` method in OpenAI Gym format.
+        Observation space of the ``sample`` method in OpenAI Gym format.
         """
 
         pass
