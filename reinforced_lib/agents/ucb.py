@@ -126,10 +126,10 @@ class UCB(BaseAgent):
         the update follows the equations
 
         .. math::
-          \begin{gather}
-            R_{t + 1}(a) = \mathbb{1}_{A_t = a} r + \gamma R_t(a) , \\
-            N_{t + 1}(a) = \mathbb{1}_{A_t = a} + \gamma N_t(a).
-          \end{gather}
+           \begin{gather}
+              R_{t + 1}(a) = \mathbb{1}_{A_t = a} r + \gamma R_t(a) , \\
+              N_{t + 1}(a) = \mathbb{1}_{A_t = a} + \gamma N_t(a).
+           \end{gather}
 
         Parameters
         ----------
@@ -165,7 +165,7 @@ class UCB(BaseAgent):
         UCB agent follows the policy
 
         .. math::
-          A = \operatorname*{argmax}_{a \in \mathscr{A}} \left[ Q(a) + c \sqrt{\frac{\ln \left( {\sum_{a' \in \mathscr{A}}} N(a') \right) }{N(a)}} \right] .
+           A = \operatorname*{argmax}_{a \in \mathscr{A}} \left[ Q(a) + c \sqrt{\frac{\ln \left( {\sum_{a' \in \mathscr{A}}} N(a') \right) }{N(a)}} \right] .
 
         where :math:`\mathscr{A}` is a set of all actions and :math:`Q` is calculated as :math:`Q(a) = \frac{R(a)}{N(a)}`.
         The second component of the sum represents a sort of upper bound on the value of :math:`Q`, where :math:`c`

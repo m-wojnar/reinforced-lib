@@ -173,11 +173,11 @@ class EGreedy(BaseAgent):
         Epsilon-greedy agent follows the policy:
 
         .. math::
-          A =
-          \begin{cases}
-            \operatorname*{argmax}_{a \in \mathscr{A}} Q(a) & \text{with probability } 1 - \epsilon , \\
-            \text{random action} & \text{with probability } \epsilon . \\
-          \end{cases}
+           A =
+           \begin{cases}
+              \operatorname*{argmax}_{a \in \mathscr{A}} Q(a) & \text{with probability } 1 - \epsilon , \\
+              \text{random action} & \text{with probability } \epsilon . \\
+           \end{cases}
 
         Parameters
         ----------

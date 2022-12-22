@@ -137,7 +137,7 @@ class Softmax(BaseAgent):
         The updates of :math:`H` for each action :math:`a` are calculated as:
 
         .. math::
-          H_{t + 1}(a) = H_t(a) + \alpha (R_t - \bar{R}_t)(\mathbb{1}_{A_t = a} - \pi_t(a)),
+           H_{t + 1}(a) = H_t(a) + \alpha (R_t - \bar{R}_t)(\mathbb{1}_{A_t = a} - \pi_t(a)),
 
         where :math:`\bar{R_t}` is the average of all rewards up to but not including step :math:`t`
         (by definition :math:`\bar{R}_1 = R_1`). The derivation of given formula can be found in [3]_.
@@ -191,7 +191,7 @@ class Softmax(BaseAgent):
         distribution. The probability of selecting action :math:`i` is calculated as:
 
         .. math::
-          softmax(H)_i = \frac{\exp(H_i / \tau)}{\sum_{h \in H} \exp(h / \tau)} .
+           softmax(H)_i = \frac{\exp(H_i / \tau)}{\sum_{h \in H} \exp(h / \tau)} .
 
         Parameters
         ----------

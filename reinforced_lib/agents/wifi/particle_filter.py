@@ -137,11 +137,11 @@ class ParticleFilter(BaseAgent):
         The weight of the particle :math:`i` at step :math:`t + 1` is updated based on observation :math:`(r, s)`:
 
         .. math::
-          p_{t + 1, i} =
-          \begin{cases}
-            p_{t, i} \cdot P(s | r, \gamma) (1 - P_c) & \text{if } s = 1 , \\
-            p_{t, i} \cdot (1 - P(s | r, \gamma)) (1 - P_c) & \text{otherwise} ,
-          \end{cases}
+           p_{t + 1, i} =
+           \begin{cases}
+              p_{t, i} \cdot P(s | r, \gamma) (1 - P_c) & \text{if } s = 1 , \\
+              p_{t, i} \cdot (1 - P(s | r, \gamma)) (1 - P_c) & \text{otherwise} ,
+           \end{cases}
 
         where :math:`r` is the data rate used during the transmission, :math:`s` indicates if the transmission was
         successful, :math:`\gamma` is SINR, :math:`P(s | r, \gamma)` is the probability of transmission success
@@ -198,7 +198,7 @@ class ParticleFilter(BaseAgent):
         Next, MCS is selected as
 
         .. math::
-          A = \operatorname*{argmax}_{i} P(1 | r_i, \gamma) r_i ,
+           A = \operatorname*{argmax}_{i} P(1 | r_i, \gamma) r_i ,
 
         where :math:`r_i` is the data rate of MCS :math:`i`.
 

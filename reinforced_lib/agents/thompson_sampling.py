@@ -127,10 +127,10 @@ class ThompsonSampling(BaseAgent):
         over time. Given a result of trial :math:`s`, we apply the following equations for each action :math:`a`:
 
         .. math::
-          \begin{gather}
-            \mathbf{\alpha}_{t + 1}(a) = \mathbf{\alpha}_t(a) e^{\frac{-\Delta t}{w}} + \mathbb{1}_{A = a} \cdot s , \\
-            \mathbf{\beta}_{t + 1}(a) = \mathbf{\beta}_t(a) e^{\frac{-\Delta t}{w}} + \mathbb{1}_{A = a} \cdot (1 - s) ,
-          \end{gather}
+           \begin{gather}
+              \mathbf{\alpha}_{t + 1}(a) = \mathbf{\alpha}_t(a) e^{\frac{-\Delta t}{w}} + \mathbb{1}_{A = a} \cdot s , \\
+              \mathbf{\beta}_{t + 1}(a) = \mathbf{\beta}_t(a) e^{\frac{-\Delta t}{w}} + \mathbb{1}_{A = a} \cdot (1 - s) ,
+           \end{gather}
 
         where :math:`\Delta t` is the time elapsed since the last action selection and :math:`w` is the decay rate.
 
@@ -179,7 +179,7 @@ class ThompsonSampling(BaseAgent):
         The next action is selected as
 
         .. math::
-          A = \operatorname*{argmax}_{a \in \mathscr{A}} q_a r_a ,
+           A = \operatorname*{argmax}_{a \in \mathscr{A}} q_a r_a ,
 
         where :math:`r_a` is contextual information for the arm :math:`a`, and :math:`\mathscr{A}` is a set
         of all actions.
