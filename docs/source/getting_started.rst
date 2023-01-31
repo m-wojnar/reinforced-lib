@@ -64,7 +64,7 @@ environment. To learn more about extensions check out the :ref:`Custom extension
 
 .. code-block:: python
 
-    import gym
+    import gymnasium as gym
 
     env = gym.make('WifiSimulator-v1')
     env_state = env.reset()

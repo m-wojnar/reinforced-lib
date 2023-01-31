@@ -395,7 +395,7 @@ usual, we begin with necessary imports:
     from reinforced_lib.logs import PlotsLogger, SourceType
     from ext import RecommenderSystemExt
 
-    import gym
+    import gymnasium as gym
     import env
 
 We define a `run()` function that constructs the recommender system extension, creates, and resets the appropriate

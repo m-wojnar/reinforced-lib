@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from time import perf_counter
 from typing import Any, Dict, Tuple
 
-import gym
+import gymnasium as gym
 gym.logger.set_level(40)
 
 import sim

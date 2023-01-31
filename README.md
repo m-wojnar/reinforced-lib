@@ -42,7 +42,7 @@ from reinforced_lib import RLib
 from reinforced_lib.agents import ThompsonSampling
 from reinforced_lib.exts import IEEE_802_11_ax
 
-import gym
+import gymnasium as gym
 
 
 rlib = RLib(

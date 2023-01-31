@@ -1,6 +1,6 @@
 from typing import Callable, NamedTuple
 
-import gym.spaces
+import gymnasium as gym
 import numpy as np
 
 

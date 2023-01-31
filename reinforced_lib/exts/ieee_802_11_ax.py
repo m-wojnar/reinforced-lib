@@ -1,4 +1,4 @@
-import gym.spaces
+import gymnasium as gym
 import numpy as np
 
 from reinforced_lib.exts import BaseExt, observation, parameter

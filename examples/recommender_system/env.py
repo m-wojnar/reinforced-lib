@@ -1,6 +1,5 @@
 from typing import Dict, Tuple
-import gym
-import gym.spaces
+import gymnasium as gym
 import numpy as np
 
 

@@ -1,6 +1,6 @@
 chex~=0.1.5
-gym~=0.26.2
-jax~=0.3.24
-jaxlib~=0.3.24
-lz4~=4.0.2
-matplotlib~=3.6.2
+gymnasium~=0.27.1
+jax~=0.4.2
+jaxlib~=0.4.2
+lz4~=4.3.2
+matplotlib~=3.6.3

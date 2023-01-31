@@ -1,7 +1,7 @@
 from functools import partial
 from typing import Tuple
 
-import gym.spaces
+import gymnasium as gym
 import jax
 import jax.numpy as jnp
 from chex import dataclass, Array, Scalar, PRNGKey
@@ -61,7 +61,7 @@ class EGreedy(BaseAgent):
         self.sample = jax.jit(partial(self.sample, e=e))
 
     @staticmethod
-    def parameters_space() -> gym.spaces.Dict:
+    def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32),
@@ -81,7 +81,7 @@ class EGreedy(BaseAgent):
         return gym.spaces.Dict({})
 
     @property
-    def action_space(self) -> gym.spaces.Space:
+    def action_space(self) -> gym.spaces.Discrete:
         return gym.spaces.Discrete(self.n_arms)
 
     @staticmethod

@@ -20,7 +20,7 @@ we can provide full access to JAX's JIT functionality, which boosts the agent's 
    from reinforced_lib.agents import ThompsonSampling
    from reinforced_lib.exts import IEEE_802_11_ax
 
-   import gym
+   import gymnasium as gym
 
 
    rlib = RLib(

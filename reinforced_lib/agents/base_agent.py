@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Tuple
 
-import gym.spaces
+import gymnasium as gym
 from chex import dataclass, PRNGKey
 
 
@@ -45,14 +45,13 @@ class BaseAgent(ABC):
         pass
 
     @staticmethod
-    @abstractmethod
-    def parameters_space() -> gym.spaces.Dict:
+    def parameter_space() -> gym.spaces.Dict:
         """
         Parameter space of the agent constructor in OpenAI Gym format.
-        Type of returned value is required to be ``gym.spaces.Dict``.
+        Type of returned value is required to be ``gym.spaces.Dict`` or ``None``.
         """
 
-        pass
+        return None
 
     @property
     @abstractmethod
@@ -73,10 +72,9 @@ class BaseAgent(ABC):
         pass
 
     @property
-    @abstractmethod
     def action_space(self) -> gym.spaces.Space:
         """
         Action space of the agent in OpenAI Gym format.
         """
 
-        pass
+        raise NotImplementedError()
