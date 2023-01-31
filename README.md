@@ -39,15 +39,14 @@ pip3 install ".[dev]"
 
 ```python
 from reinforced_lib import RLib
-from reinforced_lib.agents import ThompsonSampling
-from reinforced_lib.exts import IEEE_802_11_ax
+from reinforced_lib.agents.mab import ThompsonSampling
+from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
 import gymnasium as gym
 
-
 rlib = RLib(
-  agent_type=ThompsonSampling,
-  ext_type=IEEE_802_11_ax
+    agent_type=ThompsonSampling,
+    ext_type=IEEE_802_11_ax_RA
 )
 
 env = gym.make('WifiSimulator-v1')
@@ -55,8 +54,8 @@ env_state, _ = env.reset()
 
 terminated = False
 while not terminated:
-  action = rlib.sample(**env_state)
-  env_state, reward, terminated, *_ = env.step(action)
+    action = rlib.sample(**env_state)
+    env_state, reward, terminated, *_ = env.step(action)
 ```
 
 ## Integrated IEEE 802.11ax support

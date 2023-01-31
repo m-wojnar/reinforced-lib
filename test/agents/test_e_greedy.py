@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
-from reinforced_lib.agents import EGreedy
+from reinforced_lib.agents.mab import EGreedy
 
 if __name__ == '__main__':
     # environment characteristics

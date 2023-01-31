@@ -6,8 +6,8 @@ from typing import Any, Dict
 from py_interface import *
 
 from reinforced_lib import RLib
-from reinforced_lib.agents import ThompsonSampling
-from reinforced_lib.exts import IEEE_802_11_ax
+from reinforced_lib.agents.mab import ThompsonSampling
+from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
 
 class Env(Structure):
@@ -72,7 +72,7 @@ def run(
 
     rl = RLib(
         agent_type=ThompsonSampling,
-        ext_type=IEEE_802_11_ax
+        ext_type=IEEE_802_11_ax_RA
     )
 
     exp = Experiment(mempool_key, mem_size, scenario, ns3_path)

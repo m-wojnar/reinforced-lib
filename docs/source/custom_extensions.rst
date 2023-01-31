@@ -34,7 +34,7 @@ There are three main benefits of using extensions:
 
        rl = rfl.RLib(
            agent_type=ParticleFilter,
-           ext_type=IEEE_802_11_ax
+           ext_type=IEEE_802_11_ax_RA
        )
 
    We can also overwrite all or only part of the default values provided by the extension:
@@ -46,7 +46,7 @@ There are three main benefits of using extensions:
            agent_params={
                'default_power': 16.0206
            }
-           ext_type=IEEE_802_11_ax,
+           ext_type=IEEE_802_11_ax_RA,
        )
 
 #. Simplification of parameter passing - extensions allow automatic matching observations returned by the environment

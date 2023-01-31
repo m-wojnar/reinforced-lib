@@ -2,7 +2,7 @@ import jax
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
 
-from reinforced_lib.agents import ThompsonSampling
+from reinforced_lib.agents.mab import ThompsonSampling
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 from typing import Any, Dict, Tuple
 
-from reinforced_lib.exts import IEEE_802_11_ax
+from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
 
 class ResultsManager:
@@ -16,7 +16,7 @@ class ResultsManager:
     """
 
     def __init__(self, ra_sim_args: Dict[str, Any], seed: int) -> None:
-        self.wifi_ext = IEEE_802_11_ax()
+        self.wifi_ext = IEEE_802_11_ax_RA()
 
         self.csv_results = 'wifiManager,seed,nWifi,channelWidth,minGI,velocity,position,time,meanMcs,meanRate,throughput\n'
         self.log_str_template = f'{ra_sim_args["wifi_manager_name"]},{seed},{ra_sim_args["n_wifi"]},20,3200,{ra_sim_args["velocity"]},' + '{0},{1},{2},{3},{4}\n'

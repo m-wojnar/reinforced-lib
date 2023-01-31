@@ -12,8 +12,8 @@ gym.envs.registration.register(
 class RecommenderSystemEnv(gym.Env):
     """
     Simple Multi Armed Bandit environment to test solutions of recommending some specific goods 
-    for the user. The environment consists of a finite number of goods wchich are maped by the users
-    preference function. In each step a representant of goods is presented for the user and he can
+    for the user. The environment consists of a finite number of goods which are mapped by the users
+    preference function. In each step a representative of goods is presented for the user, and he can
     either like or dislike it. The reward is 1 or 0 accordingly.
     """
 
