@@ -27,7 +27,7 @@ There are three main benefits of using extensions:
            }
        )
 
-   On the other hand, if we decide to use the ``IEEE_802_11_ax`` :ref:`extension <IEEE 802.11ax>` extension,
+   On the other hand, if we decide to use the ``IEEE_802_11_ax_RA`` :ref:`extension <IEEE 802.11ax RA>` extension,
    this parameters can be automatically provided by the extension:
 
    .. code-block:: python
@@ -72,7 +72,7 @@ There are three main benefits of using extensions:
        )
 
    The following code is equivalent to the above but makes use of the properly defined
-   ``IEEE_802_11_ax`` :ref:`extension <IEEE 802.11ax>` extension:
+   ``IEEE_802_11_ax_RA`` :ref:`extension <IEEE 802.11ax RA>` extension:
 
    .. code-block:: python
 
@@ -97,7 +97,7 @@ There are three main benefits of using extensions:
        }
        action = rl.sample(**observations)
 
-   If we use the ``IEEE_802_11_ax`` :ref:`extension <IEEE 802.11ax>` extension, part of these parameters can be
+   If we use the ``IEEE_802_11_ax_RA`` :ref:`extension <IEEE 802.11ax RA>` extension, part of these parameters can be
    provided by the extension:
 
    .. code-block:: python
@@ -136,11 +136,11 @@ Customizing extensions
 ----------------------
 
 To create your own extension, you should inherit from the :ref:`abstract class <BaseExt>` ``BaseExt``. We
-present adding a custom extension using an example of the ``IEEE_802_11_ax`` :ref:`extension <IEEE 802.11ax>` extension.
+present adding a custom extension using an example of the ``IEEE_802_11_ax_RA`` :ref:`extension <IEEE 802.11ax RA>` extension.
 
 .. code-block:: python
 
-    class IEEE_802_11_ax(BaseExt)
+    class IEEE_802_11_ax_RA(BaseExt)
     
 First, we must specify the observation space of the extension. It is a basic set of environment observations
 that can be used by the extension to compute missing values. Note that a complete set of all parameters is not
@@ -220,7 +220,7 @@ type in the decorator:
         else:
             return 0.0
 
-The full source code of the IEEE 802.11ax extension can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/exts/ieee_802_11_ax.py>`_.
+The full source code of the IEEE 802.11ax extension can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/exts/wifi/ieee_802_11_ax_ra.py>`_.
 
 
 Rules and limitations
