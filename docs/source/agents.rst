@@ -22,7 +22,7 @@ BaseAgent
 Epsilon-greedy
 --------------
 
-.. currentmodule:: reinforced_lib.agents.e_greedy
+.. currentmodule:: reinforced_lib.agents.mab.e_greedy
 
 .. autoclass:: EGreedyState
     :show-inheritance:
@@ -58,7 +58,7 @@ Particle Filter (Wi-Fi)
 Softmax
 ---------------
 
-.. currentmodule:: reinforced_lib.agents.softmax
+.. currentmodule:: reinforced_lib.agents.mab.softmax
 
 .. autoclass:: SoftmaxState
     :show-inheritance:
@@ -72,7 +72,7 @@ Softmax
 Thompson Sampling
 -----------------
 
-.. currentmodule:: reinforced_lib.agents.thompson_sampling
+.. currentmodule:: reinforced_lib.agents.mab.thompson_sampling
 
 .. autoclass:: ThompsonSamplingState
     :show-inheritance:
@@ -86,7 +86,7 @@ Thompson Sampling
 UCB
 ---
 
-.. currentmodule:: reinforced_lib.agents.ucb
+.. currentmodule:: reinforced_lib.agents.mab.ucb
 
 .. autoclass:: UCBState
     :show-inheritance:

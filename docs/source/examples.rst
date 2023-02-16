@@ -162,7 +162,7 @@ and cleans up the environment when the simulation is done. Below we include and 
 In line 6 we include the ns3-ai structures which enables us to use the shared memory communication.
 Next we import the ``RLib`` class which is the main interface of the library that merges the agent and the environment.
 We chose the :ref:`Thompson sampling <Thompson Sampling>` agent to demonstrate the manager performance. The environment
-will be of course :ref:`802.11ax <IEEE 802.11ax>`, so we import an appropriate extension.
+will be of course :ref:`802.11ax <IEEE 802.11ax RA>`, so we import an appropriate extension.
 
 .. code-block:: python
     :linenos:

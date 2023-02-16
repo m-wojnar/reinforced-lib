@@ -16,11 +16,11 @@ BaseExt
     :members:
 
 
-IEEE 802.11ax
--------------
+IEEE 802.11ax RA
+----------------
 
-.. currentmodule:: reinforced_lib.exts.ieee_802_11_ax
+.. currentmodule:: reinforced_lib.exts.wifi.ieee_802_11_ax_ra
 
-.. autoclass:: IEEE_802_11_ax
+.. autoclass:: IEEE_802_11_ax_RA
     :show-inheritance:
     :members:

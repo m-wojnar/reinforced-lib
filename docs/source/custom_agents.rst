@@ -270,4 +270,4 @@ To sum everything up one more time:
 
 The built-in implementation of the epsilon-greedy agent with an addition of optional optimistic start and an exponential
 recency-weighted average update can be found
-`here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/agents/e_greedy.py>`_.
+`here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/agents/mab/e_greedy.py>`_.
