@@ -59,10 +59,10 @@ class RLib:
         Parameters of the selected loggers.
     no_ext_mode : bool, default=False
         Pass observations directly to the agent (do not use the extensions).
-    save_directory : str, default=None
+    save_directory : str, optional
         Path to a user specified directory where the ``save`` method will store the experiment checkpoints.
         If none specified, uses the home directory.
-    auto_checkpoint : int, default=None
+    auto_checkpoint : int, optional
         Automatically saves the experiment every ``auto_checkpoint`` steps. If ``None``, the automatic checkpointing is
         disabled.
     """
