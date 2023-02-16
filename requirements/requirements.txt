@@ -4,4 +4,5 @@ jax~=0.4.2
 jaxlib~=0.4.2
 lz4~=4.3.2
 matplotlib~=3.6.3
+optax~=0.1.4
 tensorboardX~=2.6

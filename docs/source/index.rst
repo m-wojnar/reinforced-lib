@@ -107,6 +107,7 @@ API Documentation
 * :ref:`Agents <agents_page>`
 * :ref:`Extensions <extensions_page>`
 * :ref:`Logging <logging_page>`
+* :ref:`Utils <utils_page>`
 * :ref:`Exceptions <exceptions_page>`
 
 
@@ -130,6 +131,7 @@ API Documentation
    Agents <agents>
    Extensions <extensions>
    Logging <logging>
+   Utils <utils>
    Exceptions <exceptions>
 
 
