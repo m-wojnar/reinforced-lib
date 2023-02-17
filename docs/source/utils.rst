@@ -8,7 +8,7 @@ This module contains a collection of utility functions that are used throughout 
 JAX
 ---
 
-.. automodule:: reinforced_lib.utils.jax
+.. automodule:: reinforced_lib.utils.jax_utils
     :members:
 
 Experience Replay
