@@ -168,7 +168,7 @@ class EGreedy(BaseAgent):
         state: EGreedyState,
         key: PRNGKey,
         e: Scalar
-    ) -> Tuple[EGreedyState, jnp.int32]:
+    ) -> jnp.int32:
         r"""
         Epsilon-greedy agent follows the policy:
 
@@ -190,14 +190,14 @@ class EGreedy(BaseAgent):
 
         Returns
         -------
-        tuple[EGreedyState, jnp.int32]
-            Tuple containing the updated agent state and the selected action.
+        int
+            Selected action.
         """
 
         epsilon_key, choice_key = jax.random.split(key)
 
         return jax.lax.cond(
             jax.random.uniform(epsilon_key) < e,
-            lambda: (state, jax.random.choice(choice_key, state.Q.size)),
-            lambda: (state, jnp.argmax(state.Q))
+            lambda: jax.random.choice(choice_key, state.Q.size),
+            lambda: jnp.argmax(state.Q)
         )

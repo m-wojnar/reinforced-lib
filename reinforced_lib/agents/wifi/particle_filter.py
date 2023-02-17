@@ -191,7 +191,7 @@ class ParticleFilter(BaseAgent):
             power: Scalar,
             rates: Array,
             pf: ParticleFilterBase
-    ) -> Tuple[ParticleFilterState, jnp.int32]:
+    ) -> jnp.int32:
         r"""
         The algorithm draws :math:`\theta` from the categorical distribution according to the particle positions
         and weights. Then it calculates the corresponding SINR value :math:`\gamma = \theta + P_{tx}`.
@@ -219,14 +219,14 @@ class ParticleFilter(BaseAgent):
 
         Returns
         -------
-        tuple[ParticleFilterState, int]
-            Tuple containing the updated agent state and the selected action.
+        int
+            Selected action.
         """
 
-        _, snr_sample = pf.sample(state, key)
+        snr_sample = pf.sample(state, key)
         p_s = ParticleFilter._success_probability(snr_sample + power)
 
-        return state, jnp.argmax(p_s * rates)
+        return jnp.argmax(p_s * rates)
 
     @staticmethod
     def _observation_fn(

@@ -177,7 +177,7 @@ class ParticleFilter:
         Shape of the particle positions array.
     weights_shape : array_like
         Shape of the particle weights array.
-    scale : float or array_like
+    scale : array_like
         Scale of the random movement of the particles.
     observation_fn : callable
         Function that updates particles based on an observation from the environment; takes two positional arguments:
@@ -202,7 +202,7 @@ class ParticleFilter:
         Function that updates the particle positions; takes four positional arguments:
             - ``state``: the state of the filter (`ParticleFilterState`).
             - ``key``: a PRNG key used as a random key (`PRNGKey`).
-            - ``scale``: scale of the random movement of the particles (`float or array_like`).
+            - ``scale``: scale of the random movement of the particles (`array_like`).
             - ``time``: the current time (`float`).
         
         Returns the updated state of the filter (`ParticleFilterState`).
@@ -324,12 +324,12 @@ class ParticleFilter:
             Function that updates the particle positions; takes four positional arguments:
                 - ``state``: the state of the filter (`ParticleFilterState`).
                 - ``key``: a PRNG key used as a random key (`PRNGKey`).
-                - ``scale``: scale of the random movement of the particles (`float or array_like`).
+                - ``scale``: scale of the random movement of the particles (`array_like`).
                 - ``time``: the current time (`float`).
 
         time : float
             Current time.
-        scale : float or array_like
+        scale : array_like
             Scale of the random movement of the particles.
 
         Returns
@@ -354,7 +354,7 @@ class ParticleFilter:
     def sample(
             state: ParticleFilterState,
             key: PRNGKey
-    ) -> Tuple[ParticleFilterState, Numeric]:
+    ) -> Numeric:
         """
         Samples the estimated environment state from a categorical distribution with particle weights.
 
@@ -367,8 +367,8 @@ class ParticleFilter:
 
         Returns
         -------
-        tuple[ParticleFilterState, float or array_like]
-            Tuple containing the filter state and the estimated environment state.
+        array_like
+            Estimated environment state.
         """
 
-        return state, state.positions[jax.random.categorical(key, state.logit_weights)]
+        return state.positions[jax.random.categorical(key, state.logit_weights)]

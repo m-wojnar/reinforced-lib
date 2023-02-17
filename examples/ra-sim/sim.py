@@ -151,7 +151,8 @@ class RASimEnv(gym.Env):
             'n_wifi': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
             'cw': gym.spaces.Discrete(32767),
-            'mcs': gym.spaces.Discrete(12)
+            'mcs': gym.spaces.Discrete(12),
+            'terminal': gym.spaces.Discrete(2)
         })
 
         self.options = {

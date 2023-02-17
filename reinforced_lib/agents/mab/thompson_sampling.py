@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Tuple
 
 import gymnasium as gym
 import jax
@@ -20,13 +19,13 @@ class ThompsonSamplingState(AgentState):
         Number of successful tries for each arm.
     beta : array_like
         Number of failed tries for each arm.
-    last_decay : array_like
+    last_decay : float
         Time of the last decay for each arm.
     """
 
     alpha: Array
     beta: Array
-    last_decay: Array
+    last_decay: Scalar
 
 
 class ThompsonSampling(BaseAgent):
@@ -90,7 +89,7 @@ class ThompsonSampling(BaseAgent):
         r"""
         Creates and initializes an instance of the Thompson sampling agent for ``n_arms`` arms. The :math:`\mathbf{\alpha}`
         and :math:`\mathbf{\beta}` vectors are set to zero to create a non-informative prior distribution.
-        The ``last_decay`` array is also set to zero.
+        The ``last_decay`` is also set to zero.
 
         Parameters
         ----------
@@ -108,7 +107,7 @@ class ThompsonSampling(BaseAgent):
         return ThompsonSamplingState(
             alpha=jnp.zeros(n_arms),
             beta=jnp.zeros(n_arms),
-            last_decay=jnp.zeros(n_arms)
+            last_decay=0.
         )
 
     @staticmethod
@@ -157,13 +156,12 @@ class ThompsonSampling(BaseAgent):
             Updated agent state.
         """
 
-        state = ThompsonSampling._decay_one(state, action, time, decay)
-        state = ThompsonSamplingState(
-            alpha=state.alpha.at[action].add(n_successful),
-            beta=state.beta.at[action].add(n_failed),
-            last_decay=state.last_decay
+        smoothing_value = jnp.exp(decay * (state.last_decay - time))
+        return ThompsonSamplingState(
+            alpha=(state.alpha * smoothing_value).at[action].add(n_successful),
+            beta=(state.beta * smoothing_value).at[action].add(n_failed),
+            last_decay=time
         )
-        return state
 
     @staticmethod
     def sample(
@@ -172,7 +170,7 @@ class ThompsonSampling(BaseAgent):
             time: Scalar,
             context: Array,
             decay: Scalar
-    ) -> Tuple[ThompsonSamplingState, jnp.int32]:
+    ) -> jnp.int32:
         r"""
         The Thompson sampling policy is stochastic. The algorithm draws :math:`q_a` from the distribution
         :math:`\operatorname{Beta}(1 + \mathbf{\alpha}(a), 1 + \mathbf{\beta}(a))` for each arm :math:`a`.
@@ -199,78 +197,11 @@ class ThompsonSampling(BaseAgent):
 
         Returns
         -------
-        tuple[ThompsonSamplingState, int]
-            Tuple containing the updated agent state and the selected action.
+        int
+            Selected action.
         """
 
-        state = ThompsonSampling._decay_all(state, time, decay)
         success_prob = jax.random.beta(key, 1 + state.alpha, 1 + state.beta)
         action = jnp.argmax(success_prob * context)
-        return state, action
 
-    @staticmethod
-    def _decay_one(
-            state: ThompsonSamplingState,
-            action: jnp.int32,
-            time: Scalar,
-            decay: Scalar
-    ) -> ThompsonSamplingState:
-        """
-        Applies exponential smoothing for the parameters related to a given action.
-
-        Parameters
-        ----------
-        state : ThompsonSamplingState
-            Current state of the agent.
-        action : int
-            Action to apply smoothing.
-        time : float
-            Current time.
-        decay : float
-            Decay rate.
-
-        Returns
-        -------
-        ThompsonSamplingState
-            Updated agent state.
-        """
-
-        smoothing_value = jnp.exp(decay * (state.last_decay[action] - time))
-        state = ThompsonSamplingState(
-            alpha=state.alpha.at[action].multiply(smoothing_value),
-            beta=state.beta.at[action].multiply(smoothing_value),
-            last_decay=state.last_decay.at[action].set(time)
-        )
-        return state
-
-    @staticmethod
-    def _decay_all(
-            state: ThompsonSamplingState,
-            time: Scalar,
-            decay: Scalar
-    ) -> ThompsonSamplingState:
-        """
-        Applies exponential smoothing for the parameters of all arms.
-
-        Parameters
-        ----------
-        state : ThompsonSamplingState
-            Current state of the agent.
-        time : float
-            Current time.
-        decay : float
-            Decay rate.
-
-        Returns
-        -------
-        ThompsonSamplingState
-            Updated agent state.
-        """
-
-        smoothing_value = jnp.exp(decay * (state.last_decay - time))
-        state = ThompsonSamplingState(
-            alpha=state.alpha * smoothing_value,
-            beta=state.beta * smoothing_value,
-            last_decay=jnp.full_like(state.last_decay, time)
-        )
-        return state
+        return action

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Tuple
+from typing import Any
 
 import gymnasium as gym
 from chex import dataclass, PRNGKey
@@ -37,7 +37,7 @@ class BaseAgent(ABC):
 
     @staticmethod
     @abstractmethod
-    def sample(state: AgentState, key: PRNGKey, *args, **kwargs) -> Tuple[AgentState, Any]:
+    def sample(state: AgentState, key: PRNGKey, *args, **kwargs) -> Any:
         """
         Selects the next action based on the current agent state.
         """

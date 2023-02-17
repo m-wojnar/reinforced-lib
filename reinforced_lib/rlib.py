@@ -392,11 +392,11 @@ class RLib:
                 self.save(agent_id, f'rlib-checkpoint-agent-{agent_id}-step-{step + 1}')
 
         if isinstance(sample_observations, dict):
-            state, action = self._agent.sample(state, sample_key, **sample_observations)
+            action = self._agent.sample(state, sample_key, **sample_observations)
         elif isinstance(sample_observations, tuple):
-            state, action = self._agent.sample(state, sample_key, *sample_observations)
+            action = self._agent.sample(state, sample_key, *sample_observations)
         else:
-            state, action = self._agent.sample(state, sample_key, sample_observations)
+            action = self._agent.sample(state, sample_key, sample_observations)
 
         self._logs_observer.update_agent_state(state)
         self._logs_observer.update_metrics(action, 'action')
