@@ -25,7 +25,8 @@ class RecommenderSystemExt(BaseExt):
     observation_space = gym.spaces.Dict({
         'action': gym.spaces.Discrete(len(preferences)),
         'reward': gym.spaces.Box(-np.inf, np.inf, (1,)),
-        'time': gym.spaces.Box(0.0, np.inf, (1,))
+        'time': gym.spaces.Box(0.0, np.inf, (1,)),
+        'terminal': gym.spaces.Discrete(2)
     })
 
     def __init__(self) -> None:

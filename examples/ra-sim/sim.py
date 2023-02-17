@@ -97,7 +97,8 @@ def ra_sim(
             'n_wifi': n_wifi,
             'power': DEFAULT_TX_POWER,
             'cw': 2 ** state.cw - 1,
-            'mcs': action
+            'mcs': action,
+            'terminal': False
         }
 
     @jax.jit

@@ -33,7 +33,7 @@ def run(episodes: int, seed: int) -> None:
     _, reward, *_ = env.step(act)
 
     for i in range(1, episodes):
-        act = rl.sample(action=act, reward=reward, time=i)
+        act = rl.sample(action=act, reward=reward, time=i, terminal=False)
         _, reward, *_ = env.step(act)
 
 

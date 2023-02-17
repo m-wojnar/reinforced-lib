@@ -97,7 +97,8 @@ def run(
                         'n_wifi': data.env.n_wifi,
                         'power': data.env.power,
                         'cw': data.env.cw,
-                        'mcs': data.env.mcs
+                        'mcs': data.env.mcs,
+                        'terminal': False
                     }
 
                     data.act.station_id = data.env.station_id

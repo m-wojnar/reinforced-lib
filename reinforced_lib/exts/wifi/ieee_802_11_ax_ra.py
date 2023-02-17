@@ -28,7 +28,8 @@ class IEEE_802_11_ax_RA(BaseExt):
         'n_wifi': gym.spaces.Box(1, np.inf, (1,), np.int32),
         'power': gym.spaces.Box(-np.inf, np.inf, (1,)),
         'cw': gym.spaces.Discrete(32767),
-        'mcs': gym.spaces.Discrete(12)
+        'mcs': gym.spaces.Discrete(12),
+        'terminal': gym.spaces.Discrete(2)
     })
 
     _wifi_modes_rates = np.array([
