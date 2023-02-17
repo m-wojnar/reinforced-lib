@@ -124,7 +124,7 @@ class BaseExt(ABC):
     ) -> Callable:
         """
         Creates function that transforms environment observations and values provided by the observation
-        functions to a given space.
+        functions to a given space. If the ``out_space`` is not defined, returns observations unchanged.
 
         Parameters
         ----------

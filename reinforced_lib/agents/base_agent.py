@@ -49,27 +49,28 @@ class BaseAgent(ABC):
         """
         Parameter space of the agent constructor in OpenAI Gym format.
         Type of returned value is required to be ``gym.spaces.Dict`` or ``None``.
+        If ``None``, the user must provide all parameters manually.
         """
 
         return None
 
     @property
-    @abstractmethod
     def update_observation_space(self) -> gym.spaces.Space:
         """
         Observation space of the ``update`` method in OpenAI Gym format.
+        If ``None``, the user must provide all parameters manually.
         """
 
-        pass
+        return None
 
     @property
-    @abstractmethod
     def sample_observation_space(self) -> gym.spaces.Space:
         """
         Observation space of the ``sample`` method in OpenAI Gym format.
+        If ``None``, the user must provide all parameters manually.
         """
 
-        pass
+        return None
 
     @property
     def action_space(self) -> gym.spaces.Space:
