@@ -2,39 +2,40 @@ from typing import Callable, Tuple, Any
 
 import jax
 import optax
+from chex import Scalar
 
 
 def gradient_step(
-        optimizer: optax.GradientTransformation,
-        loss_fn: Callable,
-        loss_params: Tuple,
         objective: Any,
-        opt_state: optax.OptState
-) -> Tuple[Any, optax.OptState]:
+        loss_params: Tuple,
+        opt_state: optax.OptState,
+        optimizer: optax.GradientTransformation,
+        loss_fn: Callable
+) -> Tuple[Any, Any, optax.OptState, Scalar]:
     """
     Performs a gradient step on the objective with respect to ``grad_loss_fn`` function.
 
     Parameters
     ----------
+    objective : Any
+        Objective to be optimized.
+    loss_params : Tuple
+        Parameters to pass to ``loss_fn``.
+    opt_state : optax.OptState
+        Optimizer state.
     optimizer : optax.GradientTransformation
         Optimizer to use for gradient step.
     loss_fn : Callable
-        Function that returns the loss to be minimized.
-    loss_params : Tuple
-        Parameters to pass to ``loss_fn``.
-    objective : Any
-        Objective to be optimized.
-    opt_state : optax.OptState
-        Optimizer state.
+        Function that returns the loss to be minimized. Can return additional values as well.
 
     Returns
     -------
-    out : tuple[Any, optax.OptState]
-        Tuple containing the updated objective and optimizer state.
+    out : tuple[Any, Any, optax.OptState, Scalar]
+        Tuple containing the updated objective and optimizer state, as well as the loss value.
     """
 
-    grads = jax.grad(loss_fn)(*loss_params)
+    (loss, aux), grads = jax.value_and_grad(loss_fn, has_aux=True)(objective, *loss_params)
     updates, opt_state = optimizer.update(grads, opt_state)
     objective = optax.apply_updates(objective, updates)
 
-    return objective, opt_state
+    return objective, aux, opt_state, loss

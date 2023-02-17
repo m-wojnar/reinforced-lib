@@ -1,4 +1,5 @@
 chex~=0.1.5
+dm-haiku~=0.0.9
 gymnasium~=0.27.1
 jax~=0.4.2
 jaxlib~=0.4.2
