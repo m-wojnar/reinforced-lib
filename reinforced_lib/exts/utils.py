@@ -175,6 +175,38 @@ def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> boo
         a.dtype == b.dtype
 
 
+def test_sequence(a: gym.spaces.Space, b: gym.spaces.Sequence) -> bool:
+    """
+    Tests if the space ``a`` is identical to the gym.space.Sequence space ``b``.
+
+    Parameters
+    ----------
+    a : gym.spaces.Space
+        Space ``a``.
+    b : gym.spaces.Sequence
+        Sequence space ``b``.
+
+    Returns
+    -------
+    bool
+        Result of the comparison.
+    """
+
+    if not isinstance(a, gym.spaces.Sequence):
+        return False
+
+    if isinstance(b, gym.spaces.Box):
+        return test_box(a, b)
+    elif isinstance(b, gym.spaces.Discrete):
+        return test_discrete(a, b)
+    elif isinstance(b, gym.spaces.MultiBinary):
+        return test_multi_binary(a, b)
+    elif isinstance(b, gym.spaces.MultiDiscrete):
+        return test_multi_discrete(a, b)
+    else:
+        return test_space(a, b)
+
+
 def test_space(a: gym.spaces.Space, b: gym.spaces.Space) -> bool:
     """
     Tests if the space ``a`` is identical to the space ``b``.

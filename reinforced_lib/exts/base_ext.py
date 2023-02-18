@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 
 import gymnasium as gym
 
-from reinforced_lib.exts.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete, test_space
+from reinforced_lib.exts.utils import *
 from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpacesError, NoDefaultParameterError
 
 
@@ -149,6 +149,7 @@ class BaseExt(ABC):
             gym.spaces.Discrete: test_discrete,
             gym.spaces.MultiBinary: test_multi_binary,
             gym.spaces.MultiDiscrete: test_multi_discrete,
+            gym.spaces.Sequence: test_sequence,
             gym.spaces.Space: test_space
         }
 

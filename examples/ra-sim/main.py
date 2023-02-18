@@ -37,13 +37,13 @@ def run(ra_sim_args: Dict[str, Any], seed: int) -> Tuple[str, float, float, floa
 
     env = gym.make('RASimEnv-v1')
     state, _ = env.reset(seed=seed, options=ra_sim_args)
-    terminated = False
+    terminal = False
 
     results = ResultsManager(ra_sim_args, seed)
 
-    while not terminated:
+    while not terminal:
         action = rl.sample(**state)
-        state, _, terminated, *_ = env.step(action)
+        state, _, terminal, *_ = env.step(action)
 
         results.update(action, state)
 

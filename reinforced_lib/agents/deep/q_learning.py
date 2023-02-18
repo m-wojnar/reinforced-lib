@@ -69,13 +69,13 @@ class QLearning(BaseAgent):
             optimizer = optax.adam(1e-3)
 
         self.obs_space_shape = obs_space_shape if jnp.ndim(obs_space_shape) > 0 else (obs_space_shape,)
-        self.act_space_shape = (act_space_size,)
+        self.act_space_size = act_space_size
 
         er = experience_replay(
             experience_replay_buffer_size,
             experience_replay_batch_size,
             self.obs_space_shape,
-            self.act_space_shape
+            (1,)
         )
 
         self.init = jax.jit(partial(
@@ -92,11 +92,10 @@ class QLearning(BaseAgent):
             step_fn=jax.jit(partial(
                 gradient_step,
                 optimizer=optimizer,
-                loss_fn=partial(self._loss_fn, q_network=q_network, discount=discount)
+                loss_fn=partial(self.loss_fn, q_network=q_network, discount=discount)
             )),
             experience_replay=er,
             experience_replay_steps=experience_replay_steps,
-            discount=discount,
             epsilon_decay=epsilon_decay
         )
         self.sample = jax.jit(partial(
@@ -108,10 +107,8 @@ class QLearning(BaseAgent):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'q_network': hk.TransformedWithState,
-            'obs_space_shape': Shape,
+            'obs_space_shape': gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), jnp.int32)),
             'act_space_size': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'optimizer': optax.GradientTransformation,
             'experience_replay_buffer_size': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'experience_replay_batch_size': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'discount': gym.spaces.Box(0.0, 1.0, (1,)),
@@ -123,9 +120,9 @@ class QLearning(BaseAgent):
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape),
-            'action': gym.spaces.Box(-jnp.inf, jnp.inf, self.act_space_shape),
+            'action': gym.spaces.Discrete(self.act_space_size),
             'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
-            'terminal': gym.spaces.Discrete(2)
+            'terminal': gym.spaces.MultiBinary(1)
         })
 
     @property
@@ -135,8 +132,8 @@ class QLearning(BaseAgent):
         })
 
     @property
-    def action_space(self) -> gym.spaces.Box:
-        return gym.spaces.Box(-jnp.inf, jnp.inf, self.act_space_shape)
+    def action_space(self) -> gym.spaces.Discrete:
+        return gym.spaces.Discrete(self.act_space_size)
 
     @staticmethod
     def init(
@@ -164,7 +161,7 @@ class QLearning(BaseAgent):
         )
 
     @staticmethod
-    def _loss_fn(
+    def loss_fn(
             params: hk.Params,
             key: PRNGKey,
             state: hk.State,
@@ -200,7 +197,6 @@ class QLearning(BaseAgent):
             step_fn: Callable,
             experience_replay: ExperienceReplay,
             experience_replay_steps: jnp.int32,
-            discount: Scalar,
             epsilon_decay: Scalar
     ) -> QLearningState:
 
@@ -219,11 +215,8 @@ class QLearning(BaseAgent):
                 batch_key, network_key, key = jax.random.split(key, 3)
                 batch = experience_replay.sample(replay_buffer, batch_key)
 
-                params, network_state, opt_state, loss = step_fn(
-                    params,
-                    (key, state.state, params_target, state_target, batch),
-                    opt_state
-                )
+                loss_params = (network_key, network_state, params_target, state_target, batch)
+                params, network_state, opt_state, _ = step_fn(params, loss_params, opt_state)
 
         return QLearningState(
             params=params,
@@ -243,11 +236,10 @@ class QLearning(BaseAgent):
             act_space_size: jnp.int32
     ) -> Array:
 
-        epsilon_key, action_key, network_key = jax.random.split(key, 3)
-        action = jnp.argmax(q_network.apply(state.params, state.state, network_key, env_state)[0])
+        network_key, epsilon_key, action_key = jax.random.split(key, 3)
 
         return jax.lax.cond(
             jax.random.uniform(epsilon_key) < state.epsilon,
             lambda: jax.random.choice(action_key, act_space_size),
-            lambda: action
+            lambda: jnp.argmax(q_network.apply(state.params, state.state, network_key, env_state)[0])
         )

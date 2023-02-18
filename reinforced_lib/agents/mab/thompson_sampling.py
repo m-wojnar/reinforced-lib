@@ -19,13 +19,10 @@ class ThompsonSamplingState(AgentState):
         Number of successful tries for each arm.
     beta : array_like
         Number of failed tries for each arm.
-    last_decay : float
-        Time of the last decay for each arm.
     """
 
     alpha: Array
     beta: Array
-    last_decay: Scalar
 
 
 class ThompsonSampling(BaseAgent):
@@ -55,7 +52,7 @@ class ThompsonSampling(BaseAgent):
 
         self.init = jax.jit(partial(self.init, n_arms=self.n_arms))
         self.update = jax.jit(partial(self.update, decay=decay))
-        self.sample = jax.jit(partial(self.sample, decay=decay))
+        self.sample = jax.jit(self.sample)
 
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
@@ -70,13 +67,12 @@ class ThompsonSampling(BaseAgent):
             'action': gym.spaces.Discrete(self.n_arms),
             'n_successful': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
             'n_failed': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
-            'time': gym.spaces.Box(0.0, jnp.inf, (1,))
+            'delta_time': gym.spaces.Box(0.0, jnp.inf, (1,))
         })
 
     @property
     def sample_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'time': gym.spaces.Box(0.0, jnp.inf, (1,)),
             'context': gym.spaces.Box(-jnp.inf, jnp.inf, (self.n_arms,))
         })
 
@@ -106,8 +102,7 @@ class ThompsonSampling(BaseAgent):
 
         return ThompsonSamplingState(
             alpha=jnp.zeros(n_arms),
-            beta=jnp.zeros(n_arms),
-            last_decay=0.
+            beta=jnp.zeros(n_arms)
         )
 
     @staticmethod
@@ -117,7 +112,7 @@ class ThompsonSampling(BaseAgent):
             action: jnp.int32,
             n_successful: jnp.int32,
             n_failed: jnp.int32,
-            time: Scalar,
+            delta_time: Scalar,
             decay: Scalar
     ) -> ThompsonSamplingState:
         r"""
@@ -145,8 +140,8 @@ class ThompsonSampling(BaseAgent):
             Number of successful tries.
         n_failed : int
             Number of failed tries.
-        time : float
-            Current time.
+        delta_time : float
+            Time elapsed since the last action selection.
         decay : float
             Decay rate.
 
@@ -156,20 +151,18 @@ class ThompsonSampling(BaseAgent):
             Updated agent state.
         """
 
-        smoothing_value = jnp.exp(decay * (state.last_decay - time))
+        smoothing_value = jnp.exp(-decay * delta_time)
+
         return ThompsonSamplingState(
             alpha=(state.alpha * smoothing_value).at[action].add(n_successful),
-            beta=(state.beta * smoothing_value).at[action].add(n_failed),
-            last_decay=time
+            beta=(state.beta * smoothing_value).at[action].add(n_failed)
         )
 
     @staticmethod
     def sample(
             state: ThompsonSamplingState,
             key: PRNGKey,
-            time: Scalar,
-            context: Array,
-            decay: Scalar
+            context: Array
     ) -> jnp.int32:
         r"""
         The Thompson sampling policy is stochastic. The algorithm draws :math:`q_a` from the distribution
@@ -188,12 +181,8 @@ class ThompsonSampling(BaseAgent):
             Current state of the agent.
         key : PRNGKey
             A PRNG key used as the random key.
-        time : float
-            Current time.
         context : array_like
             One-dimensional array of features for each arm.
-        decay : float
-            Decay rate.
 
         Returns
         -------

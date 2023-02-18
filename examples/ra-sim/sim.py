@@ -97,8 +97,7 @@ def ra_sim(
             'n_wifi': n_wifi,
             'power': DEFAULT_TX_POWER,
             'cw': 2 ** state.cw - 1,
-            'mcs': action,
-            'terminal': False
+            'mcs': action
         }
 
     @jax.jit
@@ -151,8 +150,7 @@ class RASimEnv(gym.Env):
             'n_wifi': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
             'cw': gym.spaces.Discrete(32767),
-            'mcs': gym.spaces.Discrete(12),
-            'terminal': gym.spaces.Discrete(2)
+            'mcs': gym.spaces.Discrete(12)
         })
 
         self.options = {

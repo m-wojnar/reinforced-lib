@@ -14,6 +14,8 @@ def gradient_step(
 ) -> Tuple[Any, Any, optax.OptState, Scalar]:
     """
     Performs a gradient step on the objective with respect to ``grad_loss_fn`` function.
+    ``grad_loss_fn`` should return tuple of ``(loss, aux)`` where loss is the value to be minimized
+    and aux is auxiliary value to be returned (can be ``None``).
 
     Parameters
     ----------
