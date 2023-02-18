@@ -19,6 +19,20 @@ BaseAgent
     :members:
 
 
+Deep Q-Learning
+---------------
+
+.. currentmodule:: reinforced_lib.agents.deep.q_learning
+
+.. autoclass:: QLearningState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: QLearning
+    :show-inheritance:
+    :members:
+
+
 Epsilon-greedy
 --------------
 

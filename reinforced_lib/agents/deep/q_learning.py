@@ -16,7 +16,7 @@ from reinforced_lib.utils.jax_utils import gradient_step
 
 @dataclass
 class QLearningState(AgentState):
-    """
+    r"""
     Container for the state of the deep Q-learning agent.
 
     Attributes
@@ -32,7 +32,7 @@ class QLearningState(AgentState):
     prev_env_state : Array
         Previous environment state.
     epsilon : Scalar
-        Epsilon-greedy parameter.
+        :math:`\epsilon`-greedy parameter.
     """
 
     params: hk.Params
@@ -45,6 +45,39 @@ class QLearningState(AgentState):
 
 
 class QLearning(BaseAgent):
+    r"""
+    Deep Q-learning agent [6]_ with :math:`\epsilon`-greedy exploration and experience replay buffer to learn from the
+    past experiences. The agent uses a Q-network to estimate the Q-values :math:`Q^{\pi}(s, a)` of the action-value
+    function under the policy :math:`\pi`. The Q-network is trained to minimize the Bellman error.
+
+    Parameters
+    ----------
+    q_network : hk.TransformedWithState
+        Architecture of the Q-network.
+    obs_space_shape : Shape
+        Shape of the observation space.
+    act_space_size : jnp.int32
+        Size of the action space.
+    optimizer : optax.GradientTransformation, optional
+        Optimizer of the Q-network. If None, the Adam optimizer with learning rate 1e-3 is used.
+    experience_replay_buffer_size : jnp.int32, default=10000
+        Size of the experience replay buffer.
+    experience_replay_batch_size : jnp.int32, default=64
+        Batch size of the samples from the experience replay buffer.
+    experience_replay_steps : jnp.int32, default=5
+        Number of experience replay steps per update.
+    discount : Scalar, default=0.99
+        Discount factor.
+    epsilon : Scalar, default=1.0
+        Initial :math:`\epsilon`-greedy parameter.
+    epsilon_decay : Scalar, default=0.999
+        Epsilon decay factor.
+
+    References
+    ----------
+    .. [6] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D. & Riedmiller, M. (2013).
+       Playing Atari with Deep Reinforcement Learning.
+    """
 
     def __init__(
             self,
@@ -144,6 +177,30 @@ class QLearning(BaseAgent):
             experience_replay: ExperienceReplay,
             epsilon: Scalar
     ) -> QLearningState:
+        r"""
+        Initializes the Q-learning network, optimizer and experience replay buffer with given parameters.
+        First state of the environment is assumed to be a tensor of zeros.
+
+        Parameters
+        ----------
+        key : PRNGKey
+            A PRNG key used as the random key.
+        obs_space_shape : Shape
+            The shape of the observation space.
+        q_network : hk.TransformedWithState
+            The Q-network.
+        optimizer : optax.GradientTransformation
+            The optimizer.
+        experience_replay : ExperienceReplay
+            The experience replay buffer.
+        epsilon : Scalar
+            The initial :math:`\epsilon`-greedy parameter.
+
+        Returns
+        -------
+        QLearningState
+            Initial state of the deep Q-learning agent.
+        """
 
         x_dummy = jnp.empty(obs_space_shape)
         params, state = q_network.init(key, x_dummy)
@@ -171,6 +228,37 @@ class QLearning(BaseAgent):
             q_network: hk.TransformedWithState,
             discount: Scalar
     ) -> Tuple[Scalar, hk.State]:
+        r"""
+        Loss is the Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r + \gamma 
+        \max_{a'} Q(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state, :math:`a` is the 
+        current action, :math:`r` is the reward, :math:`s'` is the next state, :math:`\gamma` is  the discount factor, 
+        :math:`Q(s, a)` is the Q-value of the state-action pair. Loss can be calculated on a batch of transitions.
+
+        Parameters
+        ----------
+        params : hk.Params
+            The parameters of the Q-network.
+        key : PRNGKey
+            A PRNG key used as the random key.
+        state : hk.State
+            The state of the Q-network.
+        params_target : hk.Params
+            The parameters of the target Q-network.
+        state_target : hk.State
+            The state of the target Q-network.
+        batch : Tuple
+            A batch of transitions from the experience replay buffer.
+        q_network : hk.TransformedWithState
+            The Q-network.
+        discount : Scalar
+            The discount factor.
+
+        Returns
+        -------
+        Tuple[Scalar, hk.State]
+            The loss and the new state of the Q-network.
+        """
+
         states, actions, rewards, terminals, next_states = batch
         q_key, q_target_key = jax.random.split(key)
 
@@ -199,6 +287,42 @@ class QLearning(BaseAgent):
             experience_replay_steps: jnp.int32,
             epsilon_decay: Scalar
     ) -> QLearningState:
+        r"""
+        Appends the transition to the experience replay buffer and performs ``experience_replay_steps`` steps.
+        Each step consists of sampling a batch of transitions from the experience replay buffer, calculating the loss
+        using the ``loss_fn`` function and performing a gradient step on the Q-network. The :math:`\epsilon`-greedy
+        parameter is decayed by ``epsilon_decay``.
+
+        Parameters
+        ----------
+        state : QLearningState
+            The current state of the deep Q-learning agent.
+        key : PRNGKey
+            A PRNG key used as the random key.
+        env_state : Array
+            The current state of the environment.
+        action : Array
+            The action taken by the agent.
+        reward : Scalar
+            The reward received by the agent.
+        terminal : bool
+            Whether the episode has terminated.
+        q_network : hk.TransformedWithState
+            The Q-network.
+        step_fn : Callable
+            The function that performs a single gradient step on the Q-network.
+        experience_replay : ExperienceReplay
+            The experience replay buffer.
+        experience_replay_steps : int
+            The number of experience replay steps.
+        epsilon_decay : Scalar
+            The decay rate of the :math:`\epsilon`-greedy parameter.
+
+        Returns
+        -------
+        QLearningState
+            The updated state of the deep Q-learning agent.
+        """
 
         replay_buffer = experience_replay.append(
             state.replay_buffer, state.prev_env_state,
@@ -234,7 +358,29 @@ class QLearning(BaseAgent):
             env_state: Array,
             q_network: hk.TransformedWithState,
             act_space_size: jnp.int32
-    ) -> Array:
+    ) -> jnp.int32:
+        r"""
+        Samples random action with probability :math:`\epsilon` and the greedy action with probability
+        :math:`1 - \epsilon`. The greedy action is the action with the highest Q-value.
+        
+        Parameters
+        ----------
+        state : QLearningState
+            The state of the deep Q-learning agent.
+        key : PRNGKey
+            A PRNG key used as the random key.
+        env_state : Array
+            The current state of the environment.
+        q_network : hk.TransformedWithState
+            The Q-network.
+        act_space_size : jnp.int32
+            The size of the action space.
+
+        Returns
+        -------
+        int
+            Selected action.
+        """
 
         network_key, epsilon_key, action_key = jax.random.split(key, 3)
 

@@ -31,7 +31,7 @@ class ExperienceReplay:
 @dataclass
 class ReplayBuffer:
     """
-    Dataclass containing the replay buffer values.
+    Dataclass containing the replay buffer values. The replay buffer is implemented as a circular buffer.
 
     Attributes
     ----------
@@ -67,7 +67,8 @@ def experience_replay(
         act_space_shape: Shape
 ) -> ExperienceReplay:
     """
-    Creates an experience replay buffer.
+    Experience replay buffer used for off-policy learning. Improves the stability of the learning process
+    by reducing the correlation between the samples and enables an agent to learn from past experiences.
 
     Parameters
     ----------
@@ -88,7 +89,7 @@ def experience_replay(
 
     def init() -> ReplayBuffer:
         """
-        Initializes the replay buffer.
+        Initializes the replay buffer with empty arrays.
 
         Returns
         -------
