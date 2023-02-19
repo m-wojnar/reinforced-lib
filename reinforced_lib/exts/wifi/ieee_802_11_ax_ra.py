@@ -30,8 +30,7 @@ class IEEE_802_11_ax_RA(BaseExt):
         'n_failed': gym.spaces.Box(0, np.inf, (1,), np.int32),
         'n_wifi': gym.spaces.Box(1, np.inf, (1,), np.int32),
         'power': gym.spaces.Box(-np.inf, np.inf, (1,)),
-        'cw': gym.spaces.Discrete(32767),
-        'mcs': gym.spaces.Discrete(12)
+        'cw': gym.spaces.Discrete(32767)
     })
 
     _wifi_modes_rates = np.array([
@@ -57,14 +56,10 @@ class IEEE_802_11_ax_RA(BaseExt):
     def context(self, *args, **kwargs) -> np.ndarray:
         return self.rates()
 
-    @observation(observation_type=gym.spaces.Discrete(len(_wifi_modes_rates)))
-    def action(self, mcs: int, *args, **kwargs) -> int:
-        return mcs
-
     @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-    def reward(self, mcs: int, n_successful: int, n_failed: int, *args, **kwargs) -> float:
+    def reward(self, action: int, n_successful: int, n_failed: int, *args, **kwargs) -> float:
         if n_successful + n_failed > 0:
-            return self._wifi_modes_rates[mcs] * n_successful / (n_successful + n_failed)
+            return self._wifi_modes_rates[action] * n_successful / (n_successful + n_failed)
         else:
             return 0.0
 

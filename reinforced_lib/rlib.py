@@ -28,12 +28,15 @@ class AgentContainer:
         Current state of the agent.
     key : jax.random.PRNGKey
         A PRNG key used as the random key.
+    action : any
+        Action selected by the agent.
     step : int
         Current step of the agent.
     """
 
     state: BaseAgent
     key: jax.random.PRNGKey
+    action: Any
     step: int
 
 
@@ -304,6 +307,7 @@ class RLib:
         self._agent_containers.append(AgentContainer(
             state=self._agent.init(init_key),
             key=key,
+            action=None,
             step=0
         ))
 
@@ -332,7 +336,7 @@ class RLib:
         agent_id : int, default=0
             The identifier of the agent instance.
         *args : tuple
-            Extension observations.
+            Environment observations.
         is_training : bool
             Flag indicating whether the agent state should be updated in this step.
         update_observations : dict or tuple or any, optional
@@ -340,7 +344,7 @@ class RLib:
         sample_observations : dict or tuple or any, optional
             Observations used when ``no_ext_mode`` is enabled (must match agent's ``sample_observation_space``).
         **kwargs : dict
-            Extension observations.
+            Environment observations.
 
         Returns
         -------
@@ -366,10 +370,11 @@ class RLib:
 
         key, update_key, sample_key = jax.random.split(self._agent_containers[agent_id].key, 3)
         state = self._agent_containers[agent_id].state
+        action = self._agent_containers[agent_id].action
         step = self._agent_containers[agent_id].step
 
         if not self._no_ext_mode:
-            update_observations, sample_observations = self._ext.transform(*args, **kwargs)
+            update_observations, sample_observations = self._ext.transform(*args, action=action, **kwargs)
 
         all_observations = kwargs
         if isinstance(update_observations, dict) and isinstance(sample_observations, dict):
@@ -380,7 +385,7 @@ class RLib:
             self._logs_observer.update_observations(update_observations)
             self._logs_observer.update_observations(sample_observations)
 
-        if is_training:
+        if is_training and step > 0:
             if isinstance(update_observations, dict):
                 state = self._agent.update(state, update_key, **update_observations)
             elif isinstance(update_observations, tuple):
@@ -420,6 +425,7 @@ class RLib:
         self._agent_containers[agent_id] = AgentContainer(
             state=state,
             key=key,
+            action=action,
             step=step + 1
         )
 

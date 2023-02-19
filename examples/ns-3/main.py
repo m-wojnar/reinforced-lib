@@ -20,7 +20,6 @@ class Env(Structure):
         ('n_successful', c_uint32),
         ('n_wifi', c_uint32),
         ('station_id', c_uint32),
-        ('mcs', c_uint8),
         ('type', c_uint8)
     ]
 
@@ -96,8 +95,7 @@ def run(
                         'n_failed': data.env.n_failed,
                         'n_wifi': data.env.n_wifi,
                         'power': data.env.power,
-                        'cw': data.env.cw,
-                        'mcs': data.env.mcs
+                        'cw': data.env.cw
                     }
 
                     data.act.station_id = data.env.station_id

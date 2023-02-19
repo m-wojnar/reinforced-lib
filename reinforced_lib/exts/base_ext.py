@@ -20,6 +20,8 @@ class BaseExt(ABC):
         self._observation_functions: Dict[str, Callable] = {}
         self._parameter_functions: Dict[str, Callable] = {}
 
+        self._add_action_to_observations = False
+
         for name in dir(self):
             obj = getattr(self, name)
 
@@ -112,6 +114,17 @@ class BaseExt(ABC):
         agent_sample_space : gym.spaces.Space, optional
             Observations required by the agent ``sample`` function in OpenAI Gym format.
         """
+
+        if 'action' not in self._observation_functions and \
+                isinstance(self.observation_space, gym.spaces.Dict) and \
+                'action' not in self.observation_space:
+
+            if 'action' in agent_update_space.spaces:
+                self.observation_space['action'] = agent_update_space['action']
+            if 'action' in agent_sample_space.spaces:
+                self.observation_space['action'] = agent_sample_space['action']
+
+            self._add_action_to_observations = True
 
         self._update_space_transform = self._transform_spaces(self.observation_space, agent_update_space)
         self._sample_space_transform = self._transform_spaces(self.observation_space, agent_sample_space)
@@ -357,15 +370,18 @@ class BaseExt(ABC):
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
         return tuple(func(*args, **kwargs) for func in observations)
 
-    def transform(self, *args, **kwargs) -> Tuple[Any, Any]:
+    def transform(self, *args, action: Any = None, **kwargs) -> Tuple[Any, Any]:
         """
         Transforms environment observations and values provided by the observation functions to
-        the agent observation and sample spaces.
+        the agent observation and sample spaces. Supplies action selected by the agent if it is
+        required by the agent and the extension is not capable of providing this value.
 
         Parameters
         ----------
         *args : tuple
             Environment observations.
+        action : any
+            Action selected by the agent.
         **kwargs : dict
             Environment observations.
 
@@ -374,5 +390,8 @@ class BaseExt(ABC):
         tuple[any, any]
             Agent update and sample observations.
         """
+
+        if self._add_action_to_observations:
+            kwargs['action'] = action
 
         return self._update_space_transform(*args, **kwargs), self._sample_space_transform(*args, **kwargs)

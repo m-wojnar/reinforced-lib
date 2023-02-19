@@ -19,7 +19,7 @@ def gradient_step(
 
     Parameters
     ----------
-    objective : Any
+    objective : any
         Objective to be optimized.
     loss_params : Tuple
         Parameters to pass to ``loss_fn``.
