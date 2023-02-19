@@ -315,8 +315,8 @@ class RLib:
 
     def sample(
             self,
-            agent_id: int = 0,
             *args,
+            agent_id: int = 0,
             is_training: bool = True,
             update_observations: Union[Dict, Tuple, Any] = None,
             sample_observations: Union[Dict, Tuple, Any] = None,
@@ -333,10 +333,10 @@ class RLib:
 
         Parameters
         ----------
-        agent_id : int, default=0
-            The identifier of the agent instance.
         *args : tuple
             Environment observations.
+        agent_id : int, default=0
+            The identifier of the agent instance.
         is_training : bool
             Flag indicating whether the agent state should be updated in this step.
         update_observations : dict or tuple or any, optional
