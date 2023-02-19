@@ -69,7 +69,7 @@ environment. To learn more about extensions check out the :ref:`Custom extension
     env = gym.make('WifiSimulator-v1')
     env_state = env.reset()
 
-Next, we import OpenAI gym, make an environment, and reset it to an initial state.
+Next, we import Gymnasium, make an environment, and reset it to an initial state.
 
 .. code-block:: python
 

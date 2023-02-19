@@ -35,7 +35,7 @@ class BaseExt(ABC):
     @abstractmethod
     def observation_space(self) -> gym.spaces.Space:
         """
-        Basic observations of the environment in OpenAI Gym format.
+        Basic observations of the environment in Gymnasium format.
         """
 
         pass
@@ -56,7 +56,7 @@ class BaseExt(ABC):
         agent_type : type, optional
             Type of the selected agent.
         agent_parameter_space : gym.spaces.Dict, optional
-            Parameters required by the agents' constructor in OpenAI Gym format.
+            Parameters required by the agents' constructor in Gymnasium format.
         user_parameters : dict, optional
             Parameters provided by the user.
 
@@ -110,9 +110,9 @@ class BaseExt(ABC):
         Parameters
         ----------
         agent_update_space : gym.spaces.Space, optional
-            Observations required by the agent ``update`` function in OpenAI Gym format.
+            Observations required by the agent ``update`` function in Gymnasium format.
         agent_sample_space : gym.spaces.Space, optional
-            Observations required by the agent ``sample`` function in OpenAI Gym format.
+            Observations required by the agent ``sample`` function in Gymnasium format.
         """
 
         if 'action' not in self._observation_functions and \

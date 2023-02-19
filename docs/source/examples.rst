@@ -294,13 +294,14 @@ You can try running the following commands to test the Reinforced-lib rate adapt
 
 .. _gym_integration:
 
-***************************
-Gym environment integration
-***************************
+*********************************
+Gymnasium environment integration
+*********************************
 
 
-Our library supports defining RL environments in the OpenAI gym format. We want to show you how well our
-agents are suited to work with the gym environments using an example of a simple recommender system.
+Our library supports defining RL environments in the `Gymnasium <https://gymnasium.farama.org/>`_ (former OpenAI Gym)
+format. We want to show you how well our agents are suited to work with the Gymnasium environments using an example
+of a simple recommender system.
 
 
 Recommender system example

@@ -6,14 +6,14 @@ from reinforced_lib.exts import BaseExt, observation, parameter
 
 class IEEE_802_11_ax_RA(BaseExt):
     """
-    The IEEE 802.11ax [1]_ extension. Provides the data rates (in Mb/s) for consecutive modulation and coding
+    The IEEE 802.11ax [2]_ extension. Provides the data rates (in Mb/s) for consecutive modulation and coding
     schemes (MCS), a reward calculated as the approximate throughput, environment state as a vector, and
     default parameters for MAB and DRL agents. This extension is adapted to the IEEE 802.11ax network with the
     following settings: the guard interval is equal to 3200 ns, channel width is 20 MHz, 1 spatial stream is used.
 
     References
     ----------
-    .. [1] "IEEE Standard for Information Technology--Telecommunications and Information Exchange between Systems
+    .. [2] "IEEE Standard for Information Technology--Telecommunications and Information Exchange between Systems
        Local and Metropolitan Area Networks--Specific Requirements Part 11: Wireless LAN Medium Access Control
        (MAC) and Physical Layer (PHY) Specifications Amendment 1: Enhancements for High-Efficiency WLAN,"
        in IEEE Std 802.11ax-2021 (Amendment to IEEE Std 802.11-2020) , vol., no., pp.1-767,

@@ -9,7 +9,7 @@ gym.logger.set_level(40)
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import QLearning
 from reinforced_lib.logs import TensorboardLogger, SourceType
-from reinforced_lib.exts import Gym
+from reinforced_lib.exts import Gymnasium
 
 
 @hk.transform_with_state
@@ -19,7 +19,7 @@ def q_network(x: Array) -> Array:
 
 def run(num_epochs: int, render_every: int, seed: int) -> None:
     """
-    Run ``num_epochs`` cart-pole Gym simulations with optional rendering.
+    Run ``num_epochs`` cart-pole Gymnasium simulations with optional rendering.
 
     Parameters
     ----------
@@ -34,7 +34,7 @@ def run(num_epochs: int, render_every: int, seed: int) -> None:
     rl = RLib(
         agent_type=QLearning,
         agent_params={'q_network': q_network},
-        ext_type=Gym,
+        ext_type=Gymnasium,
         ext_params={'env_id': 'CartPole-v1'},
         loggers_type=TensorboardLogger,
         loggers_sources=[('reward', SourceType.METRIC), ('cumulative', SourceType.METRIC)]

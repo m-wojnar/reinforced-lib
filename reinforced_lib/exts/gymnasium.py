@@ -6,15 +6,19 @@ import numpy as np
 from reinforced_lib.exts import BaseExt, observation, parameter
 
 
-class Gym(BaseExt):
+class Gymnasium(BaseExt):
     """
-    Gym extension. Simplifies usage of deep RL agents by providing environment state, reward, terminal flag,
-    and shapes of the observation and action spaces.
+    Gymnasium [1]_ extension. Simplifies interaction of deep RL agents with the Gymnasium environments by providing
+    the environment state, reward, terminal flag, and shapes of the observation and action spaces.
 
     Parameters
     ----------
     env_id : str
-        Name of the Gym environment.
+        Name of the Gymnasium environment.
+
+    References
+    ----------
+    .. [1] Gymnasium https://gymnasium.farama.org
     """
 
     def __init__(self, env_id: str) -> None:
