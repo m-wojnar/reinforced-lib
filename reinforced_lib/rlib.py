@@ -1,12 +1,13 @@
 from __future__ import annotations
+
+import datetime
+import os
+import pickle
 from typing import Any, Dict, List, Tuple, Union
 
-import os
-import gym
-import pickle
-import datetime
-import lz4.frame
+import gymnasium as gym
 import jax.random
+import lz4.frame
 
 from reinforced_lib.agents import BaseAgent
 from reinforced_lib.exts import BaseExt
@@ -121,7 +122,7 @@ class RLib:
         self._agent_params = agent_params
 
         if not self._no_ext_mode and self._ext:
-            agent_params = self._ext.get_agent_params(agent_type, agent_type.parameters_space(), agent_params)
+            agent_params = self._ext.get_agent_params(agent_type, agent_type.parameter_space(), agent_params)
             self._agent = agent_type(**agent_params)
             self._ext.setup_transformations(self._agent.update_observation_space, self._agent.sample_observation_space)
         else:
@@ -157,7 +158,7 @@ class RLib:
         if self._agent:
             agent_params = self._ext.get_agent_params(
                 self._agent_type,
-                self._agent_type.parameters_space(),
+                self._agent_type.parameter_space(),
                 self._agent_params
             )
             self._agent = self._agent_type(**agent_params)
@@ -284,6 +285,7 @@ class RLib:
             self,
             agent_id: int = 0,
             *args,
+            is_training: bool = True,
             update_observations: Union[Dict, Tuple, Any] = None,
             sample_observations: Union[Dict, Tuple, Any] = None,
             **kwargs
@@ -294,7 +296,8 @@ class RLib:
         match the extension observation space). If ``no_ext_mode`` is enabled, observations must be passed
         by the ``update_observations`` and ``sample_observations`` parameters (the observations must match the agent's
         ``update_observation_space`` and ``sample_observation_space``). If there are no agent instances initialized,
-        the method automatically initializes the first instance.
+        the method automatically initializes the first instance. If the ``is_training`` flag is set, the ``update`` and
+        ``sample`` agent methods will be called. Otherwise, only the ``sample`` method will be called.
 
         Parameters
         ----------
@@ -302,6 +305,8 @@ class RLib:
             The identifier of the agent instance.
         *args : tuple
             Extension observations.
+        is_training : bool
+            Flag indicating whether the agent state should be updated in this step.
         update_observations : dict or tuple or any, optional
             Observations used when ``no_ext_mode`` is enabled (must match agent's ``update_observation_space``).
         sample_observations : dict or tuple or any, optional
@@ -346,12 +351,13 @@ class RLib:
             self._logs_observer.update_observations(update_observations)
             self._logs_observer.update_observations(sample_observations)
 
-        if isinstance(update_observations, dict):
-            state = self._agent.update(state, update_key, **update_observations)
-        elif isinstance(update_observations, tuple):
-            state = self._agent.update(state, update_key, *update_observations)
-        else:
-            state = self._agent.update(state, update_key, update_observations)
+        if is_training:
+            if isinstance(update_observations, dict):
+                state = self._agent.update(state, update_key, **update_observations)
+            elif isinstance(update_observations, tuple):
+                state = self._agent.update(state, update_key, *update_observations)
+            else:
+                state = self._agent.update(state, update_key, update_observations)
 
         if isinstance(sample_observations, dict):
             state, action = self._agent.sample(state, sample_key, **sample_observations)

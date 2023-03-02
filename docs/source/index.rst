@@ -17,15 +17,15 @@ we can provide full access to JAX's JIT functionality, which boosts the agent's 
 .. code-block:: python
 
    from reinforced_lib import RLib
-   from reinforced_lib.agents import ThompsonSampling
-   from reinforced_lib.exts import IEEE_802_11_ax
+   from reinforced_lib.agents.mab import ThompsonSampling
+   from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
-   import gym
+   import gymnasium as gym
 
 
    rlib = RLib(
       agent_type=ThompsonSampling,
-      ext_type=IEEE_802_11_ax
+      ext_type=IEEE_802_11_ax_RA
    )
 
    env = gym.make('WifiSimulator-v1')

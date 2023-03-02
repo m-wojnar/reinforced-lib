@@ -1,4 +1,4 @@
-import gym.spaces
+import gymnasium as gym
 import numpy as np
 from numpy import ndarray
 

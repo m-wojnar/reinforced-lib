@@ -1,6 +1,6 @@
 import unittest
 
-import gym.spaces
+import gymnasium as gym
 
 from reinforced_lib.exts.utils import *
 

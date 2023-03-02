@@ -156,13 +156,13 @@ and cleans up the environment when the simulation is done. Below we include and 
     from py_interface import *
 
     from reinforced_lib import RLib
-    from reinforced_lib.agents import ThompsonSampling
-    from reinforced_lib.exts import IEEE_802_11_ax
+    from reinforced_lib.agents.mab import ThompsonSampling
+    from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
 In line 6 we include the ns3-ai structures which enables us to use the shared memory communication.
 Next we import the ``RLib`` class which is the main interface of the library that merges the agent and the environment.
 We chose the :ref:`Thompson sampling <Thompson Sampling>` agent to demonstrate the manager performance. The environment
-will be of course :ref:`802.11ax <IEEE 802.11ax>`, so we import an appropriate extension.
+will be of course :ref:`802.11ax <IEEE 802.11ax RA>`, so we import an appropriate extension.
 
 .. code-block:: python
     :linenos:
@@ -204,7 +204,7 @@ python and C++. You can learn more about the data exchange model
 
     rl = RLib(
         agent_type=ThompsonSampling,
-        ext_type=IEEE_802_11_ax
+        ext_type=IEEE_802_11_ax_RA
     )
 
     exp = Experiment(mempool_key, mem_size, "rlib-sim", ns3_path)
@@ -391,11 +391,11 @@ usual, we begin with necessary imports:
     :lineno-start: 1
 
     from reinforced_lib import RLib
-    from reinforced_lib.agents import EGreedy
+    from reinforced_lib.agents.mab import EGreedy
     from reinforced_lib.logs import PlotsLogger, SourceType
     from ext import RecommenderSystemExt
 
-    import gym
+    import gymnasium as gym
     import env
 
 We define a `run()` function that constructs the recommender system extension, creates, and resets the appropriate

@@ -2,7 +2,7 @@ import random
 import sys
 from typing import Callable, Dict, Tuple
 
-import gym
+import gymnasium as gym
 import jax
 import jax.numpy as jnp
 from chex import dataclass, Array, Numeric, PRNGKey, Scalar

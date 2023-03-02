@@ -1,4 +1,4 @@
-import gym.spaces
+import gymnasium as gym
 
 
 class NoAgentError(Exception):

@@ -3,7 +3,7 @@ from functools import partial
 import inspect
 from typing import Any, Callable, Dict, List, Tuple, Union
 
-import gym.spaces
+import gymnasium as gym
 
 from reinforced_lib.exts.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete, test_space
 from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpacesError, NoDefaultParameterError
@@ -41,7 +41,7 @@ class BaseExt(ABC):
     def get_agent_params(
             self,
             agent_type: type = None,
-            agent_parameters_space: gym.spaces.Dict = None,
+            agent_parameter_space: gym.spaces.Dict = None,
             user_parameters: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
@@ -53,7 +53,7 @@ class BaseExt(ABC):
         ----------
         agent_type : type, optional
             Type of the selected agent.
-        agent_parameters_space : gym.spaces.Dict, optional
+        agent_parameter_space : gym.spaces.Dict, optional
             Parameters required by the agents' constructor in OpenAI Gym format.
         user_parameters : dict, optional
             Parameters provided by the user.
@@ -64,8 +64,10 @@ class BaseExt(ABC):
             Dictionary with the initialization parameters for the agent.
         """
 
-        if agent_parameters_space is None:
-            return {}
+        parameters = user_parameters if user_parameters else {}
+
+        if agent_parameter_space is None:
+            return parameters
 
         default_parameters = set()
 
@@ -74,9 +76,7 @@ class BaseExt(ABC):
                 if value.default != inspect._empty:
                     default_parameters.add(key)
 
-        parameters = user_parameters if user_parameters else {}
-
-        for name, space in agent_parameters_space.spaces.items():
+        for name, space in agent_parameter_space.spaces.items():
             if name in parameters:
                 continue
 

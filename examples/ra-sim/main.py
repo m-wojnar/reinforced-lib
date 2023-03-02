@@ -2,14 +2,14 @@ from argparse import ArgumentParser
 from time import perf_counter
 from typing import Any, Dict, Tuple
 
-import gym
+import gymnasium as gym
 gym.logger.set_level(40)
 
 import sim
 from utils import ResultsManager, params_str_template, results_str_template
 from reinforced_lib import RLib
-from reinforced_lib.agents import ThompsonSampling
-from reinforced_lib.exts import IEEE_802_11_ax
+from reinforced_lib.agents.mab import ThompsonSampling
+from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
 
 def run(ra_sim_args: Dict[str, Any], seed: int) -> Tuple[str, float, float, float]:
@@ -31,7 +31,7 @@ def run(ra_sim_args: Dict[str, Any], seed: int) -> Tuple[str, float, float, floa
 
     rl = RLib(
         agent_type=ThompsonSampling,
-        ext_type=IEEE_802_11_ax
+        ext_type=IEEE_802_11_ax_RA
     )
     rl.init(seed)
 

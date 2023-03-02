@@ -1,10 +1,10 @@
-import gym.spaces
+import gymnasium as gym
 import numpy as np
 
 from reinforced_lib.exts import BaseExt, observation, parameter
 
 
-class IEEE_802_11_ax(BaseExt):
+class IEEE_802_11_ax_RA(BaseExt):
     """
     The IEEE 802.11ax [1]_ extension. Provides the data rates (in Mb/s) for consecutive modulation and coding
     schemes (MCS), a reward calculated as the approximate throughput, and the default transmission power.

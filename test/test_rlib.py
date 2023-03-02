@@ -1,11 +1,11 @@
 import reinforced_lib as rfl
 from reinforced_lib.agents.wifi import ParticleFilter
-from reinforced_lib.exts import IEEE_802_11_ax
+from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
 if __name__ == '__main__':
     rl = rfl.RLib(
         agent_type=ParticleFilter,
-        ext_type=IEEE_802_11_ax
+        ext_type=IEEE_802_11_ax_RA
     )
 
     print(rl.observation_space)

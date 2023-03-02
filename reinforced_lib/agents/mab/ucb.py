@@ -1,7 +1,7 @@
 from functools import partial
 from typing import Tuple
 
-import gym.spaces
+import gymnasium as gym
 import jax
 import jax.numpy as jnp
 from chex import dataclass, Array, Scalar, PRNGKey
@@ -63,7 +63,7 @@ class UCB(BaseAgent):
         self.sample = jax.jit(partial(self.sample, c=c))
 
     @staticmethod
-    def parameters_space() -> gym.spaces.Dict:
+    def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'c': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32),

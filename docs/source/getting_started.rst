@@ -50,12 +50,12 @@ all the simplifications provided by :ref:`Reinforced-lib <reinforced-lib>`.
 .. code-block:: python
 
     from reinforced_lib import RLib
-    from reinforced_lib.agents import ThompsonSampling
-    from reinforced_lib.exts import IEEE_802_11_ax
+    from reinforced_lib.agents.mab import ThompsonSampling
+    from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
     rlib = RLib(
         agent_type=ThompsonSampling,
-        ext_type=IEEE_802_11_ax
+        ext_type=IEEE_802_11_ax_RA
     )
 
 After the necessary imports, we create an instance of :ref:`class <RLib Class>` ``Rlib``. We provide the chosen agent type and
@@ -64,7 +64,7 @@ environment. To learn more about extensions check out the :ref:`Custom extension
 
 .. code-block:: python
 
-    import gym
+    import gymnasium as gym
 
     env = gym.make('WifiSimulator-v1')
     env_state = env.reset()
@@ -94,7 +94,7 @@ real time. Below is the simplest example of using the built-in logger ``StdoutLo
 
     rlib = rfl.RLib(
         agent_type=ThompsonSampling,
-        ext_type=IEEE_802_11_ax,
+        ext_type=IEEE_802_11_ax_RA,
         logger_type=StdoutLogger,
         loggers_sources='n_successful'
     )
@@ -105,7 +105,7 @@ You can easily change the logger type, add more sources, and customize the param
 
     rlib = rfl.RLib(
         agent_type=ThompsonSampling,
-        ext_type=IEEE_802_11_ax,
+        ext_type=IEEE_802_11_ax_RA,
         logger_type=PlotsLogger,
         loggers_sources=['n_successful', 'alpha', ('action', SourceType.METRIC)],
         loggers_params={'plots_smoothing': 0.9}
@@ -123,7 +123,7 @@ You can also plug multiple loggers to one source:
 
     rlib = rfl.RLib(
         agent_type=ThompsonSampling,
-        ext_type=IEEE_802_11_ax,
+        ext_type=IEEE_802_11_ax_RA,
         logger_type=[StdoutLogger, CsvLogger, PlotsLogger],
         loggers_sources='n_successful'
     )
@@ -134,7 +134,7 @@ Or mix different loggers and sources:
 
     rlib = rfl.RLib(
         agent_type=ThompsonSampling,
-        ext_type=IEEE_802_11_ax,
+        ext_type=IEEE_802_11_ax_RA,
         logger_type=[StdoutLogger, CsvLogger, PlotsLogger],
         loggers_sources=['n_successful', 'alpha', ('action', SourceType.METRIC)]
     )
@@ -162,13 +162,13 @@ with the training, we load the whole experiment to a new RLib instance.
 
     import reinforced_lib as rfl
 
-    from reinforced_lib.agents import ThompsonSampling
-    from reinforced_lib.exts import IEEE_802_11_ax
+    from reinforced_lib.agents.mab import ThompsonSampling
+    from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
     
     # Setting up the experiment
     rl = rfl.RLib(
         agent_type=ThompsonSampling,
-        ext_type=IEEE_802_11_ax
+        ext_type=IEEE_802_11_ax_RA
     )
 
     # Do some training
@@ -197,13 +197,13 @@ parameter (responsible for the 'memory' of the Thompson sampling agent).
 
     import reinforced_lib as rfl
 
-    from reinforced_lib.agents import ThompsonSampling
-    from reinforced_lib.exts import IEEE_802_11_ax
+    from reinforced_lib.agents.mab import ThompsonSampling
+    from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
     
     # Setting up the experiment
     rl = rfl.RLib(
         agent_type=ThompsonSampling,
-        ext_type=IEEE_802_11_ax
+        ext_type=IEEE_802_11_ax_RA
     )
 
     # Do some training

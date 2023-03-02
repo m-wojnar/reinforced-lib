@@ -126,7 +126,7 @@ This enables the library to automatically infer the necessary parameters from th
     # Parameters required by the agent constructor in OpenAI Gym format.
     # Type of returned value is required to be gym.spaces.Dict.
     @staticmethod
-    def parameters_space() -> gym.spaces.Dict:
+    def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
@@ -164,7 +164,7 @@ to create your own agent.
     from functools import partial
     from typing import Tuple
 
-    import gym.spaces
+    import gymnasium as gym
     import jax
     import jax.numpy as jnp
     from chex import dataclass, Array, Scalar, PRNGKey
@@ -194,7 +194,7 @@ to create your own agent.
             self.sample = jax.jit(partial(self.sample, e=e))
 
         @staticmethod
-        def parameters_space() -> gym.spaces.Dict:
+        def parameter_space() -> gym.spaces.Dict:
             return gym.spaces.Dict({
                 'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
                 'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
@@ -270,4 +270,4 @@ To sum everything up one more time:
 
 The built-in implementation of the epsilon-greedy agent with an addition of optional optimistic start and an exponential
 recency-weighted average update can be found
-`here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/agents/e_greedy.py>`_.
+`here <https://github.com/m-wojnar/reinforced-lib/blob/main/reinforced_lib/agents/mab/e_greedy.py>`_.

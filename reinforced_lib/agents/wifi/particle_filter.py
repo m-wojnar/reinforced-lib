@@ -1,7 +1,7 @@
 from functools import partial
 from typing import Tuple
 
-import gym.spaces
+import gymnasium as gym
 import jax
 import jax.numpy as jnp
 from chex import Array, PRNGKey, Scalar
@@ -70,7 +70,7 @@ class ParticleFilter(BaseAgent):
         self.sample = jax.jit(partial(self.sample, pf=self.pf))
 
     @staticmethod
-    def parameters_space() -> gym.spaces.Dict:
+    def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'default_power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
             'min_snr_init': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),

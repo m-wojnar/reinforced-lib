@@ -1,10 +1,10 @@
-import gym
+import gymnasium as gym
 gym.logger.set_level(40)
 
 import env
 from ext import RecommenderSystemExt
 from reinforced_lib import RLib
-from reinforced_lib.agents import EGreedy
+from reinforced_lib.agents.mab import EGreedy
 from reinforced_lib.logs import PlotsLogger, SourceType
 
 

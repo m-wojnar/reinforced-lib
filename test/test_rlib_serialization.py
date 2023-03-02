@@ -6,8 +6,8 @@ import jax
 import jax.numpy as jnp
 import reinforced_lib as rfl
 
-from reinforced_lib.agents import ThompsonSampling
-from reinforced_lib.exts import IEEE_802_11_ax
+from reinforced_lib.agents.mab import ThompsonSampling
+from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 from reinforced_lib.rlib import RLib
 from reinforced_lib.logs import *
 
@@ -25,7 +25,7 @@ class TestRLibSerialization(unittest.TestCase):
         rl = rfl.RLib(
             agent_type=ThompsonSampling,
             agent_params={"decay": 0.0},
-            ext_type=IEEE_802_11_ax,
+            ext_type=IEEE_802_11_ax_RA,
             loggers_type=CsvLogger,
             loggers_sources=['n_failed', 'n_successful', ('action', SourceType.METRIC)],
             loggers_params={'csv_path': f'output_reload={reload}_new-decay={new_decay}.csv'}
