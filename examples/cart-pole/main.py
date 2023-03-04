@@ -44,7 +44,7 @@ def run(num_epochs: int, render_every: int, seed: int) -> None:
         render = render_every is not None and epoch % render_every == 0
         env = gym.make('CartPole-v1', render_mode='human' if render else 'no')
 
-        env_state, _ = env.reset(seed=seed + epoch)
+        _, _ = env.reset(seed=seed + epoch)
         env_state = env.step(env.action_space.sample())
         terminal = False
 
