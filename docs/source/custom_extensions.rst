@@ -168,8 +168,8 @@ arguments:
     def default_power(self):
         return 16.0206
 
-We can also specify the type of the returned value in the OpenAI Gym format. It will help the library to check if
-a given value type is compatible with the argument required by the agent:
+We can also specify the type of the returned value in `Gymnasium <https://gymnasium.farama.org/>`_ (former OpenAI Gym)
+format. It will help the library to check if a given value type is compatible with the argument required by the agent:
 
 .. code-block:: python
 

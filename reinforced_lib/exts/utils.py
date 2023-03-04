@@ -13,7 +13,7 @@ class ObservationInfo(NamedTuple):
     name : str
         Name of the provided observation.
     type : gym.spaces.Space
-        Type of the provided value in OpenAI Gym format.
+        Type of the provided value in Gymnasium format.
     """
 
     name: str
@@ -29,7 +29,7 @@ class ParameterInfo(NamedTuple):
     name : str
         Name of the provided parameter.
     type : gym.spaces.Space
-        Type of the provided parameter in OpenAI Gym format.
+        Type of the provided parameter in Gymnasium format.
     """
 
     name: str
@@ -45,7 +45,7 @@ def observation(observation_name: str = None, observation_type: gym.spaces.Space
     observation_name : str, optional
         Name of the provided observation.
     observation_type : gym.spaces.Space, optional
-        Type of the provided value in OpenAI Gym format.
+        Type of the provided value in Gymnasium format.
 
     Returns
     -------
@@ -70,7 +70,7 @@ def parameter(parameter_name: str = None, parameter_type: gym.spaces.Space = Non
     parameter_name : str, optional
         Name of the provided parameter.
     parameter_type : gym.spaces.Space, optional
-        Type of the provided parameter in OpenAI Gym format.
+        Type of the provided parameter in Gymnasium format.
 
     Returns
     -------

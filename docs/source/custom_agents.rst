@@ -120,10 +120,11 @@ Having defined these static methods, we can define the class constructor:
 
 Lastly, we must specify the parameter spaces that each of the implemented methods take.
 This enables the library to automatically infer the necessary parameters from the environment.
+Reinforced-lib uses the `Gymnasium <https://gymnasium.farama.org/>`_ (former OpenAI Gym) format.
 
 .. code-block:: python
 
-    # Parameters required by the agent constructor in OpenAI Gym format.
+    # Parameters required by the agent constructor in Gymnasium format.
     # Type of returned value is required to be gym.spaces.Dict.
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
@@ -132,7 +133,7 @@ This enables the library to automatically infer the necessary parameters from th
             'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
         })
     
-    # Parameters required by the 'update' method in OpenAI Gym format.
+    # Parameters required by the 'update' method in Gymnasium format.
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
@@ -140,12 +141,12 @@ This enables the library to automatically infer the necessary parameters from th
             'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
         })
     
-    # Parameters required by the 'sample' method in OpenAI Gym format.
+    # Parameters required by the 'sample' method in Gymnasium format.
     @property
     def sample_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({})
     
-    # Action returned by the agent in OpenAI Gym format.
+    # Action returned by the agent in Gymnasium format.
     @property
     def action_space(self) -> gym.spaces.Space:
         return gym.spaces.Discrete(self.n_arms)
@@ -266,7 +267,7 @@ To sum everything up one more time:
 1. Custom agent inherits from the `BaseAgent`.
 2. We implement the abstract methods *init()*, *update()* and *sample()*.
 3. We use *jax.jit()* to optimize the agent's performance.
-4. We provide the required parameters in the format of *OpenAI Gym* spaces.
+4. We provide the required parameters in the format of *Gymnasium* spaces.
 
 The built-in implementation of the epsilon-greedy agent with an addition of optional optimistic start and an exponential
 recency-weighted average update can be found
