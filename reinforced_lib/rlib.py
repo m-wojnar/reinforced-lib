@@ -470,7 +470,8 @@ class RLib:
                 id: {
                     "state": agent.state,
                     "key": agent.key,
-                    "step": agent.step,
+                    "action": agent.action,
+                    "step": agent.step
                 } for id, agent in zip(agent_ids, agent_containers)
             },
             "ext_type": self._ext_type,
@@ -546,6 +547,7 @@ class RLib:
                 rlib._agent_containers.append(AgentContainer(
                     state=agent_container["state"],
                     key=agent_container["key"],
+                    action=agent_container["action"],
                     step=agent_container["step"]
                 ))
 
