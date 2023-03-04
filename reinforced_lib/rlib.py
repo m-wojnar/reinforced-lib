@@ -8,12 +8,33 @@ from typing import Any, Dict, List, Tuple, Union
 import gymnasium as gym
 import jax.random
 import lz4.frame
+from chex import dataclass
 
 from reinforced_lib.agents import BaseAgent
 from reinforced_lib.exts import BaseExt
 from reinforced_lib.logs import Source
 from reinforced_lib.logs.logs_observer import LogsObserver
 from reinforced_lib.utils.exceptions import *
+
+
+@dataclass
+class AgentContainer:
+    """
+    Class containing the state of a given agent and all its dependencies.
+
+    Attributes
+    ----------
+    state : BaseAgent
+        Current state of the agent.
+    key : jax.random.PRNGKey
+        A PRNG key used as the random key.
+    step : int
+        Current step of the agent.
+    """
+
+    state: BaseAgent
+    key: jax.random.PRNGKey
+    step: int
 
 
 class RLib:
@@ -38,9 +59,12 @@ class RLib:
         Parameters of the selected loggers.
     no_ext_mode : bool, default=False
         Pass observations directly to the agent (do not use the extensions).
-    save_directory : str, default=None
+    save_directory : str, optional
         Path to a user specified directory where the ``save`` method will store the experiment checkpoints.
         If none specified, uses the home directory.
+    auto_checkpoint : int, optional
+        Automatically saves the experiment every ``auto_checkpoint`` steps. If ``None``, the automatic checkpointing is
+        disabled.
     """
 
     def __init__(
@@ -53,16 +77,17 @@ class RLib:
             loggers_sources: Union[Source, List[Source]] = None,
             loggers_params: Dict[str, Any] = None,
             no_ext_mode: bool = False,
-            save_directory: str = None
+            save_directory: str = None,
+            auto_checkpoint: int = None
     ) -> None:
         self._lz4_ext = ".pkl.lz4"
         self._save_directory = save_directory if save_directory else os.path.expanduser("~")
+        self._auto_checkpoint = auto_checkpoint
 
         self._agent = None
         self._agent_type = agent_type
         self._agent_params = agent_params
-        self._agents_states = []
-        self._agents_keys = []
+        self._agent_containers = []
 
         self._ext = None
         self._no_ext_mode = no_ext_mode
@@ -112,7 +137,7 @@ class RLib:
             Parameters of the selected agent.
         """
 
-        if len(self._agents_states) > 0:
+        if len(self._agent_containers) > 0:
             raise ForbiddenAgentChangeError()
 
         if not issubclass(agent_type, BaseAgent):
@@ -146,7 +171,7 @@ class RLib:
         if self._no_ext_mode:
             raise ForbiddenExtensionSetError()
 
-        if len(self._agents_states) > 0:
+        if len(self._agent_containers) > 0:
             raise ForbiddenExtensionChangeError()
 
         if not issubclass(ext_type, BaseExt):
@@ -190,7 +215,7 @@ class RLib:
             Parameters of the selected logging modules.
         """
 
-        if len(self._agents_states) > 0:
+        if len(self._agent_containers) > 0:
             raise ForbiddenLoggerSetError()
 
         loggers_params = loggers_params if loggers_params else {}
@@ -273,11 +298,14 @@ class RLib:
             Identifier of the created instance.
         """
 
-        agent_id = len(self._agents_states)
+        agent_id = len(self._agent_containers)
         init_key, key = jax.random.split(jax.random.PRNGKey(seed))
 
-        self._agents_states.append(self._agent.init(init_key))
-        self._agents_keys.append(key)
+        self._agent_containers.append(AgentContainer(
+            state=self._agent.init(init_key),
+            key=key,
+            step=0
+        ))
 
         return agent_id
 
@@ -333,11 +361,12 @@ class RLib:
             self._logs_observer.init_loggers()
             self._init_loggers = False
 
-        if len(self._agents_states) == 0:
+        if len(self._agent_containers) == 0:
             self.init()
 
-        key, update_key, sample_key = jax.random.split(self._agents_keys[agent_id], 3)
-        state = self._agents_states[agent_id]
+        key, update_key, sample_key = jax.random.split(self._agent_containers[agent_id].key, 3)
+        state = self._agent_containers[agent_id].state
+        step = self._agent_containers[agent_id].step
 
         if not self._no_ext_mode:
             update_observations, sample_observations = self._ext.transform(*args, **kwargs)
@@ -358,6 +387,9 @@ class RLib:
                 state = self._agent.update(state, update_key, *update_observations)
             else:
                 state = self._agent.update(state, update_key, update_observations)
+
+            if self._auto_checkpoint is not None and (step + 1) % self._auto_checkpoint == 0:
+                self.save(agent_id, f'rlib-checkpoint-agent-{agent_id}-step-{step + 1}')
 
         if isinstance(sample_observations, dict):
             state, action = self._agent.sample(state, sample_key, **sample_observations)
@@ -385,18 +417,23 @@ class RLib:
             except TypeError:
                 pass
 
-        self._agents_states[agent_id] = state
-        self._agents_keys[agent_id] = key
+        self._agent_containers[agent_id] = AgentContainer(
+            state=state,
+            key=key,
+            step=step + 1
+        )
 
         return action
 
-    def save(self, path: str = None) -> str:
+    def save(self, agent_id: int = None, path: str = None) -> str:
         """
         Saves the state of the experiment to a file in lz4 format. For each agent, both the state and the initialization
         parameters are saved. The extension and loggers settings are saved as well to fully reconstruct the experiment.
 
         Parameters
         ----------
+        agent_id : int, optional
+            The identifier of the agent instance. If none specified, saves the state of all agents.
         path : str, optional
             Path to the checkpoint file. If none specified, saves to the path specified by ``save_directory``.
             If the ``.pkl.lz4`` suffix is not detected, it will be appended automatically.
@@ -406,6 +443,13 @@ class RLib:
         str
             Path to the saved checkpoint file.
         """
+
+        if agent_id is None:
+            agent_ids = list(range(len(self._agent_containers)))
+            agent_containers = self._agent_containers
+        else:
+            agent_ids = [agent_id]
+            agent_containers = [self._agent_containers[agent_id]]
 
         if path is None:
             timestamp = datetime.datetime.now()
@@ -417,17 +461,19 @@ class RLib:
             "agent_type": self._agent_type,
             "agent_params": self._agent_params,
             "agents": {
-                agent_id: {
-                    "state": state,
-                    "key": key,
-                } for agent_id, (state, key) in enumerate(zip(self._agents_states, self._agents_keys))
+                id: {
+                    "state": agent.state,
+                    "key": agent.key,
+                    "step": agent.step,
+                } for id, agent in zip(agent_ids, agent_containers)
             },
             "ext_type": self._ext_type,
             "ext_params": self._ext_params,
             "loggers_type": self._loggers_type,
             "loggers_sources": self._loggers_sources,
             "loggers_params": self._loggers_params,
-            "save_directory": self._save_directory
+            "save_directory": self._save_directory,
+            "auto_checkpoint": self._auto_checkpoint
         }
 
         with lz4.frame.open(path, 'wb') as f:
@@ -460,10 +506,12 @@ class RLib:
         with lz4.frame.open(path, 'rb') as f:
             experiment_state = pickle.loads(f.read())
         
-        rlib = RLib(save_directory=experiment_state["save_directory"])
+        rlib = RLib(
+            save_directory=experiment_state["save_directory"],
+            auto_checkpoint=experiment_state["auto_checkpoint"]
+        )
         
-        rlib._agents_states = []
-        rlib._agents_keys = []
+        rlib._agent_containers = []
 
         if ext_params:
             rlib.set_ext(experiment_state["ext_type"], ext_params)
@@ -482,8 +530,17 @@ class RLib:
                 experiment_state["loggers_params"]
             )
         
-        for agent_packed in experiment_state["agents"].values():
-            rlib._agents_states.append(agent_packed["state"])
-            rlib._agents_keys.append(agent_packed["key"])
+        for agent_id, agent_container in experiment_state["agents"].items():
+            if agent_id < len(rlib._agent_containers):
+                rlib._agent_containers[agent_id] = agent_container
+            else:
+                while agent_id > len(rlib._agent_containers):
+                    rlib.init()
+
+                rlib._agent_containers.append(AgentContainer(
+                    state=agent_container["state"],
+                    key=agent_container["key"],
+                    step=agent_container["step"]
+                ))
 
         return rlib
