@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
 import haiku as hk
+import optax
 from chex import Array
 
 import gymnasium as gym
@@ -8,7 +9,6 @@ gym.logger.set_level(40)
 
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import QLearning
-from reinforced_lib.logs import TensorboardLogger, SourceType
 from reinforced_lib.exts import Gymnasium
 
 
@@ -33,11 +33,14 @@ def run(num_epochs: int, render_every: int, seed: int) -> None:
 
     rl = RLib(
         agent_type=QLearning,
-        agent_params={'q_network': q_network},
+        agent_params={
+            'q_network': q_network,
+            'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
+            'discount': 0.95,
+            'epsilon_decay': 0.9975
+        },
         ext_type=Gymnasium,
-        ext_params={'env_id': 'CartPole-v1'},
-        loggers_type=TensorboardLogger,
-        loggers_sources=[('reward', SourceType.METRIC), ('cumulative', SourceType.METRIC)]
+        ext_params={'env_id': 'CartPole-v1'}
     )
 
     for epoch in range(num_epochs):
@@ -45,20 +48,25 @@ def run(num_epochs: int, render_every: int, seed: int) -> None:
         env = gym.make('CartPole-v1', render_mode='human' if render else 'no')
 
         _, _ = env.reset(seed=seed + epoch)
-        env_state = env.step(env.action_space.sample())
+        action = env.action_space.sample()
+
         terminal = False
+        epoch_len = 0
 
         while not terminal:
-            action = rl.sample(*env_state)
             env_state = env.step(action.item())
+            action = rl.sample(*env_state)
 
             terminal = env_state[2] or env_state[3]
+            epoch_len += 1
+
+        print(f'Epoch {epoch} finished with {epoch_len} steps')
 
 
 if __name__ == '__main__':
     args = ArgumentParser()
 
-    args.add_argument('--num_epochs', default=2000, type=int)
+    args.add_argument('--num_epochs', default=300, type=int)
     args.add_argument('--render_every', default=None, type=int)
     args.add_argument('--seed', default=42, type=int)
 

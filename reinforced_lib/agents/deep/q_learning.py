@@ -48,7 +48,8 @@ class QLearning(BaseAgent):
     r"""
     Deep Q-learning agent [6]_ with :math:`\epsilon`-greedy exploration and experience replay buffer to learn from the
     past experiences. The agent uses a Q-network to estimate the Q-values :math:`Q^{\pi}(s, a)` of the action-value
-    function under the policy :math:`\pi`. The Q-network is trained to minimize the Bellman error.
+    function under the policy :math:`\pi`. The Q-network is trained to minimize the Bellman error. This agent
+    follows the off-policy learning paradigm and is suitable for environments with discrete action spaces.
 
     Parameters
     ----------
@@ -72,6 +73,8 @@ class QLearning(BaseAgent):
         Initial :math:`\epsilon`-greedy parameter.
     epsilon_decay : Scalar, default=0.999
         Epsilon decay factor.
+    epsilon_min : Scalar, default=0.01
+        Minimum :math:`\epsilon`-greedy parameter.
 
     References
     ----------
@@ -90,7 +93,8 @@ class QLearning(BaseAgent):
             experience_replay_steps: jnp.int32 = 5,
             discount: Scalar = 0.99,
             epsilon: Scalar = 1.0,
-            epsilon_decay: Scalar = 0.999
+            epsilon_decay: Scalar = 0.999,
+            epsilon_min: Scalar = 0.001
     ) -> None:
 
         assert experience_replay_buffer_size > experience_replay_batch_size > 0
@@ -129,7 +133,8 @@ class QLearning(BaseAgent):
             )),
             experience_replay=er,
             experience_replay_steps=experience_replay_steps,
-            epsilon_decay=epsilon_decay
+            epsilon_decay=epsilon_decay,
+            epsilon_min=epsilon_min
         )
         self.sample = jax.jit(partial(
             self.sample,
@@ -266,7 +271,7 @@ class QLearning(BaseAgent):
         q_values = jnp.take_along_axis(q_values, actions.astype(jnp.int32), axis=-1)
 
         q_values_target, _ = q_network.apply(params_target, state_target, q_target_key, next_states)
-        target = rewards + (1 - terminals) * discount * jnp.argmax(q_values_target, axis=-1)
+        target = rewards + (1 - terminals) * discount * jnp.max(q_values_target, axis=-1)
 
         target = jax.lax.stop_gradient(target)
         loss = jnp.square(target - jnp.squeeze(q_values)).mean()
@@ -285,7 +290,8 @@ class QLearning(BaseAgent):
             step_fn: Callable,
             experience_replay: ExperienceReplay,
             experience_replay_steps: jnp.int32,
-            epsilon_decay: Scalar
+            epsilon_decay: Scalar,
+            epsilon_min: Scalar
     ) -> QLearningState:
         r"""
         Appends the transition to the experience replay buffer and performs ``experience_replay_steps`` steps.
@@ -317,6 +323,8 @@ class QLearning(BaseAgent):
             The number of experience replay steps.
         epsilon_decay : Scalar
             The decay rate of the :math:`\epsilon`-greedy parameter.
+        epsilon_min : Scalar
+            The minimum value of the :math:`\epsilon`-greedy parameter.
 
         Returns
         -------
@@ -332,8 +340,8 @@ class QLearning(BaseAgent):
         params, network_state, opt_state = state.params, state.state, state.opt_state
 
         if experience_replay.is_ready(replay_buffer):
-            params_target = deepcopy(state.params)
-            state_target = deepcopy(state.state)
+            params_target = deepcopy(params)
+            state_target = deepcopy(network_state)
 
             for _ in range(experience_replay_steps):
                 batch_key, network_key, key = jax.random.split(key, 3)
@@ -348,7 +356,7 @@ class QLearning(BaseAgent):
             opt_state=opt_state,
             replay_buffer=replay_buffer,
             prev_env_state=env_state,
-            epsilon=state.epsilon * epsilon_decay
+            epsilon=jax.lax.max(state.epsilon * epsilon_decay, epsilon_min)
         )
 
     @staticmethod
