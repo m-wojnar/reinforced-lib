@@ -26,7 +26,7 @@ LogsObserver
 
 
 CsvLogger
--------------
+---------
 
 .. currentmodule:: reinforced_lib.logs.csv_logger
 
@@ -36,7 +36,7 @@ CsvLogger
 
 
 StdoutLogger
--------------
+------------
 
 .. currentmodule:: reinforced_lib.logs.stdout_logger
 
@@ -46,10 +46,20 @@ StdoutLogger
 
 
 PlotsLogger
--------------
+-----------
 
 .. currentmodule:: reinforced_lib.logs.plots_logger
 
 .. autoclass:: PlotsLogger
+    :show-inheritance:
+    :members:
+
+
+TensorboardLogger
+-----------------
+
+.. currentmodule:: reinforced_lib.logs.tb_logger
+
+.. autoclass:: TensorboardLogger
     :show-inheritance:
     :members:
