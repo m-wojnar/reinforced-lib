@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Tuple, Union
 import gymnasium as gym
 import jax.random
 import lz4.frame
+import numpy as np
 from chex import dataclass
 
 from reinforced_lib.agents import BaseAgent
@@ -425,15 +426,15 @@ class RLib:
 
         return action
 
-    def save(self, agent_id: int = None, path: str = None) -> str:
+    def save(self, agent_ids: Union[int, List[int]] = None, path: str = None) -> str:
         """
         Saves the state of the experiment to a file in lz4 format. For each agent, both the state and the initialization
         parameters are saved. The extension and loggers settings are saved as well to fully reconstruct the experiment.
 
         Parameters
         ----------
-        agent_id : int, optional
-            The identifier of the agent instance. If none specified, saves the state of all agents.
+        agent_ids : int or array_like, optional
+            The identifier of the agent instance(s) to save. If none specified, saves the state of all agents.
         path : str, optional
             Path to the checkpoint file. If none specified, saves to the path specified by ``save_directory``.
             If the ``.pkl.lz4`` suffix is not detected, it will be appended automatically.
@@ -444,12 +445,12 @@ class RLib:
             Path to the saved checkpoint file.
         """
 
-        if agent_id is None:
+        if agent_ids is None:
             agent_ids = list(range(len(self._agent_containers)))
-            agent_containers = self._agent_containers
-        else:
-            agent_ids = [agent_id]
-            agent_containers = [self._agent_containers[agent_id]]
+        elif np.isscalar(agent_ids) or (hasattr(agent_ids, 'ndim') and agent_ids.ndim == 0):
+            agent_ids = [agent_ids]
+
+        agent_containers = [self._agent_containers[agent_id] for agent_id in agent_ids]
 
         if path is None:
             timestamp = datetime.datetime.now()
