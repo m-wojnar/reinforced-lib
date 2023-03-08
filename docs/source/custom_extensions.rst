@@ -104,7 +104,6 @@ There are three main benefits of using extensions:
 
        observations = {
            'time': 1.8232,
-           'mcs': 11,
            'n_successful': 10,
            'n_failed': 0,
            'power': 16.0206,
@@ -118,7 +117,6 @@ There are three main benefits of using extensions:
 
        observations = {
            'time': 1.8232,
-           'mcs': 11,
            'n_successful': 10,
            'n_failed': 0,
            'power': 16.0206,
@@ -156,8 +154,7 @@ space can look like this:
         'n_failed': gym.spaces.Box(0, np.inf, (1,), np.int32),
         'n_wifi': gym.spaces.Box(1, np.inf, (1,), np.int32),
         'power': gym.spaces.Box(-np.inf, np.inf, (1,)),
-        'cw': gym.spaces.Discrete(32767),
-        'mcs': gym.spaces.Discrete(12)
+        'cw': gym.spaces.Discrete(32767)
     })
 
 Next, we define the *parameter function* that will provide the default power value for agents that require
@@ -171,8 +168,8 @@ arguments:
     def default_power(self):
         return 16.0206
 
-We can also specify the type of the returned value in the OpenAI Gym format. It will help the library to check if
-a given value type is compatible with the argument required by the agent:
+We can also specify the type of the returned value in `Gymnasium <https://gymnasium.farama.org/>`_ (former OpenAI Gym)
+format. It will help the library to check if a given value type is compatible with the argument required by the agent:
 
 .. code-block:: python
 

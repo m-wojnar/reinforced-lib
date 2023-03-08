@@ -52,10 +52,10 @@ rlib = RLib(
 env = gym.make('WifiSimulator-v1')
 env_state, _ = env.reset()
 
-terminated = False
-while not terminated:
+terminal = False
+while not terminal:
     action = rlib.sample(**env_state)
-    env_state, reward, terminated, *_ = env.step(action)
+    env_state, reward, terminal, *_ = env.step(action)
 ```
 
 ## Integrated IEEE 802.11ax support

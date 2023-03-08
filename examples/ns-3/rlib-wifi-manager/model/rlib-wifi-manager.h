@@ -16,7 +16,6 @@ struct sEnv
   uint32_t n_successful;
   uint32_t n_wifi;
   uint32_t station_id;
-  uint8_t mcs;
   uint8_t type;
 } Packed;
 

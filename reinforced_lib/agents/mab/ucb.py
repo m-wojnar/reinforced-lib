@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Tuple
 
 import gymnasium as gym
 import jax
@@ -160,7 +159,7 @@ class UCB(BaseAgent):
         state: UCBState,
         key: PRNGKey,
         c: Scalar
-    ) -> Tuple[UCBState, jnp.int32]:
+    ) -> jnp.int32:
         r"""
         UCB agent follows the policy
 
@@ -183,10 +182,11 @@ class UCB(BaseAgent):
 
         Returns
         -------
-        tuple[UCBState, jnp.int32]
-            Tuple containing the updated agent state and the selected action.
+        int
+            Selected action.
         """
 
         Q = state.R / state.N
         t = jnp.sum(state.N)
-        return state, jnp.argmax(Q + c * jnp.sqrt(jnp.log(t) / state.N))
+
+        return jnp.argmax(Q + c * jnp.sqrt(jnp.log(t) / state.N))

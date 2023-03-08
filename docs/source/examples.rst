@@ -178,7 +178,6 @@ will be of course :ref:`802.11ax <IEEE 802.11ax RA>`, so we import an appropriat
         ('n_successful', c_uint32),
         ('n_wifi', c_uint32),
         ('station_id', c_uint32),
-        ('mcs', c_uint8),
         ('type', c_uint8)
     ]
 
@@ -238,8 +237,7 @@ the previously defined environment and action structures.
                         'n_failed': data.env.n_failed,
                         'n_wifi': data.env.n_wifi,
                         'power': data.env.power,
-                        'cw': data.env.cw,
-                        'mcs': data.env.mcs
+                        'cw': data.env.cw
                     }
 
                     data.act.station_id = data.env.station_id
@@ -296,13 +294,14 @@ You can try running the following commands to test the Reinforced-lib rate adapt
 
 .. _gym_integration:
 
-***************************
-Gym environment integration
-***************************
+*********************************
+Gymnasium environment integration
+*********************************
 
 
-Our library supports defining RL environments in the OpenAI gym format. We want to show you how well our
-agents are suited to work with the gym environments using an example of a simple recommender system.
+Our library supports defining RL environments in the `Gymnasium <https://gymnasium.farama.org/>`_ (former OpenAI Gym)
+format. We want to show you how well our agents are suited to work with the Gymnasium environments using an example
+of a simple recommender system.
 
 
 Recommender system example

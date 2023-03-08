@@ -19,13 +19,10 @@ class ParticleFilterState(AgentState):
         Positions of the particles.
     logit_weights : array_like
         Unnormalized log weights of the particles.
-    last_measurement : float
-        Time of the last update.
     """
 
     positions: Array
     logit_weights: Array
-    last_measurement: Scalar
 
 
 def simple_resample(operands: Tuple[ParticleFilterState, PRNGKey]) -> ParticleFilterState:
@@ -48,8 +45,7 @@ def simple_resample(operands: Tuple[ParticleFilterState, PRNGKey]) -> ParticleFi
 
     return ParticleFilterState(
         positions=state.positions[positions_idx],
-        logit_weights=jnp.zeros_like(state.logit_weights),
-        last_measurement=state.last_measurement
+        logit_weights=jnp.zeros_like(state.logit_weights)
     )
 
 
@@ -103,12 +99,11 @@ def simple_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, *
 
     return ParticleFilterState(
         positions=state.positions + positions_update,
-        logit_weights=state.logit_weights,
-        last_measurement=state.last_measurement
+        logit_weights=state.logit_weights
     )
 
 
-def linear_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, time: Scalar) -> ParticleFilterState:
+def linear_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, delta_time: Scalar) -> ParticleFilterState:
     r"""
     Performs movement of the particle positions according to a normal distribution with :math:`\mu = 0` and
     :math:`\sigma = scale \cdot \Delta t`, where :math:`\Delta t` is the time elapsed since the last update.
@@ -121,8 +116,8 @@ def linear_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, t
         A PRNG key used as the random key.
     scale : float
         Scale of the random movement of particles. :math:`scale > 0`.
-    time : float
-        Current time.
+    delta_time : float
+        Time elapsed since the last update.
 
     Returns
     -------
@@ -130,10 +125,10 @@ def linear_transition(state: ParticleFilterState, key: PRNGKey, scale: Scalar, t
         Updated filter state.
     """
 
-    return simple_transition(state, key, scale * (time - state.last_measurement))
+    return simple_transition(state, key, scale * delta_time)
 
 
-def affine_transition(state: ParticleFilterState, key: PRNGKey, scale: Array, time: Scalar) -> ParticleFilterState:
+def affine_transition(state: ParticleFilterState, key: PRNGKey, scale: Array, delta_time: Scalar) -> ParticleFilterState:
     r"""
     Performs movement of the particle positions according to a normal distribution with :math:`\mu = 0` and
     :math:`\sigma = scale_0 \cdot \Delta t + scale_1`, where :math:`\Delta t` is the time elapsed since
@@ -147,8 +142,8 @@ def affine_transition(state: ParticleFilterState, key: PRNGKey, scale: Array, ti
         A PRNG key used as the random key.
     scale : array_like
         Scale of the random movement of particles. :math:`scale_0, scale_1 > 0`.
-    time : float
-        Current time.
+    delta_time : float
+        Time elapsed since the last update.
 
     Returns
     -------
@@ -156,7 +151,7 @@ def affine_transition(state: ParticleFilterState, key: PRNGKey, scale: Array, ti
         Updated filter state.
     """
 
-    return simple_transition(state, key, scale[0] * (time - state.last_measurement) + scale[1])
+    return simple_transition(state, key, scale[0] * delta_time + scale[1])
 
 
 class ParticleFilter:
@@ -177,7 +172,7 @@ class ParticleFilter:
         Shape of the particle positions array.
     weights_shape : array_like
         Shape of the particle weights array.
-    scale : float or array_like
+    scale : array_like
         Scale of the random movement of the particles.
     observation_fn : callable
         Function that updates particles based on an observation from the environment; takes two positional arguments:
@@ -202,7 +197,7 @@ class ParticleFilter:
         Function that updates the particle positions; takes four positional arguments:
             - ``state``: the state of the filter (`ParticleFilterState`).
             - ``key``: a PRNG key used as a random key (`PRNGKey`).
-            - ``scale``: scale of the random movement of the particles (`float or array_like`).
+            - ``scale``: scale of the random movement of the particles (`array_like`).
             - ``time``: the current time (`float`).
         
         Returns the updated state of the filter (`ParticleFilterState`).
@@ -273,8 +268,7 @@ class ParticleFilter:
 
         return ParticleFilterState(
             positions=initial_distribution_fn(key, positions_shape),
-            logit_weights=jnp.zeros(weights_shape),
-            last_measurement=0.0
+            logit_weights=jnp.zeros(weights_shape)
         )
 
     @staticmethod
@@ -286,7 +280,7 @@ class ParticleFilter:
             resample_fn: Callable[[Tuple[ParticleFilterState, PRNGKey]], ParticleFilterState],
             resample_criterion_fn: Callable[[ParticleFilterState], bool],
             transition_fn: Callable[[ParticleFilterState, PRNGKey, Numeric, Scalar], ParticleFilterState],
-            time: Scalar,
+            delta_time: Scalar,
             scale: Numeric
     ) -> ParticleFilterState:
         """
@@ -324,12 +318,12 @@ class ParticleFilter:
             Function that updates the particle positions; takes four positional arguments:
                 - ``state``: the state of the filter (`ParticleFilterState`).
                 - ``key``: a PRNG key used as a random key (`PRNGKey`).
-                - ``scale``: scale of the random movement of the particles (`float or array_like`).
+                - ``scale``: scale of the random movement of the particles (`array_like`).
                 - ``time``: the current time (`float`).
 
-        time : float
-            Current time.
-        scale : float or array_like
+        delta_time : float
+            Time difference between the current and the previous observation.
+        scale : array_like
             Scale of the random movement of the particles.
 
         Returns
@@ -342,19 +336,18 @@ class ParticleFilter:
 
         state = observation_fn(state, observation)
         state = jax.lax.cond(resample_criterion_fn(state), resample_fn, lambda op: op[0], (state, resample_key))
-        state = transition_fn(state, transition_key, scale, time)
+        state = transition_fn(state, transition_key, scale, delta_time)
 
         return ParticleFilterState(
             positions=state.positions,
-            logit_weights=state.logit_weights,
-            last_measurement=time
+            logit_weights=state.logit_weights
         )
 
     @staticmethod
     def sample(
             state: ParticleFilterState,
             key: PRNGKey
-    ) -> Tuple[ParticleFilterState, Numeric]:
+    ) -> Numeric:
         """
         Samples the estimated environment state from a categorical distribution with particle weights.
 
@@ -367,8 +360,8 @@ class ParticleFilter:
 
         Returns
         -------
-        tuple[ParticleFilterState, float or array_like]
-            Tuple containing the filter state and the estimated environment state.
+        array_like
+            Estimated environment state.
         """
 
-        return state, state.positions[jax.random.categorical(key, state.logit_weights)]
+        return state.positions[jax.random.categorical(key, state.logit_weights)]

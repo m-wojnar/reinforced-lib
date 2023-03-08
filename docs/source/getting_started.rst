@@ -69,16 +69,16 @@ environment. To learn more about extensions check out the :ref:`Custom extension
     env = gym.make('WifiSimulator-v1')
     env_state = env.reset()
 
-Next, we import OpenAI gym, make an environment, and reset it to an initial state.
+Next, we import Gymnasium, make an environment, and reset it to an initial state.
 
 .. code-block:: python
 
     terminated = False
     while not terminated:
         action = rlib.sample(**env_state)
-        env_state, reward, done, info = env.step(action)
+        env_state, reward, terminal, truncated, info = env.step(action)
 
-We can now define the training loop. The boolean ``terminated`` flag controls when to stop training the agent.
+We can now define the training loop. The boolean ``terminal`` and ``truncated`` flags control when to stop training the agent.
 Inside the loop, we call the ``rlib.sample()`` method which passes the environment observations to the agent, updates
 the agent's internal state and returns an action proposed by the agent's policy. We apply the returned action in the
 environment to get its altered state, reward, information whether this state is terminal, and some additional info.

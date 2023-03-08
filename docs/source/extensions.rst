@@ -16,6 +16,18 @@ BaseExt
     :members:
 
 
+Gymnasium
+---------
+
+
+.. currentmodule:: reinforced_lib.exts.gymnasium
+
+.. autoclass:: Gymnasium
+    :show-inheritance:
+    :members:
+
+
+
 IEEE 802.11ax RA
 ----------------
 

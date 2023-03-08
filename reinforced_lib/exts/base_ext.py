@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 
 import gymnasium as gym
 
-from reinforced_lib.exts.utils import test_box, test_discrete, test_multi_binary, test_multi_discrete, test_space
+from reinforced_lib.exts.utils import *
 from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpacesError, NoDefaultParameterError
 
 
@@ -20,6 +20,8 @@ class BaseExt(ABC):
         self._observation_functions: Dict[str, Callable] = {}
         self._parameter_functions: Dict[str, Callable] = {}
 
+        self._add_action_to_observations = False
+
         for name in dir(self):
             obj = getattr(self, name)
 
@@ -33,7 +35,7 @@ class BaseExt(ABC):
     @abstractmethod
     def observation_space(self) -> gym.spaces.Space:
         """
-        Basic observations of the environment in OpenAI Gym format.
+        Basic observations of the environment in Gymnasium format.
         """
 
         pass
@@ -54,7 +56,7 @@ class BaseExt(ABC):
         agent_type : type, optional
             Type of the selected agent.
         agent_parameter_space : gym.spaces.Dict, optional
-            Parameters required by the agents' constructor in OpenAI Gym format.
+            Parameters required by the agents' constructor in Gymnasium format.
         user_parameters : dict, optional
             Parameters provided by the user.
 
@@ -108,10 +110,21 @@ class BaseExt(ABC):
         Parameters
         ----------
         agent_update_space : gym.spaces.Space, optional
-            Observations required by the agent ``update`` function in OpenAI Gym format.
+            Observations required by the agent ``update`` function in Gymnasium format.
         agent_sample_space : gym.spaces.Space, optional
-            Observations required by the agent ``sample`` function in OpenAI Gym format.
+            Observations required by the agent ``sample`` function in Gymnasium format.
         """
+
+        if 'action' not in self._observation_functions and \
+                isinstance(self.observation_space, gym.spaces.Dict) and \
+                'action' not in self.observation_space:
+
+            if 'action' in agent_update_space.spaces:
+                self.observation_space['action'] = agent_update_space['action']
+            if 'action' in agent_sample_space.spaces:
+                self.observation_space['action'] = agent_sample_space['action']
+
+            self._add_action_to_observations = True
 
         self._update_space_transform = self._transform_spaces(self.observation_space, agent_update_space)
         self._sample_space_transform = self._transform_spaces(self.observation_space, agent_sample_space)
@@ -124,7 +137,7 @@ class BaseExt(ABC):
     ) -> Callable:
         """
         Creates function that transforms environment observations and values provided by the observation
-        functions to a given space.
+        functions to a given space. If the ``out_space`` is not defined, returns observations unchanged.
 
         Parameters
         ----------
@@ -149,6 +162,7 @@ class BaseExt(ABC):
             gym.spaces.Discrete: test_discrete,
             gym.spaces.MultiBinary: test_multi_binary,
             gym.spaces.MultiDiscrete: test_multi_discrete,
+            gym.spaces.Sequence: test_sequence,
             gym.spaces.Space: test_space
         }
 
@@ -356,15 +370,18 @@ class BaseExt(ABC):
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
         return tuple(func(*args, **kwargs) for func in observations)
 
-    def transform(self, *args, **kwargs) -> Tuple[Any, Any]:
+    def transform(self, *args, action: Any = None, **kwargs) -> Tuple[Any, Any]:
         """
         Transforms environment observations and values provided by the observation functions to
-        the agent observation and sample spaces.
+        the agent observation and sample spaces. Supplies action selected by the agent if it is
+        required by the agent and the extension is not capable of providing this value.
 
         Parameters
         ----------
         *args : tuple
             Environment observations.
+        action : any
+            Action selected by the agent.
         **kwargs : dict
             Environment observations.
 
@@ -373,5 +390,8 @@ class BaseExt(ABC):
         tuple[any, any]
             Agent update and sample observations.
         """
+
+        if self._add_action_to_observations:
+            kwargs['action'] = action
 
         return self._update_space_transform(*args, **kwargs), self._sample_space_transform(*args, **kwargs)

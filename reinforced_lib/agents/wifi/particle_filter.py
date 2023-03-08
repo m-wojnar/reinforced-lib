@@ -85,7 +85,7 @@ class ParticleFilter(BaseAgent):
             'action': gym.spaces.Discrete(self.n_mcs),
             'n_successful': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
             'n_failed': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
-            'time': gym.spaces.Box(0.0, jnp.inf, (1,)),
+            'delta_time': gym.spaces.Box(0.0, jnp.inf, (1,)),
             'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
             'cw': gym.spaces.Discrete(32767)
         })
@@ -93,7 +93,6 @@ class ParticleFilter(BaseAgent):
     @property
     def sample_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'time': gym.spaces.Box(0.0, jnp.inf, (1,)),
             'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
             'rates': gym.spaces.Box(0.0, jnp.inf, (self.n_mcs,))
         })
@@ -128,7 +127,7 @@ class ParticleFilter(BaseAgent):
             action: jnp.int32,
             n_successful: jnp.int32,
             n_failed: jnp.int32,
-            time: Scalar,
+            delta_time: Scalar,
             power: Scalar,
             cw: jnp.int32,
             scale: Scalar
@@ -160,8 +159,8 @@ class ParticleFilter(BaseAgent):
             Number of successful transmission attempts.
         n_failed : int
             Number of failed transmission attempts.
-        time : float
-            Current time [s].
+        delta_time : float
+            Time elapsed since the last transmission [s].
         power : float
             Power used prior to the transmission [dBm].
         cw : int
@@ -179,7 +178,7 @@ class ParticleFilter(BaseAgent):
             state=state,
             key=key,
             observation=(action, n_successful, n_failed, power, cw),
-            time=time,
+            delta_time=delta_time,
             scale=scale
         )
 
@@ -187,11 +186,10 @@ class ParticleFilter(BaseAgent):
     def sample(
             state: ParticleFilterState,
             key: PRNGKey,
-            time: Scalar,
             power: Scalar,
             rates: Array,
             pf: ParticleFilterBase
-    ) -> Tuple[ParticleFilterState, jnp.int32]:
+    ) -> jnp.int32:
         r"""
         The algorithm draws :math:`\theta` from the categorical distribution according to the particle positions
         and weights. Then it calculates the corresponding SINR value :math:`\gamma = \theta + P_{tx}`.
@@ -208,8 +206,6 @@ class ParticleFilter(BaseAgent):
             Current state of the agent.
         key : PRNGKey
             A PRNG key used as the random key.
-        time : float
-            Current time [s].
         power : float
             Power used during the transmission [dBm].
         rates : array_like
@@ -219,14 +215,14 @@ class ParticleFilter(BaseAgent):
 
         Returns
         -------
-        tuple[ParticleFilterState, int]
-            Tuple containing the updated agent state and the selected action.
+        int
+            Selected action.
         """
 
-        _, snr_sample = pf.sample(state, key)
+        snr_sample = pf.sample(state, key)
         p_s = ParticleFilter._success_probability(snr_sample + power)
 
-        return state, jnp.argmax(p_s * rates)
+        return jnp.argmax(p_s * rates)
 
     @staticmethod
     def _observation_fn(
@@ -258,8 +254,7 @@ class ParticleFilter(BaseAgent):
 
         return ParticleFilterState(
             positions=state.positions,
-            logit_weights=logit_weights - jnp.nanmax(logit_weights),
-            last_measurement=state.last_measurement
+            logit_weights=logit_weights - jnp.nanmax(logit_weights)
         )
 
     @staticmethod

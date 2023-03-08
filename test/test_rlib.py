@@ -12,7 +12,6 @@ if __name__ == '__main__':
 
     observations = {
         'time': 0.0,
-        'mcs': 0,
         'n_successful': 0,
         'n_failed': 0,
         'power': 16.0,
@@ -24,7 +23,6 @@ if __name__ == '__main__':
 
     observations = {
         'time': 0.0,
-        'mcs': 11,
         'n_successful': 10,
         'n_failed': 0,
         'power': 16.0,

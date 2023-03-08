@@ -8,8 +8,8 @@ class RecommenderSystemExt(BaseExt):
     """
     Basic recommender system extension where we can present the user a content in one of 7 categories
     (astronomy, nature, cooking, games, music, sports or technology) and we must infer which one of those is
-    he or she most interested in. The true interest of the user in 0-1 scale is stored in the `preferences`
-    dictionary attribute.
+    he or she most interested in. The true interest of the user in 0-1 scale is stored in the ``preferences``
+    dictionary attribute. Extension provides parameters and observations for MAB agents.
     """
 
     preferences = {

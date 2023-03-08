@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Tuple
+from typing import Any
 
 import gymnasium as gym
 from chex import dataclass, PRNGKey
@@ -37,7 +37,7 @@ class BaseAgent(ABC):
 
     @staticmethod
     @abstractmethod
-    def sample(state: AgentState, key: PRNGKey, *args, **kwargs) -> Tuple[AgentState, Any]:
+    def sample(state: AgentState, key: PRNGKey, *args, **kwargs) -> Any:
         """
         Selects the next action based on the current agent state.
         """
@@ -47,34 +47,35 @@ class BaseAgent(ABC):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         """
-        Parameter space of the agent constructor in OpenAI Gym format.
+        Parameter space of the agent constructor in Gymnasium format.
         Type of returned value is required to be ``gym.spaces.Dict`` or ``None``.
+        If ``None``, the user must provide all parameters manually.
         """
 
         return None
 
     @property
-    @abstractmethod
     def update_observation_space(self) -> gym.spaces.Space:
         """
-        Observation space of the ``update`` method in OpenAI Gym format.
+        Observation space of the ``update`` method in Gymnasium format.
+        If ``None``, the user must provide all parameters manually.
         """
 
-        pass
+        return None
 
     @property
-    @abstractmethod
     def sample_observation_space(self) -> gym.spaces.Space:
         """
-        Observation space of the ``sample`` method in OpenAI Gym format.
+        Observation space of the ``sample`` method in Gymnasium format.
+        If ``None``, the user must provide all parameters manually.
         """
 
-        pass
+        return None
 
     @property
     def action_space(self) -> gym.spaces.Space:
         """
-        Action space of the agent in OpenAI Gym format.
+        Action space of the agent in Gymnasium format.
         """
 
         raise NotImplementedError()

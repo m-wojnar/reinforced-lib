@@ -31,10 +31,10 @@ we can provide full access to JAX's JIT functionality, which boosts the agent's 
    env = gym.make('WifiSimulator-v1')
    env_state, _ = env.reset()
 
-   terminated = False
-   while not terminated:
+   terminal = False
+   while not terminal:
       action = rlib.sample(**env_state)
-      env_state, reward, terminated, *_ = env.step(action)
+      env_state, reward, terminal, *_ = env.step(action)
 
 
 Integrated IEEE 802.11ax support
@@ -107,6 +107,7 @@ API Documentation
 * :ref:`Agents <agents_page>`
 * :ref:`Extensions <extensions_page>`
 * :ref:`Logging <logging_page>`
+* :ref:`Utils <utils_page>`
 * :ref:`Exceptions <exceptions_page>`
 
 
@@ -130,6 +131,7 @@ API Documentation
    Agents <agents>
    Extensions <extensions>
    Logging <logging>
+   Utils <utils>
    Exceptions <exceptions>
 
 

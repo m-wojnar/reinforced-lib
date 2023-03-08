@@ -13,7 +13,7 @@ class ObservationInfo(NamedTuple):
     name : str
         Name of the provided observation.
     type : gym.spaces.Space
-        Type of the provided value in OpenAI Gym format.
+        Type of the provided value in Gymnasium format.
     """
 
     name: str
@@ -29,7 +29,7 @@ class ParameterInfo(NamedTuple):
     name : str
         Name of the provided parameter.
     type : gym.spaces.Space
-        Type of the provided parameter in OpenAI Gym format.
+        Type of the provided parameter in Gymnasium format.
     """
 
     name: str
@@ -45,7 +45,7 @@ def observation(observation_name: str = None, observation_type: gym.spaces.Space
     observation_name : str, optional
         Name of the provided observation.
     observation_type : gym.spaces.Space, optional
-        Type of the provided value in OpenAI Gym format.
+        Type of the provided value in Gymnasium format.
 
     Returns
     -------
@@ -70,7 +70,7 @@ def parameter(parameter_name: str = None, parameter_type: gym.spaces.Space = Non
     parameter_name : str, optional
         Name of the provided parameter.
     parameter_type : gym.spaces.Space, optional
-        Type of the provided parameter in OpenAI Gym format.
+        Type of the provided parameter in Gymnasium format.
 
     Returns
     -------
@@ -173,6 +173,38 @@ def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> boo
     return isinstance(a, gym.spaces.MultiDiscrete) and \
         np.array_equal(a.nvec, b.nvec) and \
         a.dtype == b.dtype
+
+
+def test_sequence(a: gym.spaces.Space, b: gym.spaces.Sequence) -> bool:
+    """
+    Tests if the space ``a`` is identical to the gym.space.Sequence space ``b``.
+
+    Parameters
+    ----------
+    a : gym.spaces.Space
+        Space ``a``.
+    b : gym.spaces.Sequence
+        Sequence space ``b``.
+
+    Returns
+    -------
+    bool
+        Result of the comparison.
+    """
+
+    if not isinstance(a, gym.spaces.Sequence):
+        return False
+
+    if isinstance(b, gym.spaces.Box):
+        return test_box(a, b)
+    elif isinstance(b, gym.spaces.Discrete):
+        return test_discrete(a, b)
+    elif isinstance(b, gym.spaces.MultiBinary):
+        return test_multi_binary(a, b)
+    elif isinstance(b, gym.spaces.MultiDiscrete):
+        return test_multi_discrete(a, b)
+    else:
+        return test_space(a, b)
 
 
 def test_space(a: gym.spaces.Space, b: gym.spaces.Space) -> bool:

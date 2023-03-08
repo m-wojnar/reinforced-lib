@@ -128,11 +128,11 @@ class ForbiddenLoggerSetError(ForbiddenOperationError):
 
 class IncorrectSpaceError(Exception):
     """
-    Raised when an unknown space is provided, for example a custom OpenAI Gym space.
+    Raised when an unknown space is provided, for example a custom Gymnasium space.
     """
 
     def __str__(self) -> str:
-        return 'Cannot find corresponding OpenAI Gym space.'
+        return 'Cannot find corresponding Gymnasium space.'
 
 
 class IncompatibleSpacesError(Exception):

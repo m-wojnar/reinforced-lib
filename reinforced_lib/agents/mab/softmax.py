@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Tuple
 
 import gymnasium as gym
 import jax
@@ -185,7 +184,7 @@ class Softmax(BaseAgent):
         state: SoftmaxState,
         key: PRNGKey,
         tau: Scalar
-    ) -> Tuple[SoftmaxState, jnp.int32]:
+    ) -> jnp.int32:
         r"""
         The policy of the Softmax algorithm is stochastic. The algorithm draws the next action from the softmax
         distribution. The probability of selecting action :math:`i` is calculated as:
@@ -204,8 +203,8 @@ class Softmax(BaseAgent):
 
         Returns
         -------
-        tuple[SoftmaxState, jnp.int32]
-            Tuple containing the updated agent state and the selected action.
+        int
+            Selected action.
         """
 
-        return state, jax.random.categorical(key, state.H / tau)
+        return jax.random.categorical(key, state.H / tau)

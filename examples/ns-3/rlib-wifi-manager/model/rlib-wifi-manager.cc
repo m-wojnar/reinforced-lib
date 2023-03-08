@@ -199,7 +199,6 @@ RLibWifiManager::UpdateState (RLibWifiRemoteStation *st, uint16_t nSuccessful, u
   env->n_successful = nSuccessful;
   env->n_wifi = m_nWifi;
   env->station_id = st->m_station_id;
-  env->mcs = st->m_mcs;
   env->type = 1;
 
   m_env->SetCompleted ();
