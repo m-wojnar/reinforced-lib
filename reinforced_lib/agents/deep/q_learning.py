@@ -125,7 +125,6 @@ class QLearning(BaseAgent):
         ))
         self.update = partial(
             self.update,
-            q_network=q_network,
             step_fn=jax.jit(partial(
                 gradient_step,
                 optimizer=optimizer,
@@ -151,7 +150,8 @@ class QLearning(BaseAgent):
             'experience_replay_batch_size': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
             'discount': gym.spaces.Box(0.0, 1.0, (1,)),
             'epsilon': gym.spaces.Box(0.0, 1.0, (1,)),
-            'epsilon_decay': gym.spaces.Box(0.0, 1.0, (1,))
+            'epsilon_decay': gym.spaces.Box(0.0, 1.0, (1,)),
+            'epsilon_min': gym.spaces.Box(0.0, 1.0, (1,))
         })
 
     @property
@@ -183,7 +183,7 @@ class QLearning(BaseAgent):
             epsilon: Scalar
     ) -> QLearningState:
         r"""
-        Initializes the Q-learning network, optimizer and experience replay buffer with given parameters.
+        Initializes the Q-network, optimizer and experience replay buffer with given parameters.
         First state of the environment is assumed to be a tensor of zeros.
 
         Parameters
@@ -286,7 +286,6 @@ class QLearning(BaseAgent):
             action: Array,
             reward: Scalar,
             terminal: jnp.bool_,
-            q_network: hk.TransformedWithState,
             step_fn: Callable,
             experience_replay: ExperienceReplay,
             experience_replay_steps: jnp.int32,
@@ -313,8 +312,6 @@ class QLearning(BaseAgent):
             The reward received by the agent.
         terminal : bool
             Whether the episode has terminated.
-        q_network : hk.TransformedWithState
-            The Q-network.
         step_fn : Callable
             The function that performs a single gradient step on the Q-network.
         experience_replay : ExperienceReplay

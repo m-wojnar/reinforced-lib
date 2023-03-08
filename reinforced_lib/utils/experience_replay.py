@@ -145,7 +145,7 @@ def experience_replay(
             rewards=buffer.rewards.at[buffer.ptr].set(reward),
             terminals=buffer.terminals.at[buffer.ptr].set(terminal),
             next_states=buffer.next_states.at[buffer.ptr].set(next_state),
-            size=buffer.size + 1,
+            size=jax.lax.min(buffer.size + 1, buffer_size),
             ptr=(buffer.ptr + 1) % buffer_size
         )
 
@@ -166,8 +166,7 @@ def experience_replay(
             Tuple containing the batch of states, actions, rewards, terminals and next states.
         """
 
-        choice_size = jnp.where(buffer.size < buffer_size, buffer.size, buffer_size)
-        idxs = jax.random.randint(key, shape=(batch_size,), minval=0, maxval=choice_size)
+        idxs = jax.random.randint(key, shape=(batch_size,), minval=0, maxval=buffer.size)
 
         states = buffer.states[idxs]
         actions = buffer.actions[idxs]
