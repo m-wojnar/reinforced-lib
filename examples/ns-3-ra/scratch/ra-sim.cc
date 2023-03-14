@@ -306,8 +306,8 @@ main (int argc, char *argv[])
                   << minGI << ',' << velocity << ',' << RngSeedManager::GetRun () << ',' << nWifi << ",{nWifiReal}";
 
   csvPrefix = csvPrefixStream.str ();
-  csvOutput << "wifiManager,lossModel,mobilityModel,channelWidth,minGI,"
-            << "velocity,seed,nWifi,nWifiReal,position,time,throughput" << std::endl;
+  std::string csvHeader = "wifiManager,lossModel,mobilityModel,channelWidth,minGI,"
+                          "velocity,seed,nWifi,nWifiReal,position,time,throughput\n";
 
   // Schedule measurements
   Simulator::Schedule (Seconds (warmupTime), &WarmupMeasurement, monitor);
@@ -369,7 +369,7 @@ main (int argc, char *argv[])
   std::string csvString = csvOutput.str ();
   csvString = std::regex_replace (csvString, std::regex ("\\{nWifiReal\\}"), std::to_string (nWifiReal));
 
-  std::cout << csvString;
+  std::cout << csvHeader << csvString;
 
   // Save file in CSV format
   if (!csvPath.empty ())

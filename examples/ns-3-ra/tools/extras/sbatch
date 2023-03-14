@@ -1,0 +1,41 @@
+#!/usr/bin/python3
+
+import os
+import subprocess
+import time
+from argparse import ArgumentParser
+
+
+if __name__ == '__main__':
+    args = ArgumentParser()
+    args.add_argument('-p', type=str)
+    args.add_argument('--array', type=str)
+    args.add_argument('--ntasks-per-node', type=int)
+    args, script_args = args.parse_known_args()
+
+    if args.array:
+        start, stop = tuple(map(int, args.array.split('-')))
+        array_ids = range(start, stop + 1)
+    else:
+        array_ids = range(1)
+
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    env = {
+        'PATH': f'{os.environ.get("PATH")}:{script_dir}', 
+        'HOME': os.path.expanduser('~')
+    }
+    if os.environ.get('TOOLS_DIR'):
+        env['TOOLS_DIR'] = os.environ.get('TOOLS_DIR')
+    if os.environ.get('RLIB_DIR'):
+        env['RLIB_DIR'] = os.environ.get('RLIB_DIR')
+    if os.environ.get('NS3_DIR'):
+        env['NS3_DIR'] = os.environ.get('NS3_DIR')
+    if os.environ.get('PYTHONPATH'):
+        env['PYTHONPATH'] = os.environ.get('PYTHONPATH')
+
+    for i in array_ids:
+        env['SLURM_ARRAY_TASK_ID'] = str(i)
+        output = subprocess.check_output(['bash'] + script_args, env=env)
+
+        with open(f'slurm_{int(time.time() * 1e6)}_{i}.out', 'wb') as file:
+            file.write(output)

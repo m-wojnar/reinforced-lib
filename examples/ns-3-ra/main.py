@@ -1,4 +1,3 @@
-import pathlib
 from argparse import ArgumentParser
 from ctypes import *
 from typing import Any, Dict
@@ -6,7 +5,8 @@ from typing import Any, Dict
 from py_interface import *
 
 from reinforced_lib import RLib
-from reinforced_lib.agents.mab import ThompsonSampling
+from reinforced_lib.agents.mab import *
+from reinforced_lib.agents.wifi import *
 from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
 
@@ -32,13 +32,17 @@ class Act(Structure):
     ]
 
 
+memblock_key = 2333
+memory_size = 128
+simulation = 'ra-sim'
+
+
 def run(
         ns3_args: Dict[str, Any],
-        mempool_key: int,
-        memblock_key: int,
-        mem_size: int,
-        simulation: str,
         ns3_path: str,
+        mempool_key: int,
+        agent_type: type,
+        agent_params: Dict[str, Any],
         seed: int
 ) -> None:
     """
@@ -48,16 +52,14 @@ def run(
     ----------
     ns3_args : dict
         Arguments passed to the ns-3 simulator.
-    mempool_key : int
-        Shared memory key.
-    memblock_key : int
-        Shared memory ID.
-    mem_size : int
-        Shared memory size in bytes.
-    simulation : str
-        Name of the selected simulation.
     ns3_path : str
         Path to the ns-3 location.
+    mempool_key : int
+        Shared memory key.
+    agent_type : type
+        Type of the selected agent.
+    agent_params : dict
+        Parameters of the agent.
     seed : int
         Number used to initialize the JAX and the ns-3 pseudo-random number generator.
 
@@ -70,11 +72,12 @@ def run(
     """
 
     rl = RLib(
-        agent_type=ThompsonSampling,
+        agent_type=agent_type,
+        agent_params=agent_params,
         ext_type=IEEE_802_11_ax_RA
     )
 
-    exp = Experiment(mempool_key, mem_size, simulation, ns3_path)
+    exp = Experiment(mempool_key, memory_size, simulation, ns3_path)
     var = Ns3AIRL(memblock_key, Env, Act)
 
     try:
@@ -109,6 +112,7 @@ def run(
 if __name__ == '__main__':
     args = ArgumentParser()
 
+    args.add_argument('--agent', required=True, type=str)
     args.add_argument('--area', default=40.0, type=float)
     args.add_argument('--channelWidth', default=20, type=int)
     args.add_argument('--csvPath', type=str)
@@ -118,7 +122,7 @@ if __name__ == '__main__':
     args.add_argument('--lossModel', default='LogDistance', type=str)
     args.add_argument('--mempoolKey', default=1234, type=int)
     args.add_argument('--minGI', default=3200, type=int)
-    args.add_argument('--mobilityModel', default='Distance', type=str)
+    args.add_argument('--mobilityModel', required=True, type=str)
     args.add_argument('--nodeSpeed', default=1.4, type=float)
     args.add_argument('--nodePause', default=20.0, type=float)
     args.add_argument('--ns3Path', required=True, type=str)
@@ -130,17 +134,24 @@ if __name__ == '__main__':
     args.add_argument('--warmupTime', default=2.0, type=float)
     args.add_argument('--wifiManagerName', default='RLib', type=str)
 
-    args = args.parse_args()
+    args = vars(args.parse_args())
 
-    ns3_args = vars(args)
-    ns3_args['RngRun'] = ns3_args['seed']
+    args['RngRun'] = args['seed']
+    agent = args.pop('agent')
 
-    ns3_path = ns3_args.pop('ns3Path')
-    mempool_key = ns3_args.pop('mempoolKey')
-    seed = ns3_args.pop('seed')
+    agent_type = {
+        'EGreedy': EGreedy,
+        'Softmax': Softmax,
+        'ThompsonSampling': ThompsonSampling,
+        'UCB': UCB,
+        'ParticleFilter': ParticleFilter
+    }
+    default_params = {
+        'EGreedy': {'e': 0.001, 'alpha': 0.5, 'optimistic_start': 32.0},
+        'Softmax': {'lr': 0.256, 'alpha': 0.5, 'tau': 1.0},
+        'ThompsonSampling': {'decay': 2.0},
+        'UCB': {'c': 16.0, 'gamma': 0.996},
+        'ParticleFilter': {'scale': 4.0, 'num_particles': 900}
+    }
 
-    memblock_key = 2333
-    memory_size = 128
-    simulation = 'ra-sim'
-
-    run(ns3_args, mempool_key, memblock_key, memory_size, simulation, ns3_path, seed)
+    run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], args.pop('seed'))
