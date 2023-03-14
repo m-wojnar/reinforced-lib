@@ -70,9 +70,6 @@ RLibWifiManager::DoCreateStation (void) const
 
   // Initialize new station
   auto env = m_env->EnvSetterCond ();
-  env->mcs = 0;
-  env->power = GetPhy ()->GetPowerDbm (GetDefaultTxPowerLevel ());
-  env->time = Simulator::Now ().GetSeconds ();
   env->type = 0;
   m_env->SetCompleted ();
 
@@ -150,12 +147,13 @@ RLibWifiManager::DoReportFinalDataFailed (WifiRemoteStation *station)
 }
 
 WifiTxVector
-RLibWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
+RLibWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint16_t allowedWidth)
 {
   NS_LOG_FUNCTION (this << st);
 
   auto station = static_cast<RLibWifiRemoteStation *> (st);
   WifiMode dataMode ("HeMcs" + std::to_string (station->m_mcs));
+  uint16_t channelWidth = std::min (allowedWidth, GetChannelWidthForTransmission (dataMode, GetChannelWidth (st)));
 
   return WifiTxVector (
       dataMode,
@@ -165,7 +163,7 @@ RLibWifiManager::DoGetDataTxVector (WifiRemoteStation *st)
       GetNumberOfAntennas (),
       m_nss,
       0,
-      GetChannelWidthForTransmission (dataMode, GetChannelWidth (st)),
+      channelWidth,
       GetAggregation (st));
 }
 

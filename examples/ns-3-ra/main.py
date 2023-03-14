@@ -37,7 +37,7 @@ def run(
         mempool_key: int,
         memblock_key: int,
         mem_size: int,
-        scenario: str,
+        simulation: str,
         ns3_path: str,
         seed: int
 ) -> None:
@@ -54,8 +54,8 @@ def run(
         Shared memory ID.
     mem_size : int
         Shared memory size in bytes.
-    scenario : str
-        Name of the selected scenario.
+    simulation : str
+        Name of the selected simulation.
     ns3_path : str
         Path to the ns-3 location.
     seed : int
@@ -74,7 +74,7 @@ def run(
         ext_type=IEEE_802_11_ax_RA
     )
 
-    exp = Experiment(mempool_key, mem_size, scenario, ns3_path)
+    exp = Experiment(mempool_key, mem_size, simulation, ns3_path)
     var = Ns3AIRL(memblock_key, Env, Act)
 
     try:
@@ -99,7 +99,7 @@ def run(
                     }
 
                     data.act.station_id = data.env.station_id
-                    data.act.mcs = rl.sample(data.env.station_id, **observation)
+                    data.act.mcs = rl.sample(agent_id=data.env.station_id, **observation)
 
         ns3_process.wait()
     finally:
@@ -109,48 +109,38 @@ def run(
 if __name__ == '__main__':
     args = ArgumentParser()
 
-    args.add_argument('--channel_width', default=20, type=int)
-    args.add_argument('--csv_path', type=str)
-    args.add_argument('--data_rate', default=125, type=int)
-    args.add_argument('--initial_position', default=0.0, type=float)
-    args.add_argument('--log_every', default=1.0, type=float)
-    args.add_argument('--mempool_key', default=1234, type=int)
-    args.add_argument('--min_gi', default=3200, type=int)
-    args.add_argument('--ns3_path', default=f'{pathlib.Path.home()}/ns-3-dev/', type=str)
-    args.add_argument('--n_wifi', default=1, type=int)
-    args.add_argument('--pcap_path', type=str)
+    args.add_argument('--area', default=40.0, type=float)
+    args.add_argument('--channelWidth', default=20, type=int)
+    args.add_argument('--csvPath', type=str)
+    args.add_argument('--dataRate', default=125, type=int)
+    args.add_argument('--initialPosition', default=0.0, type=float)
+    args.add_argument('--logEvery', default=1.0, type=float)
+    args.add_argument('--lossModel', default='LogDistance', type=str)
+    args.add_argument('--mempoolKey', default=1234, type=int)
+    args.add_argument('--minGI', default=3200, type=int)
+    args.add_argument('--mobilityModel', default='Distance', type=str)
+    args.add_argument('--nodeSpeed', default=1.4, type=float)
+    args.add_argument('--nodePause', default=20.0, type=float)
+    args.add_argument('--ns3Path', required=True, type=str)
+    args.add_argument('--nWifi', default=1, type=int)
+    args.add_argument('--pcapPath', type=str)
     args.add_argument('--seed', default=42, type=int)
-    args.add_argument('--simulation_time', default=20.0, type=float)
+    args.add_argument('--simulationTime', default=20.0, type=float)
     args.add_argument('--velocity', default=0.0, type=float)
-    args.add_argument('--warmup_time', default=2.0, type=float)
-    args.add_argument('--wifi_manager', default='ns3::RLibWifiManager', type=str)
-    args.add_argument('--wifi_manager_name', default='RLib', type=str)
+    args.add_argument('--warmupTime', default=2.0, type=float)
+    args.add_argument('--wifiManagerName', default='RLib', type=str)
 
     args = args.parse_args()
 
-    ns3_args = {
-        'channelWidth': args.channel_width,
-        'dataRate': args.data_rate,
-        'initialPosition': args.initial_position,
-        'logEvery': args.log_every,
-        'minGI': args.min_gi,
-        'nWifi': args.n_wifi,
-        'simulationTime': args.simulation_time,
-        'velocity': args.velocity,
-        'warmupTime': args.warmup_time,
-        'wifiManager': args.wifi_manager,
-        'wifiManagerName': args.wifi_manager_name,
-        'RngRun': args.seed,
-    }
+    ns3_args = vars(args)
+    ns3_args['RngRun'] = ns3_args['seed']
 
-    if args.csv_path:
-        ns3_args['csvPath'] = args.csv_path
-
-    if args.pcap_path:
-        ns3_args['pcapPath'] = args.pcap_path
+    ns3_path = ns3_args.pop('ns3Path')
+    mempool_key = ns3_args.pop('mempoolKey')
+    seed = ns3_args.pop('seed')
 
     memblock_key = 2333
     memory_size = 128
-    scenario = 'rlib-sim'
+    simulation = 'ra-sim'
 
-    run(ns3_args, args.mempool_key, memblock_key, memory_size, scenario, args.ns3_path, args.seed)
+    run(ns3_args, mempool_key, memblock_key, memory_size, simulation, ns3_path, seed)
