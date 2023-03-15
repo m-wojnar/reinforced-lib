@@ -153,7 +153,6 @@ RLibWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint16_t allowedWidth
 
   auto station = static_cast<RLibWifiRemoteStation *> (st);
   WifiMode dataMode ("HeMcs" + std::to_string (station->m_mcs));
-  uint16_t channelWidth = std::min (allowedWidth, GetChannelWidthForTransmission (dataMode, GetChannelWidth (st)));
 
   return WifiTxVector (
       dataMode,
@@ -163,7 +162,7 @@ RLibWifiManager::DoGetDataTxVector (WifiRemoteStation *st, uint16_t allowedWidth
       GetNumberOfAntennas (),
       m_nss,
       0,
-      channelWidth,
+      GetPhy ()->GetTxBandwidth (dataMode, allowedWidth),
       GetAggregation (st));
 }
 
@@ -177,10 +176,10 @@ RLibWifiManager::DoGetRtsTxVector (WifiRemoteStation *st)
       GetDefaultTxPowerLevel (),
       GetPreambleForTransmission (m_ctlMode.GetModulationClass (), GetShortPreambleEnabled ()),
       ConvertGuardIntervalToNanoSeconds (m_ctlMode, GetShortGuardIntervalSupported (st), NanoSeconds (GetGuardInterval (st))),
-      1,
-      1,
+      GetNumberOfAntennas (),
+      m_nss,
       0,
-      GetChannelWidthForTransmission (m_ctlMode, GetChannelWidth (st)),
+      GetChannelWidth (st),
       GetAggregation (st));
 }
 
