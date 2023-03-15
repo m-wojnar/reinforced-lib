@@ -44,6 +44,8 @@ class Softmax(BaseAgent):
         If non-zero, exponential recency-weighted average is used to update :math:`\bar{R}`. :math:`\alpha \in [0, 1]`.
     tau : float, default=1.0
         Temperature parameter. :math:`\tau > 0`.
+    multiplier : float, default=1.0
+        Multiplier for the reward. :math:`multiplier > 0`.
 
     References
     ----------
@@ -55,16 +57,18 @@ class Softmax(BaseAgent):
             n_arms: jnp.int32,
             lr: Scalar,
             alpha: Scalar = 0.0,
-            tau: Scalar = 1.0
+            tau: Scalar = 1.0,
+            multiplier: Scalar = 1.0
     ) -> None:
         assert lr > 0
         assert 0 <= alpha <= 1
         assert tau > 0
+        assert multiplier > 0
 
         self.n_arms = n_arms
 
         self.init = jax.jit(partial(self.init, n_arms=n_arms))
-        self.update = jax.jit(partial(self.update, lr=lr, alpha=alpha, tau=tau))
+        self.update = jax.jit(partial(self.update, lr=lr, alpha=alpha, tau=tau, multiplier=multiplier))
         self.sample = jax.jit(partial(self.sample, tau=tau))
 
     @staticmethod
@@ -128,7 +132,8 @@ class Softmax(BaseAgent):
         reward: Scalar,
         lr: Scalar,
         alpha: Scalar,
-        tau: Scalar
+        tau: Scalar,
+        multiplier: Scalar
     ) -> SoftmaxState:
         r"""
         Preferences :math:`H` can be learned by stochastic gradient ascent. The softmax algorithm searches
@@ -147,6 +152,9 @@ class Softmax(BaseAgent):
         :math:`\bar{R}_{t + 1} = \bar{R}_t + \alpha \lbrack R_t - \bar{R}_t \rbrack` with a constant
         step size :math:`\alpha`.
 
+        Reward :math:`R_t` is multiplied by ``multiplier`` before updating preferences to allow for
+        more flexible reward scaling while keeping the algorithm's properties.
+
         Parameters
         ----------
         state : SoftmaxState
@@ -163,12 +171,16 @@ class Softmax(BaseAgent):
             Exponential recency-weighted average factor (used when :math:`\alpha > 0`).
         tau : float
             Temperature parameter.
+        multiplier : float
+            Multiplier for the reward.
 
         Returns
         -------
         SoftmaxState
             Updated agent state.
         """
+
+        reward *= multiplier
 
         r = jnp.where(state.n == 1, reward, state.r)
         pi = jax.nn.softmax(state.H / tau)
