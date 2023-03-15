@@ -33,6 +33,20 @@ Deep Q-Learning
     :members:
 
 
+Deep Expected SARSA
+-------------------
+
+.. currentmodule:: reinforced_lib.agents.deep.expected_sarsa
+
+.. autoclass:: ExpectedSarsaState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: ExpectedSarsa
+    :show-inheritance:
+    :members:
+
+
 Epsilon-greedy
 --------------
 
