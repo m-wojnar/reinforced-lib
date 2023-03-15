@@ -64,7 +64,7 @@ run_rwpm() {
 }
 
 run_moving() {
-  N_REP=15
+  N_REP=20
   VELOCITY=$1
   SIM_TIME=$2
   INTERVAL=$3
