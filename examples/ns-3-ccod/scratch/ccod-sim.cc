@@ -284,8 +284,8 @@ void packetSent(Ptr<const Packet> packet);
 void PopulateARPcache();
 void recordHistory();
 void ScheduleNextStateRead(double envStepTime);
-void set_nodes(int channelWidth, int rng, int32_t simSeed, NodeContainer wifiStaNode, NodeContainer wifiApNode, YansWifiPhyHelper phy, WifiMacHelper mac, WifiHelper wifi, NetDeviceContainer &apDevice);
-void set_phy(int nWifi, int guardInterval, NodeContainer &wifiStaNode, NodeContainer &wifiApNode, YansWifiPhyHelper &phy);
+void set_nodes(int channelWidth, int guardInterval, int rng, int32_t simSeed, NodeContainer wifiStaNode, NodeContainer wifiApNode, YansWifiPhyHelper phy, WifiMacHelper mac, WifiHelper wifi, NetDeviceContainer &apDevice);
+void set_phy(int nWifi, NodeContainer &wifiStaNode, NodeContainer &wifiApNode, YansWifiPhyHelper &phy);
 void set_sim(bool tracing, bool dry_run, int warmup, YansWifiPhyHelper phy, NetDeviceContainer apDevice, int end_delay, Ptr<FlowMonitor> &monitor, FlowMonitorHelper &flowmon);
 void signalHandler(int signum);
 
@@ -384,7 +384,7 @@ main (int argc, char *argv[])
     NodeContainer wifiStaNode;
     NodeContainer wifiApNode;
     YansWifiPhyHelper phy;
-    set_phy(nWifi, guardInterval, wifiStaNode, wifiApNode, phy);
+    set_phy(nWifi, wifiStaNode, wifiApNode, phy);
 
     WifiMacHelper mac;
     WifiHelper wifi;
@@ -412,7 +412,7 @@ main (int argc, char *argv[])
     //                              "ControlMode", StringValue ("HtMcs7"));
 
     NetDeviceContainer apDevice;
-    set_nodes(channelWidth, rng, simSeed, wifiStaNode, wifiApNode, phy, mac, wifi, apDevice);
+    set_nodes(channelWidth, guardInterval, rng, simSeed, wifiStaNode, wifiApNode, phy, mac, wifi, apDevice);
 
     ScenarioFactory helper = ScenarioFactory(nWifi, wifiStaNode, wifiApNode, port, offeredLoad, history_length);
     wifiScenario = helper.getScenario(scenario);
@@ -511,9 +511,9 @@ jain_index(void)
     Ptr<Ipv4FlowClassifier> classifier = DynamicCast<Ipv4FlowClassifier>(flowmon.GetClassifier());
     std::map<FlowId, FlowMonitor::FlowStats> stats = monitor->GetFlowStats();
 
-    double nominator;
-    double denominator;
-    double n=0;
+    double nominator = 0;
+    double denominator = 0;
+    double n = 0;
     double station_id = 0;
     for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin(); i != stats.end(); ++i)
     {
@@ -605,7 +605,7 @@ ScheduleNextStateRead(double envStepTime)
 }
 
 void
-set_nodes(int channelWidth, int rng, int32_t simSeed, NodeContainer wifiStaNode, NodeContainer wifiApNode, YansWifiPhyHelper phy, WifiMacHelper mac, WifiHelper wifi, NetDeviceContainer &apDevice)
+set_nodes(int channelWidth, int guardInterval, int rng, int32_t simSeed, NodeContainer wifiStaNode, NodeContainer wifiApNode, YansWifiPhyHelper phy, WifiMacHelper mac, WifiHelper wifi, NetDeviceContainer &apDevice)
 {
     // Set the access point details
     Ssid ssid = Ssid("ns3-80211ax");
@@ -625,10 +625,11 @@ set_nodes(int channelWidth, int rng, int32_t simSeed, NodeContainer wifiStaNode,
 
     apDevice = wifi.Install(phy, mac, wifiApNode);
 
-    // Set channel width
-    Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/ChannelWidth", UintegerValue(channelWidth));
-    // Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/ChannelSettings",
-    //            StringValue ("{0, " + std::to_string (channelWidth) + ", BAND_5GHZ, 0}")); // ra-sim
+    // Set channel width and shortest GI
+    Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/HeConfiguration/GuardInterval",
+                TimeValue (NanoSeconds (guardInterval)));
+    Config::Set ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/ChannelSettings",
+                StringValue ("{0, " + std::to_string (channelWidth) + ", BAND_5GHZ, 0}"));
 
     // mobility.
     MobilityHelper mobility;
@@ -675,7 +676,7 @@ set_nodes(int channelWidth, int rng, int32_t simSeed, NodeContainer wifiStaNode,
 }
 
 void
-set_phy(int nWifi, int guardInterval, NodeContainer &wifiStaNode, NodeContainer &wifiApNode, YansWifiPhyHelper &phy)
+set_phy(int nWifi, NodeContainer &wifiStaNode, NodeContainer &wifiApNode, YansWifiPhyHelper &phy)
 {
     Ptr<MatrixPropagationLossModel> lossModel = CreateObject<MatrixPropagationLossModel>();
     lossModel->SetDefaultLoss(50);
@@ -687,12 +688,7 @@ set_phy(int nWifi, int guardInterval, NodeContainer &wifiStaNode, NodeContainer 
     Ptr<YansWifiChannel> chan = channel.Create();
     chan->SetPropagationLossModel(lossModel);
     chan->SetPropagationDelayModel(CreateObject<ConstantSpeedPropagationDelayModel>());
-
-    YansWifiPhyHelper phy;
     phy.SetChannel(chan);
-
-    // Set guard interval
-    phy.Set("GuardInterval", TimeValue(NanoSeconds(guardInterval)));
 }
 
 void
