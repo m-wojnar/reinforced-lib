@@ -28,6 +28,7 @@ struct FlowState
 
 /***** Functions declarations *****/
 
+void ChangePower (NodeContainer wifiStaNodes, uint8_t powerLevel);
 void CwCallback (std::string path, u_int32_t value, u_int8_t linkId);
 void InstallTrafficGenerator (Ptr<ns3::Node> sourceNode, Ptr<ns3::Node> sinkNode, uint32_t port,
                               DataRate offeredLoad, uint32_t packetSize, double simulationTime,
@@ -51,6 +52,7 @@ int
 main (int argc, char *argv[])
 {
   // Initialize constants
+  const double defaultPower = 16.0206;
   const double cooldownTime = 0.1;
   const uint32_t packetSize = 1500;
   const uint32_t nss = 1;
@@ -66,6 +68,8 @@ main (int argc, char *argv[])
   uint32_t dataRate = 125;
   uint32_t minGI = 3200;
   uint32_t nWifi = 1;
+  double deltaPower = 0.;
+  double intervalPower = 4.;
 
   std::string mobilityModel = "Distance";
   double area = 40.;
@@ -84,7 +88,9 @@ main (int argc, char *argv[])
   cmd.AddValue ("channelWidth", "Channel width (MHz)", channelWidth);
   cmd.AddValue ("csvPath", "Save an output file in the CSV format", csvPath);
   cmd.AddValue ("dataRate", "Aggregate traffic generators data rate (Mb/s)", dataRate);
+  cmd.AddValue ("deltaPower", "Power change (dBm)", deltaPower);
   cmd.AddValue ("initialPosition", "Initial position of the AP on X axis (m) [Distance mobility type]", initialPosition);
+  cmd.AddValue ("intervalPower", "Interval between power change (s)", intervalPower);
   cmd.AddValue ("logEvery", "Time interval between successive measurements (s)", logEvery);
   cmd.AddValue ("lossModel", "Propagation loss model to use [LogDistance, Nakagami]", lossModel);
   cmd.AddValue ("minGI", "Shortest guard interval (ns)", minGI);
@@ -105,6 +111,8 @@ main (int argc, char *argv[])
             << "Simulating an IEEE 802.11ax devices with the following settings:" << std::endl
             << "- frequency band: 5 GHz" << std::endl
             << "- loss model: " << lossModel << std::endl
+            << "- delta of power changes: " << deltaPower << " dBm" << std::endl
+            << "- mean interval of power changes: " << intervalPower << " s" << std::endl
             << "- max aggregated data rate: " << dataRate << " Mb/s" << std::endl
             << "- channel width: " << channelWidth << " Mhz" << std::endl
             << "- shortest guard interval: " << minGI << " ns" << std::endl
@@ -224,6 +232,11 @@ main (int argc, char *argv[])
 
   phy.SetChannel (channel.Create ());
 
+  // Configure two power levels
+  phy.Set ("TxPowerLevels", UintegerValue (2));
+  phy.Set ("TxPowerStart", DoubleValue (defaultPower - deltaPower));
+  phy.Set ("TxPowerEnd", DoubleValue (defaultPower));
+
   // Configure MAC layer
   WifiMacHelper mac;
   WifiHelper wifi;
@@ -300,14 +313,33 @@ main (int argc, char *argv[])
   Config::Connect ("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/PhyTxBegin",
                    MakeCallback (PowerCallback));
 
+  // Schedule all power changes
+  double time = warmupTime;
+  bool maxPower = false;
+
+  // Create random number generator with parameters: seed = global seed, stream = 2^63 + 5, substream/run = 1
+  // generator assures that the same sequence of random numbers is generated for each run
+  RngStream rng (RngSeedManager::GetSeed (), ((1ULL) << 63) + 5, 1);
+
+  while (time < warmupTime + simulationTime)
+    {
+      // Draw from the exponential distribution ( [ -1 / lambda * ln(x) ] ~ Exp[lambda] where x ~ Uniform[0, 1] )
+      time += -intervalPower * std::log (rng.RandU01 ());
+
+      // The interval between each change follows the exponential distribution
+      Simulator::Schedule (Seconds (time), &ChangePower, wifiStaNodes, maxPower);
+      maxPower = !maxPower;
+    }
+
   // Setup CSV output
   std::ostringstream csvPrefixStream;
   csvPrefixStream << wifiManagerName << ',' << lossModel << ',' << mobilityModel << ',' << channelWidth << ','
-                  << minGI << ',' << velocity << ',' << RngSeedManager::GetRun () << ',' << nWifi << ",{nWifiReal}";
+                  << minGI << ',' << velocity << ',' << deltaPower << ',' << intervalPower << ','
+                  << RngSeedManager::GetRun () << ',' << nWifi << ",{nWifiReal}";
 
   csvPrefix = csvPrefixStream.str ();
-  std::string csvHeader = "wifiManager,lossModel,mobilityModel,channelWidth,minGI,"
-                          "velocity,seed,nWifi,nWifiReal,position,time,throughput\n";
+  std::string csvHeader = "wifiManager,lossModel,mobilityModel,channelWidth,minGI,velocity,"
+                          "delta,interval,seed,nWifi,nWifiReal,position,time,throughput\n";
 
   // Schedule measurements
   Simulator::Schedule (Seconds (warmupTime), &WarmupMeasurement, monitor);
@@ -387,6 +419,18 @@ main (int argc, char *argv[])
 /***** Function definitions *****/
 
 void
+ChangePower (NodeContainer wifiStaNodes, uint8_t powerLevel)
+{
+  // Iter through STA nodes and change power for each node
+  for (auto node = wifiStaNodes.Begin (); node != wifiStaNodes.End (); ++node)
+    {
+      Config::Set ("/NodeList/" + std::to_string ((*node)->GetId ()) + "/DeviceList/*/$ns3::WifiNetDevice/"
+                       "RemoteStationManager/DefaultTxPowerLevel",
+                   UintegerValue (powerLevel));
+    }
+}
+
+void
 CwCallback (std::string path, u_int32_t value, u_int8_t linkId)
 {
   size_t start = 10; // the length of the "/NodeList/" string
@@ -415,7 +459,7 @@ InstallTrafficGenerator (Ptr<ns3::Node> sourceNode, Ptr<ns3::Node> sinkNode, uin
   Ptr<UniformRandomVariable> fuzz = CreateObject<UniformRandomVariable> ();
   fuzz->SetAttribute ("Min", DoubleValue (0.));
   fuzz->SetAttribute ("Max", DoubleValue (warmupTime / 2));
-  fuzz->SetStream (0);
+  fuzz->SetStream (6);
   double applicationsStart = fuzz->GetValue ();
 
   // Configure source and sink

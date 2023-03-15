@@ -12,7 +12,6 @@ DATA_FILE = os.path.join(TOOLS_DIR, 'outputs', 'all_results.csv')
 ALL_MANAGERS = {
     'Minstrel': 'Minstrel',
     'EGreedy': r'$\epsilon$-greedy',
-    'Softmax': 'Softmax',
     'ThompsonSampling': 'Thompson sampling',
     'UCB': 'Upper confidence bound',
     'Ideal': 'Ideal'
@@ -32,8 +31,8 @@ PLOT_PARAMS = {
     'axes.linewidth': 0.5,
     'grid.alpha': 0.42,
     'grid.linewidth': 0.5,
-    'legend.title_fontsize': 7,
-    'legend.fontsize': 7,
+    'legend.title_fontsize': 6,
+    'legend.fontsize': 6,
     'lines.linewidth': 0.5,
     'text.usetex': True,
     'xtick.major.width': 0.5,

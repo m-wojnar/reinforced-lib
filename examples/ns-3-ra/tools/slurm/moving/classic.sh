@@ -13,12 +13,11 @@ MANAGER_NAME=$3
 VELOCITY=$4
 SIM_TIME=$5
 INTERVAL=$6
+LOSS_MODEL=$7
 
 SEED=$(( SEED_SHIFT + SLURM_ARRAY_TASK_ID ))
 
 CSV_PATH="$TOOLS_DIR/outputs/moving_${MANAGER_NAME}_v${VELOCITY}_s${SEED}.csv"
-
 WARMUP_TIME=5
-LOSS_MODEL="LogDistance"
 
 ./ns3.37-ra-sim-optimized --wifiManager="$MANAGER" --wifiManagerName="$MANAGER_NAME" --velocity="$VELOCITY" --simulationTime="$SIM_TIME" --warmupTime="$WARMUP_TIME" --logEvery="$INTERVAL" --lossModel="$LOSS_MODEL" --RngRun="$SEED" --csvPath="$CSV_PATH"
