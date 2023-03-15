@@ -141,6 +141,7 @@ if __name__ == '__main__':
 
     agent_type = {
         'EGreedy': EGreedy,
+        'Exp3': Exp3,
         'Softmax': Softmax,
         'ThompsonSampling': ThompsonSampling,
         'UCB': UCB,
@@ -148,6 +149,7 @@ if __name__ == '__main__':
     }
     default_params = {
         'EGreedy': {'e': 0.001, 'alpha': 0.5, 'optimistic_start': 32.0},
+        'Exp3': {'gamma': 0.15},
         'Softmax': {'lr': 0.256, 'alpha': 0.5, 'tau': 1.0},
         'ThompsonSampling': {'decay': 2.0},
         'UCB': {'c': 16.0, 'gamma': 0.996},

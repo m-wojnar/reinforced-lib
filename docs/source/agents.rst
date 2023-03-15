@@ -47,6 +47,20 @@ Epsilon-greedy
     :members:
 
 
+Exp3
+----
+
+.. currentmodule:: reinforced_lib.agents.mab.exp3
+
+.. autoclass:: Exp3State
+    :show-inheritance:
+    :members:
+
+.. autoclass:: Exp3
+    :show-inheritance:
+    :members:
+
+
 Particle Filter (Core)
 ----------------------
 

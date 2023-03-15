@@ -99,6 +99,14 @@ class IEEE_802_11_ax_RA(BaseExt):
     def default_power(self) -> float:
         return 16.0206
 
+    @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    def min_reward(self) -> float:
+        return 0
+
+    @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    def max_reward(self) -> int:
+        return self._wifi_modes_rates.max()
+
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
     def obs_space_shape(self) -> tuple:
         return tuple((6,))
