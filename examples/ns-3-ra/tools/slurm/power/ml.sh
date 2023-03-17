@@ -2,7 +2,7 @@
 
 RLIB_DIR="${RLIB_DIR:=$HOME/reinforced-lib/examples/ns-3-ra}"
 TOOLS_DIR="${TOOLS_DIR:=$HOME/reinforced-lib/examples/ns-3-ra/tools}"
-NS3_DIR="${NS3_DIR:=$HOME/ns-3.37}"
+NS3_DIR="${NS3_DIR:=$HOME/ns-3.38}"
 
 cd "$RLIB_DIR"
 

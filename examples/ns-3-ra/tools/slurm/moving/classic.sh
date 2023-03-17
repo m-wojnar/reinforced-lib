@@ -1,6 +1,6 @@
 #!/usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -l
 
-NS3_DIR="${NS3_DIR:=$HOME/ns-3.37}"
+NS3_DIR="${NS3_DIR:=$HOME/ns-3.38}"
 TOOLS_DIR="${TOOLS_DIR:=$HOME/reinforced-lib/examples/ns-3-ra/tools}"
 
 cd "$NS3_DIR"
@@ -20,4 +20,4 @@ SEED=$(( SEED_SHIFT + SLURM_ARRAY_TASK_ID ))
 CSV_PATH="$TOOLS_DIR/outputs/moving_${MANAGER_NAME}_v${VELOCITY}_s${SEED}.csv"
 WARMUP_TIME=5
 
-./ns3.37-ra-sim-optimized --wifiManager="$MANAGER" --wifiManagerName="$MANAGER_NAME" --velocity="$VELOCITY" --simulationTime="$SIM_TIME" --warmupTime="$WARMUP_TIME" --logEvery="$INTERVAL" --lossModel="$LOSS_MODEL" --RngRun="$SEED" --csvPath="$CSV_PATH"
+./ns3.38-ra-sim-optimized --wifiManager="$MANAGER" --wifiManagerName="$MANAGER_NAME" --velocity="$VELOCITY" --simulationTime="$SIM_TIME" --warmupTime="$WARMUP_TIME" --logEvery="$INTERVAL" --lossModel="$LOSS_MODEL" --RngRun="$SEED" --csvPath="$CSV_PATH"
