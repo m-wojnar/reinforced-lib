@@ -280,7 +280,7 @@ bool act(float action);
 void installTrafficGenerator(Ptr<ns3::Node> fromNode, Ptr<ns3::Node> toNode, int port, string offeredLoad, double startTime);
 double jain_index(void);
 void packetReceived(Ptr<const Packet> packet);
-void packetSent(Ptr<const Packet> packet);
+void packetSent(Ptr<const Packet> packet, double txPowerW);
 void PopulateARPcache();
 void recordHistory();
 void ScheduleNextStateRead(double envStepTime);
@@ -428,7 +428,7 @@ main (int argc, char *argv[])
     wifiScenario->installScenario(simulationTime + end_delay + envStepTime, envStepTime, MakeCallback(&packetReceived));
 
     // Config::ConnectWithoutContext("/NodeList/0/ApplicationList/*/$ns3::OnOffApplication/Tx", MakeCallback(&packetSent));
-    Config::ConnectWithoutContext("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/PhyTxBegin", MakeCallback(&packetSent));
+    Config::ConnectWithoutContext("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Phy/PhyTxBegin", MakeCallback(packetSent));
 
     wifiScenario->PopulateARPcache();
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
@@ -438,7 +438,7 @@ main (int argc, char *argv[])
 
     double flowThr;
     float res =  g_rxPktNum * (1500 - 20 - 8 - 8) * 8.0 / 1024 / 1024;
-    printf("Sent mbytes: %.2f\tThroughput: %.3f", res, res/simulationTime);
+    printf("Sent mbytes: %.2f\tThroughput: %.3f\n", res, res/simulationTime);
     ofstream myfile;
     myfile.open(outputCsv, ios::app);
 
@@ -539,7 +539,7 @@ packetReceived(Ptr<const Packet> packet)
 }
 
 void
-packetSent(Ptr<const Packet> packet)
+packetSent(Ptr<const Packet> packet, double txPowerW)
 {
     g_txPktNum++;
 }
