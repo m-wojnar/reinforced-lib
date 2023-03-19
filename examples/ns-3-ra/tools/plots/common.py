@@ -12,8 +12,8 @@ DATA_FILE = os.path.join(TOOLS_DIR, 'outputs', 'all_results.csv')
 ALL_MANAGERS = {
     'Minstrel': 'Minstrel',
     'EGreedy': r'$\epsilon$-greedy',
-    'ThompsonSampling': 'Thompson sampling',
     'UCB': 'Upper confidence bound',
+    'ThompsonSampling': 'Thompson sampling',
     'Ideal': 'Ideal'
 }
 MIN_REPS = 5
