@@ -7,6 +7,7 @@ from typing import Any, Dict
 from py_interface import *
 
 from reinforced_lib import RLib
+from reinforced_lib.agents.deep import *
 from reinforced_lib.agents.mab import *
 from reinforced_lib.agents.wifi import *
 from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
@@ -15,28 +16,21 @@ from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 class Env(Structure):
     _pack_ = 1
     _fields_ = [
-        ('power', c_double),
-        ('time', c_double),
-        ('cw', c_uint32),
-        ('n_failed', c_uint32),
-        ('n_successful', c_uint32),
-        ('n_wifi', c_uint32),
-        ('station_id', c_uint32),
-        ('type', c_uint8)
+        ('observation', c_uint32),
+        ('reward', c_uint32)
     ]
 
 
 class Act(Structure):
     _pack_ = 1
     _fields_ = [
-        ('station_id', c_uint32),
-        ('mcs', c_uint8)
+        ('action', c_uint32)
     ]
 
 
 memblock_key = 2333
 memory_size = 128
-simulation = 'ra-sim'
+simulation = 'ccod-sim'
 
 
 def run(
@@ -73,13 +67,7 @@ def run(
        Association for Computing Machinery.
     """
 
-    rl = RLib(
-        agent_type=agent_type,
-        agent_params=agent_params,
-        ext_type=IEEE_802_11_ax_RA
-    )
-
-    exp = Experiment(mempool_key, memory_size, simulation, ns3_path)
+    exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
     var = Ns3AIRL(memblock_key, Env, Act)
 
     try:
@@ -90,21 +78,12 @@ def run(
                 if data is None:
                     break
 
-                if data.env.type == 0:
-                    data.act.station_id = rl.init(seed)
+                observation = {
+                    'observation': data.env.observation,
+                    'reward': data.env.reward
+                }
 
-                elif data.env.type == 1:
-                    observation = {
-                        'time': data.env.time,
-                        'n_successful': data.env.n_successful,
-                        'n_failed': data.env.n_failed,
-                        'n_wifi': data.env.n_wifi,
-                        'power': data.env.power,
-                        'cw': data.env.cw
-                    }
-
-                    data.act.station_id = data.env.station_id
-                    data.act.mcs = rl.sample(agent_id=data.env.station_id, **observation)
+                data.act.action = 4
 
         ns3_process.wait()
     finally:
@@ -114,31 +93,30 @@ def run(
 if __name__ == '__main__':
     args = ArgumentParser()
 
+    # Python arguments
     args.add_argument('--agent', required=True, type=str)
-    args.add_argument('--area', default=40.0, type=float)
-    args.add_argument('--channelWidth', default=20, type=int)
-    args.add_argument('--csvPath', type=str)
-    args.add_argument('--dataRate', default=125, type=int)
-    args.add_argument('--initialPosition', default=0.0, type=float)
-    args.add_argument('--logEvery', default=1.0, type=float)
-    args.add_argument('--lossModel', default='LogDistance', type=str)
     args.add_argument('--mempoolKey', default=1234, type=int)
-    args.add_argument('--minGI', default=3200, type=int)
-    args.add_argument('--mobilityModel', required=True, type=str)
-    args.add_argument('--nodeSpeed', default=1.4, type=float)
-    args.add_argument('--nodePause', default=20.0, type=float)
     args.add_argument('--ns3Path', required=True, type=str)
-    args.add_argument('--nWifi', default=1, type=int)
-    args.add_argument('--pcapPath', type=str)
-    args.add_argument('--seed', default=42, type=int)
-    args.add_argument('--simulationTime', default=20.0, type=float)
-    args.add_argument('--velocity', default=0.0, type=float)
-    args.add_argument('--warmupTime', default=2.0, type=float)
-    args.add_argument('--wifiManagerName', default='RLib', type=str)
+    args.add_argument('--pythonSeed', default=42, type=int)
+
+    # ns3 arguments
+    args.add_argument('--agentType', default='discrete', type=str)
+    args.add_argument('--CW', default=0, type=int)
+    args.add_argument('--dryRun', default=False, action='store_true')
+    args.add_argument('--envStepTime', default=0.1, type=float)
+    args.add_argument('--historyLength', default=20, type=int)
+    args.add_argument('--nonZeroStart', default=False, action='store_true')
+    args.add_argument('--nWifi', default=5, type=int)
+    args.add_argument('--rng', default=42, type=int)
+    args.add_argument('--scenario', default='basic', type=str)
+    args.add_argument('--seed', default=-1, type=int)
+    args.add_argument('--simTime', default=10.0, type=float)
+    args.add_argument('--tracing', default=False, action='store_true')
+    args.add_argument('--verbose', default=False, action='store_true')
 
     args = vars(args.parse_args())
 
-    args['RngRun'] = args['seed']
+    args['RngRun'] = args['pythonSeed']
     agent = args.pop('agent')
 
     agent_type = {
@@ -147,7 +125,7 @@ if __name__ == '__main__':
         'Softmax': Softmax,
         'ThompsonSampling': ThompsonSampling,
         'UCB': UCB,
-        'ParticleFilter': ParticleFilter
+        'ParticleFilter': ParticleFilter,
     }
     default_params = {
         'EGreedy': {'e': 0.001, 'alpha': 0.5, 'optimistic_start': 32.0},
@@ -158,4 +136,4 @@ if __name__ == '__main__':
         'ParticleFilter': {'scale': 4.0, 'num_particles': 900}
     }
 
-    run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], args.pop('seed'))
+    run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], args.pop('pythonSeed'))

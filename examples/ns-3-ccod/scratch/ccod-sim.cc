@@ -26,13 +26,31 @@
 #include "ns3/wifi-net-device.h"
 #include "ns3/yans-wifi-channel.h"
 #include "ns3/yans-wifi-helper.h"
-// #include "ns3/opengym-module.h"
-//#include "ns3/csma-module.h"
+#include "ns3/ns3-ai-module.h"
+
+#define DEFAULT_MEMBLOCK_KEY 2333
 
 using namespace std;
 using namespace ns3;
 
-NS_LOG_COMPONENT_DEFINE("OpenGym");
+// NS_LOG_COMPONENT_DEFINE("OpenGym");
+
+/***** ns3-ai structures *****/
+
+// ns3-ai structures
+
+struct Env
+{
+    uint32_t observation;
+    uint32_t reward;
+} Packed;
+
+struct Act
+{
+  uint32_t action;
+} Packed;
+
+Ns3AIRL<Env, Act> * m_env = new Ns3AIRL<Env, Act> (DEFAULT_MEMBLOCK_KEY);
 
 /***** scenario.h *****/
 
@@ -276,12 +294,10 @@ void ConvergenceScenario::installScenario(double simulationTime, double envStepT
 
 /***** Functions declarations *****/
 
-bool act(float action);
-void installTrafficGenerator(Ptr<ns3::Node> fromNode, Ptr<ns3::Node> toNode, int port, string offeredLoad, double startTime);
+bool execute_action(float action);
 double jain_index(void);
 void packetReceived(Ptr<const Packet> packet);
 void packetSent(Ptr<const Packet> packet, double txPowerW);
-void PopulateARPcache();
 void recordHistory();
 void ScheduleNextStateRead(double envStepTime);
 void set_nodes(int channelWidth, int guardInterval, int rng, int32_t simSeed, NodeContainer wifiStaNode, NodeContainer wifiApNode, YansWifiPhyHelper phy, WifiMacHelper mac, WifiHelper wifi, NetDeviceContainer &apDevice);
@@ -293,14 +309,14 @@ void signalHandler(int signum);
 
 double envStepTime = 0.1;
 double simulationTime = 10; //seconds
-double current_time = 0.0;
+// double current_time = 0.0;
 bool verbose = false;
 int end_delay = 0;
 bool dry_run = false;
 
 Ptr<FlowMonitor> monitor;
 FlowMonitorHelper flowmon;
-ofstream outfile ("scratch/linear-mesh/CW_data.csv", fstream::out);
+ofstream outfile ("CW_data.csv", fstream::out);
 
 uint32_t CW = 0;
 
@@ -344,31 +360,36 @@ main (int argc, char *argv[])
     outfile << "SimulationTime,CW" << endl;
 
     CommandLine cmd;
-    cmd.AddValue("CW", "Value of Contention Window", CW);
-    cmd.AddValue("historyLength", "Length of history window", history_length);
-    cmd.AddValue("nWifi", "Number of wifi 802.11ax STA devices", nWifi);
-    cmd.AddValue("verbose", "Tell echo applications to log if true", verbose);
-    cmd.AddValue("tracing", "Enable pcap tracing", tracing);
-    cmd.AddValue("rng", "Number of RngRun", rng);
-    cmd.AddValue("simTime", "Simulation time in seconds. Default: 10s", simulationTime);
-    cmd.AddValue("envStepTime", "Step time in seconds. Default: 0.1s", envStepTime);
     cmd.AddValue("agentType", "Type of agent actions: discrete, continuous", type);
-    cmd.AddValue("nonZeroStart", "Start only after history buffer is filled", non_zero_start);
-    cmd.AddValue("scenario", "Scenario for analysis: basic, convergence, reaction", scenario);
+    cmd.AddValue("CW", "Value of Contention Window", CW);
     cmd.AddValue("dryRun", "Execute scenario with BEB and no agent interaction", dry_run);
+    cmd.AddValue("envStepTime", "Step time in seconds. Default: 0.1s", envStepTime);
+    cmd.AddValue("historyLength", "Length of history window", history_length);
+    cmd.AddValue("nonZeroStart", "Start only after history buffer is filled", non_zero_start);
+    cmd.AddValue("nWifi", "Number of wifi 802.11ax STA devices", nWifi);
+    cmd.AddValue("rng", "Number of RngRun", rng);
+    cmd.AddValue("scenario", "Scenario for analysis: basic, convergence, reaction", scenario);
     cmd.AddValue("seed", "Random seed", simSeed);
+    cmd.AddValue("simTime", "Simulation time in seconds. Default: 10s", simulationTime);
+    cmd.AddValue("tracing", "Enable pcap tracing", tracing);
+    cmd.AddValue("verbose", "Tell echo applications to log if true", verbose);
 
     cmd.Parse(argc, argv);
     // history_length*=2;
 
-    NS_LOG_UNCOND("Ns3Env parameters:");
-    NS_LOG_UNCOND("--nWifi: " << nWifi);
-    NS_LOG_UNCOND("--simulationTime: " << simulationTime);
-    NS_LOG_UNCOND("--envStepTime: " << envStepTime);
-    NS_LOG_UNCOND("--seed: " << simSeed);
-    NS_LOG_UNCOND("--agentType: " << type);
-    NS_LOG_UNCOND("--scenario: " << scenario);
-    NS_LOG_UNCOND("--dryRun: " << dry_run);
+    cout << endl
+         << "Ns3Env parameters:" << endl
+         << "--agentType: " << type << endl
+         << "--dryRun: " << dry_run << endl
+         << "--envStepTime: " << envStepTime << endl
+         << "--nonZeroStart: " << non_zero_start << endl
+         << "--nWifi: " << nWifi << endl
+         << "--scenario: " << scenario << endl
+         << "--seed: " << simSeed << endl
+         << "--simulationTime: " << simulationTime << endl << endl;
+    
+    // Set the ns3-ai operation lock
+    m_env->SetCond(2, 0);
 
     if (verbose)
     {
@@ -438,7 +459,7 @@ main (int argc, char *argv[])
 
     double flowThr;
     float res =  g_rxPktNum * (1500 - 20 - 8 - 8) * 8.0 / 1024 / 1024;
-    printf("Sent mbytes: %.2f\tThroughput: %.3f\n", res, res/simulationTime);
+    cout << "Sent mbytes: " << res << "\tThroughput: " << res/simulationTime << endl;
     ofstream myfile;
     myfile.open(outputCsv, ios::app);
 
@@ -453,14 +474,14 @@ main (int argc, char *argv[])
         auto tm = *std::localtime(&time);
         Ipv4FlowClassifier::FiveTuple t = classifier->FindFlow(i->first);
         flowThr = i->second.rxBytes * 8.0 / simulationTime / 1000 / 1000;
-        NS_LOG_UNCOND("Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ")\tThroughput: " << flowThr << " Mbps\tTime: " << i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds() << " s\tRx packets " << i->second.rxPackets);
+        cout << "Flow " << i->first << " (" << t.sourceAddress << " -> " << t.destinationAddress << ")\tThroughput: " << flowThr << " Mbps\tTime: " << i->second.timeLastRxPacket.GetSeconds() - i->second.timeFirstTxPacket.GetSeconds() << " s\tRx packets " << i->second.rxPackets << endl;
         myfile << std::put_time(&tm, "%Y-%m-%d %H:%M") << "," << CW << "," << nWifi << "," << RngSeedManager::GetRun() << "," << t.sourceAddress << "," << t.destinationAddress << "," << flowThr;
         myfile << std::endl;
     }
     myfile.close();
 
     Simulator::Destroy();
-    NS_LOG_UNCOND("Packets registered by handler: " << g_rxPktNum << " Packets" << endl);
+    cout << "Packets registered by handler: " << g_rxPktNum << " Packets" << endl;
 
     return 0;
 }
@@ -468,7 +489,7 @@ main (int argc, char *argv[])
 /***** Function definitions *****/
 
 bool
-act(float action)
+execute_action(float action)
 {
     if (verbose)
         NS_LOG_UNCOND("Action executed: " << action);
@@ -495,7 +516,7 @@ act(float action)
     uint32_t max_cw = 1024;
 
     CW = min(max_cw, max(CW, min_cw));
-    outfile << current_time << "," << CW << endl;
+    outfile << Simulator::Now().GetSeconds() << "," << CW << endl;
 
     if(!dry_run){
         Config::Set("/$ns3::NodeListPriv/NodeList/*/$ns3::Node/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::RegularWifiMac/BE_Txop/$ns3::QosTxop/MinCw", UintegerValue(CW));
@@ -518,7 +539,7 @@ jain_index(void)
     for (std::map<FlowId, FlowMonitor::FlowStats>::const_iterator i = stats.begin(); i != stats.end(); ++i)
     {
         flowThr = i->second.rxBytes;
-        flowThr /= wifiScenario->getStationUptime(station_id, current_time);
+        flowThr /= wifiScenario->getStationUptime(station_id, Simulator::Now ().GetSeconds ());
         if(flowThr>0){
             nominator += flowThr;
             denominator += flowThr*flowThr;
@@ -553,7 +574,7 @@ recordHistory()
     static uint32_t last_tx = 0;            // Previously transmitted packets
     static uint32_t calls = 0;              // Number of calls to this function
     calls++;
-    current_time += envStepTime;
+    // current_time += envStepTime;
 
     float received = g_rxPktNum - last_rx;  // Received packets since the last observation
     float sent = g_txPktNum - last_tx;      // Sent (...)
@@ -587,20 +608,26 @@ recordHistory()
     }
 }
 
-// TODO Replace with ns3-ai communication
+// TODO Replace with proper observations
 void
 ScheduleNextStateRead(double envStepTime)
 {
     Simulator::Schedule(Seconds(envStepTime), &ScheduleNextStateRead, envStepTime);
     
     // Here is the ns3-ai communication with python agent
-    // 1. push history to DQN agent as observation
-    // 2. push reward thr to DQN agent
-    // 3. get action from DQN agent
+        // 1. push history and reward to DQN agent as observation
+    auto env = m_env->EnvSetterCond();
+    env->observation = 42;
+    env->reward = 1;
+    m_env->SetCompleted();
 
-    // Mock action
-    static uint32_t current_action = 0;
-    act((float) current_action);
+        // 2. get action from DQN agent
+    auto act = m_env->ActionGetterCond();
+    uint32_t current_action = act->action;
+    m_env->GetCompleted();
+
+    // Act according to the retrived action
+    execute_action((float) current_action);
     current_action = (current_action + 1) % 6;
 }
 
@@ -725,7 +752,7 @@ set_sim(bool tracing, bool dry_run, int warmup, YansWifiPhyHelper phy, NetDevice
 
     Simulator::Stop(Seconds(simulationTime + end_delay + 1.0 + envStepTime*(history_length+1)));
 
-    NS_LOG_UNCOND("Simulation started");
+    cout << "Simulation started..." << endl;
     Simulator::Run();
 }
 
