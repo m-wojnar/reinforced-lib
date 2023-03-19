@@ -65,9 +65,9 @@ class ExpectedSarsa(BaseAgent):
     experience_replay_steps : jnp.int32, default=5
         Number of experience replay steps per update.
     discount : Scalar, default=0.99
-        Discount factor.
+        Discount factor. :math:`\gamma = 0.0` means no discount, :math:`\gamma = 1.0` means infinite discount. :math:`0 \leq \gamma \leq 1`
     tau : Scalar, default=1.0
-        Temperature parameter.
+        Temperature parameter. :math:`\tau = 0.0` means no exploration, :math:`\tau = \infty` means infinite exploration. :math:`\tau > 0`
     """
 
     def __init__(
@@ -204,9 +204,9 @@ class ExpectedSarsa(BaseAgent):
     def loss_fn(
             params: hk.Params,
             key: PRNGKey,
-            state: hk.State,
+            net_state: hk.State,
             params_target: hk.Params,
-            state_target: hk.State,
+            net_state_target: hk.State,
             batch: Tuple,
             q_network: hk.TransformedWithState,
             discount: Scalar,
@@ -224,11 +224,11 @@ class ExpectedSarsa(BaseAgent):
             The parameters of the Q-network.
         key : PRNGKey
             A PRNG key used as the random key.
-        state : hk.State
+        net_state : hk.State
             The state of the Q-network.
         params_target : hk.Params
             The parameters of the target Q-network.
-        state_target : hk.State
+        net_state_target : hk.State
             The state of the target Q-network.
         batch : Tuple
             A batch of transitions from the experience replay buffer.
@@ -248,10 +248,10 @@ class ExpectedSarsa(BaseAgent):
         states, actions, rewards, terminals, next_states = batch
         q_key, q_target_key = jax.random.split(key)
 
-        q_values, state = q_network.apply(params, state, q_key, states)
+        q_values, state = q_network.apply(params, net_state, q_key, states)
         q_values = jnp.take_along_axis(q_values, actions.astype(jnp.int32), axis=-1)
 
-        q_values_target, _ = q_network.apply(params_target, state_target, q_target_key, next_states)
+        q_values_target, _ = q_network.apply(params_target, net_state_target, q_target_key, next_states)
         probs_target = jax.nn.softmax(q_values_target / tau)
         target = rewards + (1 - terminals) * discount * jnp.sum(probs_target * q_values_target, axis=-1)
 
@@ -312,22 +312,22 @@ class ExpectedSarsa(BaseAgent):
             action, reward, terminal, env_state
         )
 
-        params, network_state, opt_state = state.params, state.state, state.opt_state
+        params, net_state, opt_state = state.params, state.state, state.opt_state
 
         if experience_replay.is_ready(replay_buffer):
             params_target = deepcopy(params)
-            state_target = deepcopy(network_state)
+            net_state_target = deepcopy(net_state)
 
             for _ in range(experience_replay_steps):
                 batch_key, network_key, key = jax.random.split(key, 3)
                 batch = experience_replay.sample(replay_buffer, batch_key)
 
-                loss_params = (network_key, network_state, params_target, state_target, batch)
-                params, network_state, opt_state, _ = step_fn(params, loss_params, opt_state)
+                loss_params = (network_key, net_state, params_target, net_state_target, batch)
+                params, net_state, opt_state, _ = step_fn(params, loss_params, opt_state)
 
         return ExpectedSarsaState(
             params=params,
-            state=network_state,
+            state=net_state,
             opt_state=opt_state,
             replay_buffer=replay_buffer,
             prev_env_state=env_state
