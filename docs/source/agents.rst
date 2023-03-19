@@ -47,6 +47,20 @@ Deep Expected SARSA
     :members:
 
 
+Deep Double Q-Learning
+----------------------
+
+.. currentmodule:: reinforced_lib.agents.deep.dqn
+
+.. autoclass:: DQNState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: DQN
+    :show-inheritance:
+    :members:
+
+
 Epsilon-greedy
 --------------
 
