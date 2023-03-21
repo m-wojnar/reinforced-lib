@@ -29,6 +29,7 @@
 #include "ns3/ns3-ai-module.h"
 
 #define DEFAULT_MEMBLOCK_KEY 2333
+#define MAX_HISTORY_LENGTH 128
 
 using namespace std;
 using namespace ns3;
@@ -41,13 +42,15 @@ using namespace ns3;
 
 struct Env
 {
-    uint32_t observation;
-    uint32_t reward;
+    uint32_t history_sie;
+    float history[MAX_HISTORY_LENGTH];
+    float reward;
+    double sim_time;
 } Packed;
 
 struct Act
 {
-  uint32_t action;
+    uint32_t action;
 } Packed;
 
 Ns3AIRL<Env, Act> * m_env = new Ns3AIRL<Env, Act> (DEFAULT_MEMBLOCK_KEY);
@@ -295,6 +298,7 @@ void ConvergenceScenario::installScenario(double simulationTime, double envStepT
 /***** Functions declarations *****/
 
 bool execute_action(float action);
+float getReward(void);
 double jain_index(void);
 void packetReceived(Ptr<const Packet> packet);
 void packetSent(Ptr<const Packet> packet, double txPowerW);
@@ -322,6 +326,7 @@ uint32_t CW = 0;
 
 uint32_t history_length = 20;
 deque<float> history;
+float reward;
 
 string type = "discrete";
 bool non_zero_start = false;
@@ -376,6 +381,11 @@ main (int argc, char *argv[])
 
     cmd.Parse(argc, argv);
     // history_length*=2;
+
+    if (history_length > MAX_HISTORY_LENGTH) {
+        cout << "Error, Maximum history length " << MAX_HISTORY_LENGTH << " exceeded!" << endl;
+        exit(1);
+    }
 
     cout << endl
          << "Ns3Env parameters:" << endl
@@ -459,7 +469,7 @@ main (int argc, char *argv[])
 
     double flowThr;
     float res =  g_rxPktNum * (1500 - 20 - 8 - 8) * 8.0 / 1024 / 1024;
-    cout << "Sent mbytes: " << res << "\tThroughput: " << res/simulationTime << endl;
+    cout << endl << "Sent mbytes: " << res << "\tThroughput: " << res/simulationTime << endl;
     ofstream myfile;
     myfile.open(outputCsv, ios::app);
 
@@ -509,7 +519,7 @@ execute_action(float action)
     else
     {
         std::cout << "Unsupported agent type!" << endl;
-        exit(0);
+        exit(1);
     }
 
     uint32_t min_cw = 16;
@@ -523,6 +533,31 @@ execute_action(float action)
         Config::Set("/$ns3::NodeListPriv/NodeList/*/$ns3::Node/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::RegularWifiMac/BE_Txop/$ns3::QosTxop/MaxCw", UintegerValue(CW));
     }
     return true;
+}
+
+float
+getReward(void)
+{
+    static float ticks = 0.0;
+    static uint32_t last_packets = 0;
+    static float last_reward = 0.0;
+    ticks += envStepTime;
+
+    float res = g_rxPktNum - last_packets;
+    float reward = res * (1500 - 20 - 8 - 8) * 8.0 / 1024 / 1024 / (5 * 150 * envStepTime) * 10;
+
+    last_packets = g_rxPktNum;
+
+    if (ticks <= 2 * envStepTime)
+        return 0.0;
+
+    if (verbose)
+        NS_LOG_UNCOND("Reward: " << reward);
+
+    if(reward>1.0f || reward<0.0f)
+        reward = last_reward;
+    last_reward = reward;
+    return last_reward;
 }
 
 double
@@ -583,29 +618,34 @@ recordHistory()
 
     ratio = errs / sent;
     history.push_front(ratio);
+    reward = getReward();
 
     // Remove the oldest observation if we have filled the history
     if (history.size() > history_length)
     {
         history.pop_back();
     }
+    // cout << "history_sie: " << history.size() << "history_length: " << history_length << endl;
 
     // Replace the last observation with the current one
     last_rx = g_rxPktNum;
     last_tx = g_txPktNum;
 
-    if (calls < history_length && non_zero_start)
-    {   
-        // Schedule the next observation if we are not at the end of the simulation
-        Simulator::Schedule(Seconds(envStepTime), &recordHistory);
-    }
-    else if (calls == history_length && non_zero_start)
-    {
-        g_rxPktNum = 0;
-        g_txPktNum = 0;
-        last_rx = 0;
-        last_tx = 0;
-    }
+    // // TODO Why are we restricting the calls???
+    // if (calls < history_length && non_zero_start)
+    // {   
+    //     // Schedule the next observation if we are not at the end of the simulation
+    //     Simulator::Schedule(Seconds(envStepTime), &recordHistory);
+    // }
+    // else if (calls == history_length && non_zero_start)
+    // {
+    //     g_rxPktNum = 0;
+    //     g_txPktNum = 0;
+    //     last_rx = 0;
+    //     last_tx = 0;
+    // }
+
+    Simulator::Schedule(Seconds(envStepTime), &recordHistory);
 }
 
 // TODO Replace with proper observations
@@ -616,9 +656,14 @@ ScheduleNextStateRead(double envStepTime)
     
     // Here is the ns3-ai communication with python agent
         // 1. push history and reward to DQN agent as observation
+    // cout << "history_sie: " << history.size() << endl;
     auto env = m_env->EnvSetterCond();
-    env->observation = 42;
-    env->reward = 1;
+    env->history_sie = history.size();
+    for (int i = 0; i < history.size(); i++) {
+        env->history[i] = history.at(i);
+    }
+    env->reward = reward;
+    env->sim_time = Simulator::Now().GetSeconds();
     m_env->SetCompleted();
 
         // 2. get action from DQN agent
@@ -743,6 +788,7 @@ set_sim(bool tracing, bool dry_run, int warmup, YansWifiPhyHelper phy, NetDevice
     // {
     if (non_zero_start)
     {
+
         Simulator::Schedule(Seconds(1.0), &recordHistory);
         Simulator::Schedule(Seconds(envStepTime * history_length + 1.0), &ScheduleNextStateRead, envStepTime);
     }

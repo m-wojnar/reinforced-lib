@@ -12,12 +12,16 @@ from reinforced_lib.agents.mab import *
 from reinforced_lib.agents.wifi import *
 from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
+MAX_HISTORY_LENGTH = 128
+
 
 class Env(Structure):
     _pack_ = 1
     _fields_ = [
-        ('observation', c_uint32),
-        ('reward', c_uint32)
+        ('history_sie', c_uint32),
+        ('history', c_float * MAX_HISTORY_LENGTH),
+        ('reward', c_float),
+        ('sim_time', c_double)
     ]
 
 
@@ -29,7 +33,7 @@ class Act(Structure):
 
 
 memblock_key = 2333
-memory_size = 128
+memory_size = 2048
 simulation = 'ccod-sim'
 
 
@@ -39,7 +43,8 @@ def run(
         mempool_key: int,
         agent_type: type,
         agent_params: Dict[str, Any],
-        seed: int
+        seed: int,
+        verbose: bool
 ) -> None:
     """
     Run a simulation in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
@@ -67,6 +72,14 @@ def run(
        Association for Computing Machinery.
     """
 
+    def print_environment(observation):
+        print(f"Sim Time: {'{:.3f}'.format(observation['sim_time'])}\t", end="")
+        print(f"Reward: {'{:.3f}'.format(observation['reward'])}\t", end="")
+        print(f"History[{len(observation['history'])}]:", end="")
+        for p_col in observation['history']:
+            print(" {:.3f}".format(p_col), end="")
+        print()
+
     exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
     var = Ns3AIRL(memblock_key, Env, Act)
 
@@ -79,9 +92,11 @@ def run(
                     break
 
                 observation = {
-                    'observation': data.env.observation,
-                    'reward': data.env.reward
+                    'history': data.env.history[:data.env.history_sie],
+                    'reward': data.env.reward,
+                    'sim_time': data.env.sim_time
                 }
+                print_environment(observation) if verbose else None
 
                 data.act.action = 4
 
@@ -136,4 +151,4 @@ if __name__ == '__main__':
         'ParticleFilter': {'scale': 4.0, 'num_particles': 900}
     }
 
-    run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], args.pop('pythonSeed'))
+    run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], args.pop('pythonSeed'), args['verbose'])
