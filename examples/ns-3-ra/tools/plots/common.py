@@ -1,6 +1,7 @@
 import os
 from typing import Tuple
 
+import matplotlib.pylab as pl
 import numpy as np
 import pandas as pd
 from scipy.stats import t, ttest_ind
@@ -11,7 +12,7 @@ DATA_FILE = os.path.join(TOOLS_DIR, 'outputs', 'all_results.csv')
 
 ALL_MANAGERS = {
     'Minstrel': 'Minstrel',
-    'EGreedy': r'$\epsilon$-greedy',
+    'EGreedy': r'$\varepsilon$-greedy',
     'UCB': 'Upper confidence bound',
     'ThompsonSampling': 'Thompson sampling',
     'Ideal': 'Ideal'
@@ -38,6 +39,8 @@ PLOT_PARAMS = {
     'xtick.major.width': 0.5,
     'ytick.major.width': 0.5,
 }
+
+COLORS = pl.cm.viridis(np.linspace(0., 1., len(ALL_MANAGERS)))
 
 
 def get_thr_ci(

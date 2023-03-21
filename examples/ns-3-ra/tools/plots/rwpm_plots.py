@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import matplotlib.pylab as pl
 import pandas as pd
 import seaborn as sns
 
@@ -10,12 +9,13 @@ N_WIFI = 10
 
 
 def plot_results(ax: plt.Axes, velocity: float) -> None:
-    colors = pl.cm.viridis(np.linspace(0., 1., len(ALL_MANAGERS) - 1)).tolist() + ['gray']
-
     df = pd.read_csv(DATA_FILE)
     df = df[(df.mobilityModel == 'RWPM') & (df.nWifiReal == N_WIFI) & (df.velocity == velocity)]
 
-    sns.violinplot(ax=ax, data=df, x='wifiManager', y='throughput', order=ALL_MANAGERS.keys(), palette=colors)
+    sns.violinplot(
+        ax=ax, data=df, x='wifiManager', y='throughput',
+        order=ALL_MANAGERS.keys(), palette=COLORS.tolist()[:-1] + ['gray']
+    )
     oracle = df[df.wifiManager == 'Ideal']['throughput'].mean()
     ax.axhline(oracle, linestyle='--', c='gray', label=f'{ALL_MANAGERS["Ideal"]} mean')
 

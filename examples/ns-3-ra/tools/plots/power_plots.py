@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import matplotlib.pylab as pl
 import numpy as np
 import pandas as pd
 
@@ -18,8 +17,6 @@ POWER_CHANGE = {
 
 
 def plot_results(ax: plt.Axes, delta: float, interval: float, velocity: float) -> None:
-    colors = pl.cm.viridis(np.linspace(0., 1., len(ALL_MANAGERS) - 1))
-
     df = pd.read_csv(DATA_FILE)
     df = df[(df.mobilityModel == 'Distance') & (df.delta == delta) & (df.interval == interval) & (df.velocity == velocity)]
 
@@ -29,8 +26,8 @@ def plot_results(ax: plt.Axes, delta: float, interval: float, velocity: float) -
         if manager == 'Ideal':
             ax.plot(mean.index, mean, linestyle='--', c='gray', label=manager_name)
         else:
-            ax.plot(mean.index, mean, marker='o', markersize=1, label=manager_name, c=colors[i])
-            ax.fill_between(mean.index, ci_low, ci_high, alpha=0.3, color=colors[i], linewidth=0.0)
+            ax.plot(mean.index, mean, marker='o', markersize=1, label=manager_name, c=COLORS[i])
+            ax.fill_between(mean.index, ci_low, ci_high, alpha=0.3, color=COLORS[i], linewidth=0.0)
 
     for i, x in enumerate(POWER_CHANGE[interval]):
         ax.axvline(x, linestyle='--', c='r', alpha=0.4, label='Power change' if i == 0 else None)
@@ -55,5 +52,5 @@ if __name__ == '__main__':
     axes[1].set_xlabel('Time [s]')
     axes[0].legend(ncol=2)
 
-    plt.savefig(f'power-moving-thr.pdf', bbox_inches='tight')
+    plt.savefig(f'power-thr.pdf', bbox_inches='tight')
     plt.clf()

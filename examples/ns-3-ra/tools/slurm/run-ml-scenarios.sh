@@ -126,8 +126,8 @@ run_rwpm 0
 echo -e "\nQueue mobile stations scenario"
 run_rwpm "1.4"
 
-echo -e "\nQueue power (delta=5, interval=4, v=0, start=5) scenario"
-run_power 5 4 0 5
+echo -e "\nQueue power (delta=5, interval=4, v=0, start=8) scenario"
+run_power 5 4 0 8
 
-echo -e "\nQueue power (delta=15, interval=8, v=0, start=5) scenario"
-run_power 15 8 0 5
+echo -e "\nQueue power (delta=15, interval=8, v=0, start=8) scenario"
+run_power 15 8 0 8

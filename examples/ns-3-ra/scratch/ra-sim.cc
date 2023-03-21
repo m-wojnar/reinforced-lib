@@ -334,8 +334,8 @@ main (int argc, char *argv[])
   // Setup CSV output
   std::ostringstream csvPrefixStream;
   csvPrefixStream << wifiManagerName << ',' << lossModel << ',' << mobilityModel << ',' << channelWidth << ','
-                  << minGI << ',' << velocity << ',' << deltaPower << ',' << intervalPower << ','
-                  << RngSeedManager::GetRun () << ',' << nWifi << ",{nWifiReal}";
+                  << minGI << ',' << (mobilityModel == "Distance" ? velocity : nodeSpeed) << ',' << deltaPower << ','
+                  << intervalPower << ',' << RngSeedManager::GetRun () << ',' << nWifi << ",{nWifiReal}";
 
   csvPrefix = csvPrefixStream.str ();
   std::string csvHeader = "wifiManager,lossModel,mobilityModel,channelWidth,minGI,velocity,"
