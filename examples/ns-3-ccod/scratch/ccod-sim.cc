@@ -631,21 +631,19 @@ recordHistory()
     last_rx = g_rxPktNum;
     last_tx = g_txPktNum;
 
-    // // TODO Why are we restricting the calls???
-    // if (calls < history_length && non_zero_start)
-    // {   
-    //     // Schedule the next observation if we are not at the end of the simulation
-    //     Simulator::Schedule(Seconds(envStepTime), &recordHistory);
-    // }
-    // else if (calls == history_length && non_zero_start)
-    // {
-    //     g_rxPktNum = 0;
-    //     g_txPktNum = 0;
-    //     last_rx = 0;
-    //     last_tx = 0;
-    // }
-
-    Simulator::Schedule(Seconds(envStepTime), &recordHistory);
+    // TODO Why are we restricting the calls???
+    if (calls < history_length && non_zero_start)
+    {   
+        // Schedule the next observation if we are not at the end of the simulation
+        Simulator::Schedule(Seconds(envStepTime), &recordHistory);
+    }
+    else if (calls == history_length && non_zero_start)
+    {
+        g_rxPktNum = 0;
+        g_txPktNum = 0;
+        last_rx = 0;
+        last_tx = 0;
+    }
 }
 
 // TODO Replace with proper observations
@@ -653,10 +651,11 @@ void
 ScheduleNextStateRead(double envStepTime)
 {
     Simulator::Schedule(Seconds(envStepTime), &ScheduleNextStateRead, envStepTime);
+
+    recordHistory();
     
     // Here is the ns3-ai communication with python agent
         // 1. push history and reward to DQN agent as observation
-    // cout << "history_sie: " << history.size() << endl;
     auto env = m_env->EnvSetterCond();
     env->history_sie = history.size();
     for (int i = 0; i < history.size(); i++) {
