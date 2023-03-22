@@ -116,8 +116,10 @@ if __name__ == '__main__':
     args.add_argument('--area', default=40.0, type=float)
     args.add_argument('--channelWidth', default=20, type=int)
     args.add_argument('--csvPath', type=str)
+    args.add_argument('--deltaPower', default=0.0, type=float)
     args.add_argument('--dataRate', default=125, type=int)
     args.add_argument('--initialPosition', default=0.0, type=float)
+    args.add_argument('--intervalPower', default=4.0, type=float)
     args.add_argument('--logEvery', default=1.0, type=float)
     args.add_argument('--lossModel', default='LogDistance', type=str)
     args.add_argument('--mempoolKey', default=1234, type=int)
@@ -148,7 +150,7 @@ if __name__ == '__main__':
         'ParticleFilter': ParticleFilter
     }
     default_params = {
-        'EGreedy': {'e': 0.001, 'alpha': 0.5, 'optimistic_start': 32.0},
+        'EGreedy': {'e': 0.01, 'alpha': 0.1, 'optimistic_start': 128.0},
         'Exp3': {'gamma': 0.15},
         'Softmax': {'lr': 0.256, 'alpha': 0.5, 'tau': 1.0, 'multiplier': 0.01},
         'ThompsonSampling': {'decay': 2.0},

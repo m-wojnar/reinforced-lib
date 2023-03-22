@@ -13,12 +13,11 @@ MANAGER_NAME=$3
 N_WIFI=$4
 DISTANCE=$5
 SIM_TIME=$6
+LOSS_MODEL=$7
 
 SEED=$(( SEED_SHIFT + SLURM_ARRAY_TASK_ID ))
 
 CSV_PATH="$TOOLS_DIR/outputs/distance_${MANAGER_NAME}_d${DISTANCE}_n${N_WIFI}_s${SEED}.csv"
-
 WARMUP_TIME=$(( N_WIFI + 4))
-LOSS_MODEL="LogDistance"
 
 ./ns3.37-ra-sim-optimized --mobilityModel="Distance" --wifiManager="$MANAGER" --wifiManagerName="$MANAGER_NAME" --initialPosition="$DISTANCE" --nWifi="$N_WIFI" --simulationTime="$SIM_TIME" --warmupTime="$WARMUP_TIME" --logEvery="$SIM_TIME" --lossModel="$LOSS_MODEL" --RngRun="$SEED" --csvPath="$CSV_PATH"

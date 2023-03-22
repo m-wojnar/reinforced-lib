@@ -177,8 +177,8 @@ RLibWifiManager::DoGetRtsTxVector (WifiRemoteStation *st)
       GetDefaultTxPowerLevel (),
       GetPreambleForTransmission (m_ctlMode.GetModulationClass (), GetShortPreambleEnabled ()),
       ConvertGuardIntervalToNanoSeconds (m_ctlMode, GetShortGuardIntervalSupported (st), NanoSeconds (GetGuardInterval (st))),
-      1,
-      1,
+      GetNumberOfAntennas (),
+      m_nss,
       0,
       GetChannelWidthForTransmission (m_ctlMode, GetChannelWidth (st)),
       GetAggregation (st));

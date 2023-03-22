@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import matplotlib.pylab as pl
 import numpy as np
 import pandas as pd
 
@@ -10,8 +9,6 @@ MAX_DISTANCE = 55
 
 
 def plot_results(ax: plt.Axes, velocity: float) -> None:
-    colors = pl.cm.viridis(np.linspace(0., 1., len(ALL_MANAGERS) - 1))
-
     df = pd.read_csv(DATA_FILE)
     df = df[(df.mobilityModel == 'Distance') & (df.velocity == velocity)]
 
@@ -21,8 +18,8 @@ def plot_results(ax: plt.Axes, velocity: float) -> None:
         if manager == 'Ideal':
             ax.plot(mean.index, mean, linestyle='--', c='gray', label=manager_name)
         else:
-            ax.plot(mean.index, mean, marker='o', markersize=1, label=manager_name, c=colors[i])
-            ax.fill_between(mean.index, ci_low, ci_high, alpha=0.3, color=colors[i], linewidth=0.0)
+            ax.plot(mean.index, mean, marker='o', markersize=1, label=manager_name, c=COLORS[i])
+            ax.fill_between(mean.index, ci_low, ci_high, alpha=0.3, color=COLORS[i], linewidth=0.0)
 
     ax.set_xlim((0, MAX_DISTANCE))
     ax.set_ylim((0, 125))
