@@ -163,8 +163,47 @@ def main3():
     interpreter.invoke()
     return
 
+def main4():
+    print(f'JAX {jax.__version__}')
+    print(f'tf {tf.__version__}')
+
+    @jax.jit
+    def _update(x):
+        return x + 4*jax.nn.one_hot(0,x.shape[0])
+
+
+    converter = tf.lite.TFLiteConverter.experimental_from_jax([_update],
+                                                              [[('x', jnp.ones(2))]])
+    converter.target_spec.supported_ops = [
+        tf.lite.OpsSet.TFLITE_BUILTINS,  # enable TensorFlow Lite ops.
+        tf.lite.OpsSet.SELECT_TF_OPS  # enable TensorFlow ops.
+
+    ]
+
+    tflite_update = converter.convert()
+    with open('update.tflite', 'wb') as f:
+        f.write(tflite_update)
+
+    interpreter = tf.lite.Interpreter(model_content=tflite_update)
+    interpreter.allocate_tensors()
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+
+
+    args = jnp.ones(2)
+
+    expected = _update(args)
+
+    # for a, d in zip(args, input_details):
+    interpreter.set_tensor(input_details[0]['index'], args)
+
+    interpreter.invoke()
+    assert jnp.allclose(interpreter.get_tensor(output_details[0]['index']), expected)
+    return
+
 if __name__ == '__main__':
 
-    main3()
+    main4()
 
     ...
