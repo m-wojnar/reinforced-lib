@@ -3,7 +3,7 @@
 TOOLS_DIR="${TOOLS_DIR:=$HOME/reinforced-lib/examples/ns-3-ra/tools}"
 
 export XLA_PYTHON_CLIENT_PREALLOCATE=false
-TASKS_PER_NODE=5
+TASKS_PER_NODE=3
 
 MANAGERS=("EGreedy" "ThompsonSampling" "UCB")
 MANAGERS_LEN=${#MANAGERS[@]}
@@ -17,8 +17,7 @@ LOSS_MODEL="LogDistance"
 ### Basic scenarios
 
 run_equal_distance() {
-  N_REP=10
-  N_POINTS=13
+  N_POINTS=9
   DISTANCE=$1
 
   for (( i = 0; i < MANAGERS_LEN; i++ )); do
@@ -26,8 +25,9 @@ run_equal_distance() {
     ARRAY_SHIFT=0
 
     for (( j = 0; j < N_POINTS; j++)); do
-      N_WIFI=$(( j == 0 ? 1 : 4 * j))
+      N_WIFI=$(( j == 0 ? 1 : 2 * j))
       SIM_TIME=$(( 10 * N_WIFI + 50 ))
+      N_REP=$(( N_WIFI <= 4 ? 6 : (N_WIFI / 2) * (N_WIFI / 2) ))
 
       START=$ARRAY_SHIFT
       END=$(( ARRAY_SHIFT + N_REP - 1 ))
@@ -36,9 +36,8 @@ run_equal_distance() {
       ARRAY_SHIFT=$(( ARRAY_SHIFT + N_REP ))
 
       sbatch --ntasks-per-node="$TASKS_PER_NODE" -p gpu --array=$START-$END "$TOOLS_DIR/slurm/distance/ml.sh" "$SEED_SHIFT" "$MANAGER" "$MANAGER" "$N_WIFI" "$DISTANCE" "$SIM_TIME" "$LOSS_MODEL" "$MEMPOOL_SHIFT"
+      SHIFT=$(( SHIFT + N_REP ))
     done
-
-    SHIFT=$(( SHIFT + N_POINTS * N_REP ))
   done
 }
 
@@ -108,8 +107,8 @@ run_power() {
 
 ### Run section
 
-echo -e "\nQueue equal distance (d=0) scenario"
-run_equal_distance 0
+echo -e "\nQueue equal distance (d=1) scenario"
+run_equal_distance 1
 
 echo -e "\nQueue equal distance (d=20) scenario"
 run_equal_distance 20
