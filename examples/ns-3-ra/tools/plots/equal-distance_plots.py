@@ -5,12 +5,12 @@ import pandas as pd
 from common import *
 
 
-MAX_N_WIFI = 30
+MAX_N_WIFI = 16
 
 
 def plot_results(ax: plt.Axes, distance: float) -> None:
     df = pd.read_csv(DATA_FILE)
-    df = df[(df.mobilityModel == 'Distance') & (df.position == distance)]
+    df = df[(df.mobilityModel == 'Distance') & (df.position == distance) & (df.velocity == 0) & (df.nWifiReal == df.nWifi)]
 
     for i, (manager, manager_name) in enumerate(ALL_MANAGERS.items()):
         mean, ci_low, ci_high = get_thr_ci(df[df.wifiManager == manager], 'nWifiReal')
@@ -21,6 +21,7 @@ def plot_results(ax: plt.Axes, distance: float) -> None:
             ax.plot(mean.index, mean, marker='o', markersize=2, label=manager_name, c=COLORS[i])
             ax.fill_between(mean.index, ci_low, ci_high, alpha=0.3, color=COLORS[i], linewidth=0.0)
 
+    ax.set_xticks(range(0, MAX_N_WIFI + 1, 2))
     ax.set_xlim((0, MAX_N_WIFI))
     ax.set_ylim((0, 125))
 
@@ -34,7 +35,7 @@ if __name__ == '__main__':
     plt.rcParams.update(PLOT_PARAMS)
     fig, axes = plt.subplots(2, 1, sharex='col')
 
-    for distance, ax in zip([0, 20], axes):
+    for distance, ax in zip([1, 20], axes):
         plot_results(ax, distance)
 
     axes[0].tick_params('x', labelbottom=False, bottom=False)
