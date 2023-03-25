@@ -1,18 +1,19 @@
-# TODO adapt to CCOD scenario
-
 from argparse import ArgumentParser
 from ctypes import *
 from typing import Any, Dict
+from chex import Array
 
 from py_interface import *
+import haiku as hk
+import optax
+import jax.numpy as jnp
 
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import *
-from reinforced_lib.agents.mab import *
-from reinforced_lib.agents.wifi import *
-from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
+from reinforced_lib.exts.wifi import IEEE_802_11_ax_CCOD
 
 MAX_HISTORY_LENGTH = 128
+NO_ACTIONS = 6
 
 
 class Env(Structure):
@@ -35,6 +36,24 @@ class Act(Structure):
 memblock_key = 2333
 memory_size = 2048
 simulation = 'ccod-sim'
+
+
+@hk.transform_with_state
+def q_network(x: Array) -> Array:
+
+    # sequence_length - it is the history depth to analyze, equals the number of LSTM cells
+    # batch_size - self explanatory
+    # features_length - it is the size of a input vector (history_length in CCOD)
+    sequence_length, batch_size, fetures_length = x.shape
+
+    core = hk.LSTM(fetures_length)
+    initial_state = core.initial_state(batch_size)
+    _, lstm_state = hk.dynamic_unroll(core, x, initial_state)
+    h_t = lstm_state.hidden
+
+    h_t = hk.nets.MLP([128, 64, NO_ACTIONS])(h_t)
+
+    return jnp.argmax(h_t, axis=1)
 
 
 def run(
@@ -72,13 +91,19 @@ def run(
        Association for Computing Machinery.
     """
 
-    def print_environment(observation):
+    def print_environment(observation, action):
         print(f"Sim Time: {'{:.3f}'.format(observation['sim_time'])}\t", end="")
-        print(f"Reward: {'{:.3f}'.format(observation['reward'])}\t", end="")
         print(f"History[{len(observation['history'])}]:", end="")
-        for p_col in observation['history']:
+        for p_col in observation['history'][:5]:
             print(" {:.3f}".format(p_col), end="")
-        print()
+        print(f"\tAction: {action}\t", end="")
+        print(f"Reward: {'{:.3f}'.format(observation['reward'])}")
+
+    rl = RLib(
+        agent_type=agent_type,
+        agent_params=agent_params,
+        ext_type=IEEE_802_11_ax_CCOD
+    )
 
     exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
     var = Ns3AIRL(memblock_key, Env, Act)
@@ -96,9 +121,10 @@ def run(
                     'reward': data.env.reward,
                     'sim_time': data.env.sim_time
                 }
-                print_environment(observation) if verbose else None
+                action = rl.sample(**observation)
+                data.act.action = action
 
-                data.act.action = 4
+                print_environment(observation, action) if verbose else None
 
         ns3_process.wait()
     finally:
@@ -109,7 +135,7 @@ if __name__ == '__main__':
     args = ArgumentParser()
 
     # Python arguments
-    args.add_argument('--agent', required=True, type=str)
+    args.add_argument('--agent', default="dqn", type=str)
     args.add_argument('--mempoolKey', default=1234, type=int)
     args.add_argument('--ns3Path', required=True, type=str)
     args.add_argument('--pythonSeed', default=42, type=int)
@@ -135,20 +161,15 @@ if __name__ == '__main__':
     agent = args.pop('agent')
 
     agent_type = {
-        'EGreedy': EGreedy,
-        'Exp3': Exp3,
-        'Softmax': Softmax,
-        'ThompsonSampling': ThompsonSampling,
-        'UCB': UCB,
-        'ParticleFilter': ParticleFilter,
+        'DQN': DQN
     }
     default_params = {
-        'EGreedy': {'e': 0.001, 'alpha': 0.5, 'optimistic_start': 32.0},
-        'Exp3': {'gamma': 0.15},
-        'Softmax': {'lr': 0.256, 'alpha': 0.5, 'tau': 1.0, 'multiplier': 0.01},
-        'ThompsonSampling': {'decay': 2.0},
-        'UCB': {'c': 16.0, 'gamma': 0.996},
-        'ParticleFilter': {'scale': 4.0, 'num_particles': 900}
+        'DQN': {
+            'q_network': q_network,
+            'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
+            'discount': 0.95,
+            'epsilon_decay': 0.9975
+        }
     }
 
     run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], args.pop('pythonSeed'), args['verbose'])
