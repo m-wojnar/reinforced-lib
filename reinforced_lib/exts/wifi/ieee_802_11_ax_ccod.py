@@ -1,3 +1,5 @@
+from chex import Array
+
 import gymnasium as gym
 import numpy as np
 
@@ -20,27 +22,26 @@ class IEEE_802_11_ax_CCOD(BaseExt):
        19 May 2021, doi: 10.1109/IEEESTD.2021.9442429.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, history_length: int) -> None:
         super().__init__()
+        self.history_length = history_length
         self.last_time = 0.0
 
     max_history_length = 512
     no_actions = 6
+
     observation_space = gym.spaces.Dict({
         'history_sie': gym.spaces.Box(0.0, np.inf, (1,)),
-        'history': gym.spaces.Box(0, 1, (1,), np.int32),
-        'reward': gym.spaces.Box(0, 1, (1,)),
+        'history': gym.spaces.Box(0, 1, (max_history_length,), np.int32),
+        'reward': gym.spaces.Box(-np.inf, np.inf, (1,)),
         'sim_time': gym.spaces.Box(0, np.inf, (1,)),
-        'current_thr': gym.spaces.Box(-np.inf, np.inf, (1,)),
+        'current_thr': gym.spaces.Box(0, np.inf, (1,)),
         'n_wifi': gym.spaces.Box(0, np.inf, (1,), np.int32)
     })
 
     @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-    def reward(self, action: int, n_successful: int, n_failed: int, *args, **kwargs) -> float:
-        if n_successful + n_failed > 0:
-            return self._wifi_modes_rates[action] * n_successful / (n_successful + n_failed)
-        else:
-            return 0.0
+    def reward(self, reward: float, *args, **kwargs) -> float:
+        return reward
 
     @observation(observation_type=gym.spaces.Box(0.0, np.inf, (1,)))
     def delta_time(self, time: float, *args, **kwargs) -> float:
@@ -48,47 +49,33 @@ class IEEE_802_11_ax_CCOD(BaseExt):
         self.last_time = time
         return delta_time
 
-    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (6,)))
+    # TODO Jak przekazać historię, która ma zmienny rozmiar w zaleności od 'history_length'?
+    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (max_history_length,)))
     def env_state(
             self,
-            time: float,
-            n_successful: int,
-            n_failed: int,
-            n_wifi: int,
-            power: float,
-            cw: int,
+            history_sie: int,
+            history: Array,
             *args,
             **kwargs
     ) -> np.ndarray:
-        return np.array([self.delta_time(time), n_successful, n_failed, n_wifi, power, cw], dtype=np.float32)
+        return np.array(history[:history_sie], dtype=np.float32)
 
     @observation(observation_type=gym.spaces.MultiBinary(1))
     def terminal(self, *args, **kwargs) -> bool:
         return False
 
-    @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
-    def n_mcs(self) -> int:
-        return len(self._wifi_modes_rates)
-
-    @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
-    def n_arms(self) -> int:
-        return self.n_mcs()
-
-    @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-    def default_power(self) -> float:
-        return 16.0206
-
     @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
     def min_reward(self) -> float:
-        return 0
+        return 0.
 
     @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-    def max_reward(self) -> int:
-        return self._wifi_modes_rates.max()
+    def max_reward(self) -> float:
+        return 1.
 
+    # TODO jak się uda do env_state wrzucić history_length, to tu te trzeba
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(0, np.inf, (1,), np.int32)))
     def obs_space_shape(self) -> tuple:
-        return tuple((300,))
+        return tuple((self.max_history_length,))
 
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
     def act_space_shape(self) -> tuple:

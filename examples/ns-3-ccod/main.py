@@ -31,8 +31,9 @@ import jax.numpy as jnp
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import *
 from reinforced_lib.exts.wifi import IEEE_802_11_ax_CCOD as CCOD
+from reinforced_lib.logs import *
 
-max_history_length = CCOD().max_history_length
+max_history_length = CCOD.max_history_length
 no_actions = CCOD.no_actions
 
 class Env(Structure):
@@ -65,6 +66,7 @@ def q_network(x: Array) -> Array:
     # sequence_length - it is the history depth to analyze, equals the number of LSTM cells
     # batch_size - self explanatory
     # features_length - it is the size of a input vector (history_length in CCOD)
+    print(f"SHAPE: {x.shape}")
     sequence_length, batch_size, fetures_length = x.shape
 
     core = hk.LSTM(fetures_length)
@@ -114,7 +116,7 @@ def run(
 
     def print_environment(observation, action):
         print(f"Sim Time: {'{:.3f}'.format(observation['sim_time'])}\t", end="")
-        print(f"History[{len(observation['history'])}]:", end="")
+        print(f"History[{observation['history_sie']}]:", end="")
         for p_col in observation['history'][:5]:
             print(" {:.3f}".format(p_col), end="")
         print(f"\tAction: {action}\t", end="")
@@ -123,7 +125,8 @@ def run(
     rl = RLib(
         agent_type=agent_type,
         agent_params=agent_params,
-        ext_type=CCOD
+        ext_type=CCOD,
+        ext_params={'history_length': 24}
     )
 
     exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
@@ -145,7 +148,8 @@ def run(
                     'current_thr': data.env.current_thr,
                     'n_wifi': data.env.n_wifi
                 }
-                action = rl.sample(**observation)
+                # action = rl.sample(**observation)
+                action = rl.action_space.sample()
                 data.act.action = action
 
                 print_environment(observation, action) if verbose else None
@@ -193,8 +197,8 @@ if __name__ == '__main__':
     default_params = {
         # DQN parameters are set according to the Table I from the cited article
         'DQN': {
-            'obs_space_shape':                  (HISTORY_LENGTH),
-            'act_space_size':                   (no_actions),
+            # 'obs_space_shape':                  (HISTORY_LENGTH),
+            # 'act_space_size':                   (no_actions),
             'q_network':                        q_network,
             'optimizer':                        optax.sgd(DQN_LEARNING_RATE),
             'experience_replay_batch_size':     BATCH_SIZE,
