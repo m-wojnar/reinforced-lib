@@ -24,13 +24,15 @@ class IEEE_802_11_ax_CCOD(BaseExt):
         super().__init__()
         self.last_time = 0.0
 
+    max_history_length = 512
+    no_actions = 6
     observation_space = gym.spaces.Dict({
         'history_sie': gym.spaces.Box(0.0, np.inf, (1,)),
-        'history': gym.spaces.Box(0, np.inf, (1,), np.int32),
-        'reward': gym.spaces.Box(0, np.inf, (1,), np.int32),
-        'sim_time': gym.spaces.Box(1, np.inf, (1,), np.int32),
-        'power': gym.spaces.Box(-np.inf, np.inf, (1,)),
-        'cw': gym.spaces.Discrete(32767)
+        'history': gym.spaces.Box(0, 1, (1,), np.int32),
+        'reward': gym.spaces.Box(0, 1, (1,)),
+        'sim_time': gym.spaces.Box(0, np.inf, (1,)),
+        'current_thr': gym.spaces.Box(-np.inf, np.inf, (1,)),
+        'n_wifi': gym.spaces.Box(0, np.inf, (1,), np.int32)
     })
 
     @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
@@ -84,9 +86,9 @@ class IEEE_802_11_ax_CCOD(BaseExt):
     def max_reward(self) -> int:
         return self._wifi_modes_rates.max()
 
-    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(0, np.inf, (1,), np.int32)))
     def obs_space_shape(self) -> tuple:
-        return tuple((6,))
+        return tuple((300,))
 
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
     def act_space_shape(self) -> tuple:
@@ -94,4 +96,4 @@ class IEEE_802_11_ax_CCOD(BaseExt):
 
     @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
     def act_space_size(self) -> int:
-        return 12
+        return 6

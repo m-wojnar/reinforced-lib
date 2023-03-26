@@ -29,7 +29,7 @@
 #include "ns3/ns3-ai-module.h"
 
 #define DEFAULT_MEMBLOCK_KEY 2333
-#define MAX_HISTORY_LENGTH 128
+#define MAX_HISTORY_LENGTH 512
 
 using namespace std;
 using namespace ns3;
@@ -46,6 +46,8 @@ struct Env
     float history[MAX_HISTORY_LENGTH];
     float reward;
     double sim_time;
+    double current_thr;
+    uint32_t n_wifi;
 } Packed;
 
 struct Act
@@ -298,6 +300,7 @@ void ConvergenceScenario::installScenario(double simulationTime, double envStepT
 /***** Functions declarations *****/
 
 bool execute_action(float action);
+float getCurrentThr(void);
 float getReward(void);
 double jain_index(void);
 void packetReceived(Ptr<const Packet> packet);
@@ -327,6 +330,8 @@ uint32_t CW = 0;
 uint32_t history_length = 20;
 deque<float> history;
 float reward;
+double current_thr;
+uint32_t n_wifi = 0;
 
 string type = "discrete";
 bool non_zero_start = false;
@@ -536,6 +541,29 @@ execute_action(float action)
 }
 
 float
+getCurrentThr(void)
+{
+    static float ticks = 0.0;
+    static uint32_t last_packets = 0;
+    static float last_thr = 0.0;
+    ticks += envStepTime;
+
+    float res = g_rxPktNum - last_packets;
+    float thr = res * (1500 - 20 - 8 - 8) * 8.0 / 1024 / 1024 / envStepTime;
+
+    last_packets = g_rxPktNum;
+
+    if (ticks <= 2 * envStepTime)
+        return 0.0;
+
+    if (verbose)
+        NS_LOG_UNCOND("Current thr: " << thr);
+
+    last_thr = thr;
+    return last_thr;
+}
+
+float
 getReward(void)
 {
     static float ticks = 0.0;
@@ -619,6 +647,7 @@ recordHistory()
     ratio = errs / sent;
     history.push_front(ratio);
     reward = getReward();
+    current_thr = getCurrentThr();
 
     // Remove the oldest observation if we have filled the history
     if (history.size() > history_length)
@@ -631,7 +660,6 @@ recordHistory()
     last_rx = g_rxPktNum;
     last_tx = g_txPktNum;
 
-    // TODO Why are we restricting the calls???
     if (calls < history_length && non_zero_start)
     {   
         // Schedule the next observation if we are not at the end of the simulation
@@ -646,7 +674,6 @@ recordHistory()
     }
 }
 
-// TODO Replace with proper observations
 void
 ScheduleNextStateRead(double envStepTime)
 {
@@ -657,12 +684,14 @@ ScheduleNextStateRead(double envStepTime)
     // Here is the ns3-ai communication with python agent
         // 1. push history and reward to DQN agent as observation
     auto env = m_env->EnvSetterCond();
+    env->sim_time = Simulator::Now().GetSeconds();
     env->history_sie = history.size();
     for (int i = 0; i < history.size(); i++) {
         env->history[i] = history.at(i);
     }
     env->reward = reward;
-    env->sim_time = Simulator::Now().GetSeconds();
+    env->current_thr = current_thr;
+    env->n_wifi = n_wifi;
     m_env->SetCompleted();
 
         // 2. get action from DQN agent

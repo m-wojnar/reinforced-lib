@@ -1,3 +1,23 @@
+"""
+Implementation of CCOD algorithm, according to:
+W. Wydmaski and S. Szott, “Contention Window Optimization in IEEE 802.11ax Networks
+with Deep Reinforcement Learning” 2021 IEEE Wireless Communications and Networking
+Conference (WCNC), 2021. https://doi.org/10.1109/WCNC49053.2021.9417575
+"""
+
+"DRL settings, according to the Table I from the cited article:"
+
+INTERACTION_PERIOD = 1e-2
+HISTORY_LENGTH = 300
+DQN_LEARNING_RATE = 4e-4
+BATCH_SIZE = 32
+REWARD_DISCOUNT = 0.7
+REPLAY_BUFFER_SIZE = 18000
+SOFT_UPDATE_COEFFICIENT = 4e-3
+
+SIMULATION_TIME = 60
+
+
 from argparse import ArgumentParser
 from ctypes import *
 from typing import Any, Dict
@@ -10,19 +30,20 @@ import jax.numpy as jnp
 
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import *
-from reinforced_lib.exts.wifi import IEEE_802_11_ax_CCOD
+from reinforced_lib.exts.wifi import IEEE_802_11_ax_CCOD as CCOD
 
-MAX_HISTORY_LENGTH = 128
-NO_ACTIONS = 6
-
+max_history_length = CCOD().max_history_length
+no_actions = CCOD.no_actions
 
 class Env(Structure):
     _pack_ = 1
     _fields_ = [
         ('history_sie', c_uint32),
-        ('history', c_float * MAX_HISTORY_LENGTH),
+        ('history', c_float * max_history_length),
         ('reward', c_float),
-        ('sim_time', c_double)
+        ('sim_time', c_double),
+        ('current_thr', c_double),
+        ('n_wifi', c_uint32)
     ]
 
 
@@ -34,7 +55,7 @@ class Act(Structure):
 
 
 memblock_key = 2333
-memory_size = 2048
+memory_size = 16384
 simulation = 'ccod-sim'
 
 
@@ -51,7 +72,7 @@ def q_network(x: Array) -> Array:
     _, lstm_state = hk.dynamic_unroll(core, x, initial_state)
     h_t = lstm_state.hidden
 
-    h_t = hk.nets.MLP([128, 64, NO_ACTIONS])(h_t)
+    h_t = hk.nets.MLP([128, 64, no_actions])(h_t)
 
     return jnp.argmax(h_t, axis=1)
 
@@ -102,7 +123,7 @@ def run(
     rl = RLib(
         agent_type=agent_type,
         agent_params=agent_params,
-        ext_type=IEEE_802_11_ax_CCOD
+        ext_type=CCOD
     )
 
     exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
@@ -117,9 +138,12 @@ def run(
                     break
 
                 observation = {
-                    'history': data.env.history[:data.env.history_sie],
+                    'history_sie': data.env.history_sie,
+                    'history': data.env.history,
                     'reward': data.env.reward,
-                    'sim_time': data.env.sim_time
+                    'sim_time': data.env.sim_time,
+                    'current_thr': data.env.current_thr,
+                    'n_wifi': data.env.n_wifi
                 }
                 action = rl.sample(**observation)
                 data.act.action = action
@@ -135,7 +159,7 @@ if __name__ == '__main__':
     args = ArgumentParser()
 
     # Python arguments
-    args.add_argument('--agent', default="dqn", type=str)
+    args.add_argument('--agent', default="DQN", type=str)
     args.add_argument('--mempoolKey', default=1234, type=int)
     args.add_argument('--ns3Path', required=True, type=str)
     args.add_argument('--pythonSeed', default=42, type=int)
@@ -144,18 +168,21 @@ if __name__ == '__main__':
     args.add_argument('--agentType', default='discrete', type=str)
     args.add_argument('--CW', default=0, type=int)
     args.add_argument('--dryRun', default=False, action='store_true')
-    args.add_argument('--envStepTime', default=0.1, type=float)
-    args.add_argument('--historyLength', default=20, type=int)
+    args.add_argument('--envStepTime', default=INTERACTION_PERIOD, type=float)
+    args.add_argument('--historyLength', default=HISTORY_LENGTH, type=int)
     args.add_argument('--nonZeroStart', default=False, action='store_true')
     args.add_argument('--nWifi', default=5, type=int)
     args.add_argument('--rng', default=42, type=int)
     args.add_argument('--scenario', default='basic', type=str)
     args.add_argument('--seed', default=-1, type=int)
-    args.add_argument('--simTime', default=10.0, type=float)
+    args.add_argument('--simTime', default=SIMULATION_TIME, type=float)
     args.add_argument('--tracing', default=False, action='store_true')
     args.add_argument('--verbose', default=False, action='store_true')
 
     args = vars(args.parse_args())
+
+    assert args['historyLength'] <= max_history_length, \
+        f"MAX_HISTORY_LENGTH={max_history_length} reached, reduce 'historyLength' parameter value!"
 
     args['RngRun'] = args['pythonSeed']
     agent = args.pop('agent')
@@ -164,11 +191,16 @@ if __name__ == '__main__':
         'DQN': DQN
     }
     default_params = {
+        # DQN parameters are set according to the Table I from the cited article
         'DQN': {
-            'q_network': q_network,
-            'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
-            'discount': 0.95,
-            'epsilon_decay': 0.9975
+            'obs_space_shape':                  (HISTORY_LENGTH),
+            'act_space_size':                   (no_actions),
+            'q_network':                        q_network,
+            'optimizer':                        optax.sgd(DQN_LEARNING_RATE),
+            'experience_replay_batch_size':     BATCH_SIZE,
+            'discount':                         REWARD_DISCOUNT,
+            'experience_replay_buffer_size':    REPLAY_BUFFER_SIZE,
+            'tau':                              SOFT_UPDATE_COEFFICIENT
         }
     }
 
