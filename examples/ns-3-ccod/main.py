@@ -5,12 +5,26 @@ with Deep Reinforcement Learning” 2021 IEEE Wireless Communications and Networ
 Conference (WCNC), 2021. https://doi.org/10.1109/WCNC49053.2021.9417575
 """
 
-"DRL settings, according to the Table I from the cited article:"
+from argparse import ArgumentParser
+from ctypes import *
+from typing import Any, Dict
+
+import haiku as hk
+import jax.numpy as jnp
+import optax
+from chex import Array
+
+from py_interface import *
+from reinforced_lib import RLib
+from reinforced_lib.agents.deep import DQN
+from reinforced_lib.exts.wifi import IEEE_802_11_CW
+
+# DRL settings, according to Table I from the cited article
 
 INTERACTION_PERIOD = 1e-2
-HISTORY_LENGTH = 300
 DQN_LEARNING_RATE = 4e-4
 BATCH_SIZE = 32
+LSTM_HIDDEN_SIZE = 8
 REWARD_DISCOUNT = 0.7
 REPLAY_BUFFER_SIZE = 18000
 SOFT_UPDATE_COEFFICIENT = 4e-3
@@ -18,33 +32,11 @@ SOFT_UPDATE_COEFFICIENT = 4e-3
 SIMULATION_TIME = 60
 
 
-from argparse import ArgumentParser
-from ctypes import *
-from typing import Any, Dict
-from chex import Array
-
-from py_interface import *
-import haiku as hk
-import optax
-import jax.numpy as jnp
-
-from reinforced_lib import RLib
-from reinforced_lib.agents.deep import *
-from reinforced_lib.exts.wifi import IEEE_802_11_ax_CCOD as CCOD
-from reinforced_lib.logs import *
-
-max_history_length = CCOD.max_history_length
-no_actions = CCOD.no_actions
-
 class Env(Structure):
     _pack_ = 1
     _fields_ = [
-        ('history_sie', c_uint32),
-        ('history', c_float * max_history_length),
-        ('reward', c_float),
-        ('sim_time', c_double),
-        ('current_thr', c_double),
-        ('n_wifi', c_uint32)
+        ('history', c_float * IEEE_802_11_CW.history_length),
+        ('reward', c_float)
     ]
 
 
@@ -56,27 +48,22 @@ class Act(Structure):
 
 
 memblock_key = 2333
-memory_size = 16384
+memory_size = 128
 simulation = 'ccod-sim'
 
 
 @hk.transform_with_state
 def q_network(x: Array) -> Array:
+    core = hk.LSTM(LSTM_HIDDEN_SIZE)
 
-    # sequence_length - it is the history depth to analyze, equals the number of LSTM cells
-    # batch_size - self explanatory
-    # features_length - it is the size of a input vector (history_length in CCOD)
-    print(f"SHAPE: {x.shape}")
-    sequence_length, batch_size, fetures_length = x.shape
+    if x.ndim == 2:
+        x = x[jnp.newaxis, ...]
 
-    core = hk.LSTM(fetures_length)
-    initial_state = core.initial_state(batch_size)
-    _, lstm_state = hk.dynamic_unroll(core, x, initial_state)
+    initial_state = core.initial_state(x.shape[0])
+    _, lstm_state = hk.dynamic_unroll(core, x, initial_state, time_major=False)
+
     h_t = lstm_state.hidden
-
-    h_t = hk.nets.MLP([128, 64, no_actions])(h_t)
-
-    return jnp.argmax(h_t, axis=1)
+    return hk.nets.MLP([128, 64, 6])(h_t)
 
 
 def run(
@@ -125,8 +112,7 @@ def run(
     rl = RLib(
         agent_type=agent_type,
         agent_params=agent_params,
-        ext_type=CCOD,
-        ext_params={'history_length': 24}
+        ext_type=IEEE_802_11_CW
     )
 
     exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
@@ -141,15 +127,10 @@ def run(
                     break
 
                 observation = {
-                    'history_sie': data.env.history_sie,
                     'history': data.env.history,
-                    'reward': data.env.reward,
-                    'sim_time': data.env.sim_time,
-                    'current_thr': data.env.current_thr,
-                    'n_wifi': data.env.n_wifi
+                    'reward': data.env.reward
                 }
-                # action = rl.sample(**observation)
-                action = rl.action_space.sample()
+                action = rl.sample(**observation)
                 data.act.action = action
 
                 print_environment(observation, action) if verbose else None
@@ -173,7 +154,6 @@ if __name__ == '__main__':
     args.add_argument('--CW', default=0, type=int)
     args.add_argument('--dryRun', default=False, action='store_true')
     args.add_argument('--envStepTime', default=INTERACTION_PERIOD, type=float)
-    args.add_argument('--historyLength', default=HISTORY_LENGTH, type=int)
     args.add_argument('--nonZeroStart', default=False, action='store_true')
     args.add_argument('--nWifi', default=5, type=int)
     args.add_argument('--rng', default=42, type=int)
@@ -185,9 +165,6 @@ if __name__ == '__main__':
 
     args = vars(args.parse_args())
 
-    assert args['historyLength'] <= max_history_length, \
-        f"MAX_HISTORY_LENGTH={max_history_length} reached, reduce 'historyLength' parameter value!"
-
     args['RngRun'] = args['pythonSeed']
     agent = args.pop('agent')
 
@@ -197,8 +174,6 @@ if __name__ == '__main__':
     default_params = {
         # DQN parameters are set according to the Table I from the cited article
         'DQN': {
-            # 'obs_space_shape':                  (HISTORY_LENGTH),
-            # 'act_space_size':                   (no_actions),
             'q_network':                        q_network,
             'optimizer':                        optax.sgd(DQN_LEARNING_RATE),
             'experience_replay_batch_size':     BATCH_SIZE,
