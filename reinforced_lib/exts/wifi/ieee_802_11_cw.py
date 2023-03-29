@@ -4,17 +4,16 @@ import gymnasium as gym
 import numpy as np
 
 from reinforced_lib.exts import BaseExt, observation, parameter
-
+HISTORY_LENGTH = 64
 
 class IEEE_802_11_CW(BaseExt):
-    history_length = 20
 
     observation_space = gym.spaces.Dict({
-        'history': gym.spaces.Box(0, 1, (history_length,), np.int32),
+        'history': gym.spaces.Box(0, 1, (HISTORY_LENGTH,), np.int32),
         'reward': gym.spaces.Box(-np.inf, np.inf, (1,))
     })
 
-    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (history_length, 1), np.float32))
+    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (HISTORY_LENGTH, 1), np.float32))
     def env_state(self, history: Array, *args, **kwargs) -> np.ndarray:
         return np.array(history, dtype=np.float32)[..., np.newaxis]
 
@@ -32,7 +31,7 @@ class IEEE_802_11_CW(BaseExt):
 
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(0, np.inf, (1,), np.int32)))
     def obs_space_shape(self) -> tuple:
-        return self.history_length, 1
+        return HISTORY_LENGTH, 1
 
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
     def act_space_shape(self) -> tuple:

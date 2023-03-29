@@ -17,7 +17,7 @@ from chex import Array
 from py_interface import *
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import DQN
-from reinforced_lib.exts.wifi import IEEE_802_11_CW
+from reinforced_lib.exts.wifi import IEEE_802_11_CW, HISTORY_LENGTH
 
 # DRL settings, according to Table I from the cited article
 
@@ -30,12 +30,13 @@ REPLAY_BUFFER_SIZE = 18000
 SOFT_UPDATE_COEFFICIENT = 4e-3
 
 SIMULATION_TIME = 60
+MAX_HISTORY_LENGTH = 512
 
 
 class Env(Structure):
     _pack_ = 1
     _fields_ = [
-        ('history', c_float * IEEE_802_11_CW.history_length),
+        ('history', c_float * MAX_HISTORY_LENGTH),
         ('reward', c_float)
     ]
 
@@ -48,7 +49,7 @@ class Act(Structure):
 
 
 memblock_key = 2333
-memory_size = 128
+memory_size = 4096
 simulation = 'ccod-sim'
 
 
@@ -102,8 +103,7 @@ def run(
     """
 
     def print_environment(observation, action):
-        print(f"Sim Time: {'{:.3f}'.format(observation['sim_time'])}\t", end="")
-        print(f"History[{observation['history_sie']}]:", end="")
+        print(f"History[{len(observation['history'])}]:", end="")
         for p_col in observation['history'][:5]:
             print(" {:.3f}".format(p_col), end="")
         print(f"\tAction: {action}\t", end="")
@@ -127,7 +127,7 @@ def run(
                     break
 
                 observation = {
-                    'history': data.env.history,
+                    'history': data.env.history[:HISTORY_LENGTH],
                     'reward': data.env.reward
                 }
                 action = rl.sample(**observation)
@@ -141,6 +141,11 @@ def run(
 
 
 if __name__ == '__main__':
+
+    assert HISTORY_LENGTH <= MAX_HISTORY_LENGTH, \
+        f"HISTORY_LENGTH={HISTORY_LENGTH} exceeded MAX_HISTORY_LENGTH={MAX_HISTORY_LENGTH}, " +\
+        f"reduce HISTORY_LENGTH value in 'reinforced_lib/exts/wifi/ieee_802_11_cw.py' file!"
+    
     args = ArgumentParser()
 
     # Python arguments
@@ -166,6 +171,7 @@ if __name__ == '__main__':
     args = vars(args.parse_args())
 
     args['RngRun'] = args['pythonSeed']
+    args['historyLength'] = HISTORY_LENGTH
     agent = args.pop('agent')
 
     agent_type = {

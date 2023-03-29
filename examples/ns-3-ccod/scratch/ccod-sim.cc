@@ -29,7 +29,7 @@
 #include "ns3/ns3-ai-module.h"
 
 #define DEFAULT_MEMBLOCK_KEY 2333
-#define HISTORY_LENGTH 20
+#define MAX_HISTORY_LENGTH 512
 
 using namespace std;
 using namespace ns3;
@@ -42,7 +42,7 @@ using namespace ns3;
 
 struct Env
 {
-    float history[HISTORY_LENGTH];
+    float history[MAX_HISTORY_LENGTH];
     float reward;
 } Packed;
 
@@ -76,7 +76,7 @@ class Scenario
                                  ns3::Callback<void, Ptr<const Packet>> callback);
 
   public:
-    Scenario(int nWifim, NodeContainer wifiStaNode, NodeContainer wifiApNode, int port, std::string offeredLoad);
+    Scenario(int nWifim, NodeContainer wifiStaNode, NodeContainer wifiApNode, int port, std::string offeredLoad, int history_length);
     virtual void installScenario(double simulationTime, double envStepTime, ns3::Callback<void, Ptr<const Packet>> callback) = 0;
     void PopulateARPcache();
     int getActiveStationCount(double time);
@@ -106,16 +106,18 @@ class ScenarioFactory
     NodeContainer wifiStaNode;
     NodeContainer wifiApNode;
     int port;
+    int history_length;
     std::string offeredLoad;
 
   public:
-    ScenarioFactory(int nWifim, NodeContainer wifiStaNode, NodeContainer wifiApNode, int port, std::string offeredLoad)
+    ScenarioFactory(int nWifim, NodeContainer wifiStaNode, NodeContainer wifiApNode, int port, std::string offeredLoad, int history_length)
     {
         this->nWifim = nWifim;
         this->wifiStaNode = wifiStaNode;
         this->wifiApNode = wifiApNode;
         this->port = port;
         this->offeredLoad = offeredLoad;
+        this->history_length = history_length;
     }
 
     Scenario *getScenario(std::string scenario)
@@ -123,11 +125,11 @@ class ScenarioFactory
         Scenario *wifiScenario;
         if (scenario == "basic")
         {
-            wifiScenario = new BasicScenario(this->nWifim, this->wifiStaNode, this->wifiApNode, this->port, this->offeredLoad);
+            wifiScenario = new BasicScenario(this->nWifim, this->wifiStaNode, this->wifiApNode, this->port, this->offeredLoad, this->history_length);
         }
         else if (scenario == "convergence")
         {
-            wifiScenario = new ConvergenceScenario(this->nWifim, this->wifiStaNode, this->wifiApNode, this->port, this->offeredLoad);
+            wifiScenario = new ConvergenceScenario(this->nWifim, this->wifiStaNode, this->wifiApNode, this->port, this->offeredLoad, this->history_length);
         }
         else
         {
@@ -138,14 +140,14 @@ class ScenarioFactory
     }
 };
 
-Scenario::Scenario(int nWifim, NodeContainer wifiStaNode, NodeContainer wifiApNode, int port, std::string offeredLoad)
+Scenario::Scenario(int nWifim, NodeContainer wifiStaNode, NodeContainer wifiApNode, int port, std::string offeredLoad, int history_length)
 {
     this->nWifim = nWifim;
     this->wifiStaNode = wifiStaNode;
     this->wifiApNode = wifiApNode;
     this->port = port;
     this->offeredLoad = offeredLoad;
-    this->history_length = HISTORY_LENGTH;
+    this->history_length = history_length;
 }
 
 int Scenario::getActiveStationCount(double time)
@@ -265,14 +267,14 @@ void BasicScenario::installScenario(double simulationTime, double envStepTime, n
 {
     for (int i = 0; i < this->nWifim; ++i)
     {
-        installTrafficGenerator(this->wifiStaNode.Get(i), this->wifiApNode.Get(0), this->port++, this->offeredLoad, 0.0, simulationTime + 2 + envStepTime*HISTORY_LENGTH, callback);
+        installTrafficGenerator(this->wifiStaNode.Get(i), this->wifiApNode.Get(0), this->port++, this->offeredLoad, 0.0, simulationTime + 2 + envStepTime*history_length, callback);
     }
 }
 
 void ConvergenceScenario::installScenario(double simulationTime, double envStepTime, ns3::Callback<void, Ptr<const Packet>> callback)
 {
     float delta = simulationTime/(this->nWifim-4);
-    float delay = HISTORY_LENGTH*envStepTime;
+    float delay = history_length*envStepTime;
     if (this->nWifim > 5)
     {
         for (int i = 0; i < 5; ++i)
@@ -321,6 +323,7 @@ ofstream outfile ("CW_data.csv", fstream::out);
 
 uint32_t CW = 0;
 
+uint32_t history_length = 20;
 deque<float> history;
 float reward;
 double current_thr;
@@ -367,6 +370,7 @@ main (int argc, char *argv[])
     cmd.AddValue("CW", "Value of Contention Window", CW);
     cmd.AddValue("dryRun", "Execute scenario with BEB and no agent interaction", dry_run);
     cmd.AddValue("envStepTime", "Step time in seconds. Default: 0.1s", envStepTime);
+    cmd.AddValue("historyLength", "Length of history window", history_length);
     cmd.AddValue("nonZeroStart", "Start only after history buffer is filled", non_zero_start);
     cmd.AddValue("nWifi", "Number of wifi 802.11ax STA devices", nWifi);
     cmd.AddValue("rng", "Number of RngRun", rng);
@@ -378,11 +382,17 @@ main (int argc, char *argv[])
 
     cmd.Parse(argc, argv);
 
+    if (history_length > MAX_HISTORY_LENGTH) {
+        cout << "Error, Maximum history length " << MAX_HISTORY_LENGTH << " exceeded!" << endl;
+        exit(1);
+    }
+
     cout << endl
          << "Ns3Env parameters:" << endl
          << "--agentType: " << type << endl
          << "--dryRun: " << dry_run << endl
          << "--envStepTime: " << envStepTime << endl
+         << "--historyLength: " << history_length << endl
          << "--nonZeroStart: " << non_zero_start << endl
          << "--nWifi: " << nWifi << endl
          << "--scenario: " << scenario << endl
@@ -436,13 +446,13 @@ main (int argc, char *argv[])
     NetDeviceContainer apDevice;
     set_nodes(channelWidth, guardInterval, rng, simSeed, wifiStaNode, wifiApNode, phy, mac, wifi, apDevice);
 
-    ScenarioFactory helper = ScenarioFactory(nWifi, wifiStaNode, wifiApNode, port, offeredLoad);
+    ScenarioFactory helper = ScenarioFactory(nWifi, wifiStaNode, wifiApNode, port, offeredLoad, history_length);
     wifiScenario = helper.getScenario(scenario);
 
     // if (!dry_run)
     // {
     if (non_zero_start)
-        end_delay = envStepTime * HISTORY_LENGTH + 1.0;
+        end_delay = envStepTime * history_length + 1.0;
     else
         end_delay = 0.0;
     // }
@@ -636,7 +646,7 @@ recordHistory()
     current_thr = getCurrentThr();
 
     // Remove the oldest observation if we have filled the history
-    if (history.size() > HISTORY_LENGTH)
+    if (history.size() > history_length)
     {
         history.pop_back();
     }
@@ -645,12 +655,12 @@ recordHistory()
     last_rx = g_rxPktNum;
     last_tx = g_txPktNum;
 
-    if (calls < HISTORY_LENGTH && non_zero_start)
+    if (calls < history_length && non_zero_start)
     {   
         // Schedule the next observation if we are not at the end of the simulation
         Simulator::Schedule(Seconds(envStepTime), &recordHistory);
     }
-    else if (calls == HISTORY_LENGTH && non_zero_start)
+    else if (calls == history_length && non_zero_start)
     {
         g_rxPktNum = 0;
         g_txPktNum = 0;
@@ -799,13 +809,13 @@ set_sim(bool tracing, bool dry_run, int warmup, YansWifiPhyHelper phy, NetDevice
     {
 
         Simulator::Schedule(Seconds(1.0), &recordHistory);
-        Simulator::Schedule(Seconds(envStepTime * HISTORY_LENGTH + 1.0), &ScheduleNextStateRead, envStepTime);
+        Simulator::Schedule(Seconds(envStepTime * history_length + 1.0), &ScheduleNextStateRead, envStepTime);
     }
     else
         Simulator::Schedule(Seconds(1.0), &ScheduleNextStateRead, envStepTime);
     // }
 
-    Simulator::Stop(Seconds(simulationTime + end_delay + 1.0 + envStepTime*(HISTORY_LENGTH+1)));
+    Simulator::Stop(Seconds(simulationTime + end_delay + 1.0 + envStepTime*(history_length+1)));
 
     cout << "Simulation started..." << endl;
     Simulator::Run();
