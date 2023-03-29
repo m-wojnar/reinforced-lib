@@ -66,6 +66,24 @@ def main():
     interpreter.invoke()
     next_state = interpreter.get_tensor(output_details[0]['index'])
 
+
+    converter = make_converter(ts.sample,tree.tree_map(jnp.asarray,[new_state,k,1.]))
+
+    converter.target_spec.supported_ops = [
+        tf.lite.OpsSet.TFLITE_BUILTINS,  # enable TensorFlow Lite ops.
+        tf.lite.OpsSet.SELECT_TF_OPS  # enable TensorFlow ops.
+    ]
+
+    tflite_sample = converter.convert()
+    with open('sample.tflite', 'wb') as f:
+        f.write(tflite_update)
+
+    interpreter = tf.lite.Interpreter(model_content=tflite_update)
+    interpreter.allocate_tensors()
+
+    interpreter.invoke()
+
+
     return
 
 # TODO delete this
