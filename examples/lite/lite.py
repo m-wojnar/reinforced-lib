@@ -68,6 +68,7 @@ def main():
 
     return
 
+# TODO delete this
 def main2():
     k = jax.random.PRNGKey(42)
     ts = ThompsonSampling(16)
@@ -119,6 +120,7 @@ def main2():
     interpreter.invoke()
     return
 
+# TODO delete this
 def main3():
     print(f'JAX {jax.__version__}')
     print(f'tf {tf.__version__}')
@@ -163,6 +165,7 @@ def main3():
 
     return
 
+# TODO delete this
 def main4():
     print(f'JAX {jax.__version__}')
     print(f'tf {tf.__version__}')
