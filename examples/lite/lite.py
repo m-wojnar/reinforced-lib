@@ -78,7 +78,7 @@ def main():
     with open('sample.tflite', 'wb') as f:
         f.write(tflite_update)
 
-    interpreter = tf.lite.Interpreter(model_content=tflite_update)
+    interpreter = tf.lite.Interpreter(model_content=tflite_sample)
     interpreter.allocate_tensors()
 
     interpreter.invoke()
