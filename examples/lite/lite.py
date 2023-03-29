@@ -1,16 +1,9 @@
-import sys
-
 import tensorflow as tf
-#tf.config.set_visible_devices([], 'GPU')
+
 
 import jax
-import jax.numpy as jnp
-import numpy as np
-import inspect
 from reinforced_lib.agents.mab import ThompsonSampling
 from functools import wraps
-import inspect
-import chex
 import jax.numpy as jnp
 import jax.tree_util as tree
 
@@ -71,6 +64,7 @@ def main():
         interpreter.set_tensor(d['index'],a)
 
     interpreter.invoke()
+    next_state = interpreter.get_tensor(output_details[0]['index'])
 
     return
 
@@ -156,11 +150,17 @@ def main3():
     args = jnp.ones(2)
 
     expected = _update(args)
+    print("Expected output:", expected)
 
-    # for a, d in zip(args, input_details):
     interpreter.set_tensor(input_details[0]['index'], args)
-
     interpreter.invoke()
+
+    interpreter.set_tensor(input_details[0]['index'], args)
+    interpreter.invoke()
+
+    output = interpreter.get_tensor(output_details[0]['index'])
+    print("Output:", output)
+
     return
 
 def main4():
@@ -204,6 +204,6 @@ def main4():
 
 if __name__ == '__main__':
 
-    main4()
+    main()
 
     ...
