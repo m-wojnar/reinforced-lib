@@ -34,8 +34,6 @@
 using namespace std;
 using namespace ns3;
 
-// NS_LOG_COMPONENT_DEFINE("OpenGym");
-
 /***** ns3-ai structures *****/
 
 // ns3-ai structures
@@ -325,20 +323,13 @@ uint32_t CW = 0;
 
 uint32_t history_length = 20;
 deque<float> history;
-float reward;
-double current_thr;
-uint32_t n_wifi = 0;
 
 string type = "discrete";
 bool non_zero_start = false;
 Scenario *wifiScenario;
 
-// GYM_PART
-
 uint64_t g_rxPktNum = 0;
 uint64_t g_txPktNum = 0;
-
-// GYM_PART
 
 /***** Main with scenario definition *****/
 
@@ -530,33 +521,10 @@ execute_action(float action)
     outfile << Simulator::Now().GetSeconds() << "," << CW << endl;
 
     if(!dry_run){
-        Config::Set("/$ns3::NodeListPriv/NodeList/*/$ns3::Node/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::RegularWifiMac/BE_Txop/$ns3::QosTxop/MinCw", UintegerValue(CW));
-        Config::Set("/$ns3::NodeListPriv/NodeList/*/$ns3::Node/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::RegularWifiMac/BE_Txop/$ns3::QosTxop/MaxCw", UintegerValue(CW));
+        Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/BE_Txop/MinCw", UintegerValue(CW));
+        Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/BE_Txop/MaxCw", UintegerValue(CW));
     }
     return true;
-}
-
-float
-getCurrentThr(void)
-{
-    static float ticks = 0.0;
-    static uint32_t last_packets = 0;
-    static float last_thr = 0.0;
-    ticks += envStepTime;
-
-    float res = g_rxPktNum - last_packets;
-    float thr = res * (1500 - 20 - 8 - 8) * 8.0 / 1024 / 1024 / envStepTime;
-
-    last_packets = g_rxPktNum;
-
-    if (ticks <= 2 * envStepTime)
-        return 0.0;
-
-    if (verbose)
-        NS_LOG_UNCOND("Current thr: " << thr);
-
-    last_thr = thr;
-    return last_thr;
 }
 
 float
@@ -642,8 +610,6 @@ recordHistory()
 
     ratio = errs / sent;
     history.push_front(ratio);
-    reward = getReward();
-    current_thr = getCurrentThr();
 
     // Remove the oldest observation if we have filled the history
     if (history.size() > history_length)
@@ -675,7 +641,8 @@ ScheduleNextStateRead(double envStepTime)
     Simulator::Schedule(Seconds(envStepTime), &ScheduleNextStateRead, envStepTime);
 
     recordHistory();
-    
+    float reward = getReward();
+
     // Here is the ns3-ai communication with python agent
         // 1. push history and reward to DQN agent as observation
     auto env = m_env->EnvSetterCond();
@@ -692,7 +659,6 @@ ScheduleNextStateRead(double envStepTime)
 
     // Act according to the retrived action
     execute_action((float) current_action);
-    current_action = (current_action + 1) % 6;
 }
 
 void
@@ -755,14 +721,14 @@ set_nodes(int channelWidth, int guardInterval, int rng, int32_t simSeed, NodeCon
 
     if (!dry_run)
     {
-        Config::Set("/$ns3::NodeListPriv/NodeList/*/$ns3::Node/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::RegularWifiMac/BE_Txop/$ns3::QosTxop/MinCw", UintegerValue(CW));
-        Config::Set("/$ns3::NodeListPriv/NodeList/*/$ns3::Node/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::RegularWifiMac/BE_Txop/$ns3::QosTxop/MaxCw", UintegerValue(CW));
+        Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/BE_Txop/MinCw", UintegerValue(CW));
+        Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/BE_Txop/MaxCw", UintegerValue(CW));
     }
     else
     {
         NS_LOG_UNCOND("Default CW");
-        Config::Set("/$ns3::NodeListPriv/NodeList/*/$ns3::Node/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::RegularWifiMac/BE_Txop/$ns3::QosTxop/MinCw", UintegerValue(16));
-        Config::Set("/$ns3::NodeListPriv/NodeList/*/$ns3::Node/DeviceList/*/$ns3::WifiNetDevice/Mac/$ns3::RegularWifiMac/BE_Txop/$ns3::QosTxop/MaxCw", UintegerValue(1024));
+        Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/BE_Txop/MinCw", UintegerValue(16));
+        Config::Set("/NodeList/*/DeviceList/*/$ns3::WifiNetDevice/Mac/BE_Txop/MaxCw", UintegerValue(1024));
     }
 }
 
@@ -793,15 +759,6 @@ set_sim(bool tracing, bool dry_run, int warmup, YansWifiPhyHelper phy, NetDevice
         phy.SetPcapDataLinkType(WifiPhyHelper::DLT_IEEE802_11_RADIO);
         phy.EnablePcap("cw", apDevice.Get(0));
     }
-
-    // Ptr<OpenGymInterface> openGymInterface = CreateObject<OpenGymInterface>(openGymPort);
-    // openGymInterface->SetGetActionSpaceCb(MakeCallback(&MyGetActionSpace));
-    // openGymInterface->SetGetObservationSpaceCb(MakeCallback(&MyGetObservationSpace));
-    // openGymInterface->SetGetGameOverCb(MakeCallback(&MyGetGameOver));
-    // openGymInterface->SetGetObservationCb(MakeCallback(&MyGetObservation));
-    // openGymInterface->SetGetRewardCb(MakeCallback(&MyGetReward));
-    // openGymInterface->SetGetExtraInfoCb(MakeCallback(&MyGetExtraInfo));
-    // openGymInterface->SetExecuteActionsCb(MakeCallback(&MyExecuteActions));
 
     // if (!dry_run)
     // {
