@@ -10,27 +10,36 @@ from ctypes import *
 from typing import Any, Dict
 
 import haiku as hk
-import jax.numpy as jnp
+import numpy as np
 import optax
 from chex import Array
 
 from py_interface import *
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import DQN
-from reinforced_lib.exts.wifi import IEEE_802_11_CW, HISTORY_LENGTH
+from reinforced_lib.exts.wifi import IEEE_802_11_CW
+
 
 # DRL settings, according to Table I from the cited article
 
 INTERACTION_PERIOD = 1e-2
-DQN_LEARNING_RATE = 4e-4
-BATCH_SIZE = 32
+SIMULATION_TIME = 60
+NUM_REPS = 15
+MAX_HISTORY_LENGTH = 512
+HISTORY_LENGTH = 300
+
 LSTM_HIDDEN_SIZE = 8
 REWARD_DISCOUNT = 0.7
-REPLAY_BUFFER_SIZE = 18000
-SOFT_UPDATE_COEFFICIENT = 4e-3
 
-SIMULATION_TIME = 60
-MAX_HISTORY_LENGTH = 512
+DQN_LEARNING_RATE = 4e-4
+EPSILON = 0.9
+EPSILON_DECAY = 0.99991
+EPSILON_MIN = 0.001
+SOFT_UPDATE = 4e-3
+
+REPLAY_BUFFER_SIZE = 18000
+REPLAY_BUFFER_BATCH_SIZE = 32
+REPLAY_BUFFER_STEPS = 1
 
 
 class Env(Structure):
@@ -55,16 +64,43 @@ simulation = 'ccod-sim'
 
 @hk.transform_with_state
 def q_network(x: Array) -> Array:
-    core = hk.LSTM(LSTM_HIDDEN_SIZE)
-
     if x.ndim == 2:
-        x = x[jnp.newaxis, ...]
+        x = x[None, ...]
 
+    core = hk.LSTM(LSTM_HIDDEN_SIZE)
     initial_state = core.initial_state(x.shape[0])
     _, lstm_state = hk.dynamic_unroll(core, x, initial_state, time_major=False)
 
     h_t = lstm_state.hidden
-    return hk.nets.MLP([128, 64, 6])(h_t)
+    return hk.nets.MLP([128, 64, 7])(h_t)
+
+
+def preprocess(history: Array, history_length: int) -> Array:
+    """
+    Preprocess the history according to the CCOD algorithm.
+
+    Parameters
+    ----------
+    history : array_like
+        History of the transmission failure probability.
+    history_length : int
+        Length of the history.
+
+    Returns
+    -------
+    array_like
+        Preprocessed history.
+    """
+
+    history = history[:history_length]
+    window = history_length // 2
+    res = np.empty((4, 2))
+
+    for i, pos in enumerate(range(0, history_length, window // 2)):
+        res[i, 0] = np.mean(history[pos:pos + window])
+        res[i, 1] = np.std(history[pos:pos + window])
+
+    return np.clip(res, 0, 1)
 
 
 def run(
@@ -73,11 +109,10 @@ def run(
         mempool_key: int,
         agent_type: type,
         agent_params: Dict[str, Any],
-        seed: int,
-        verbose: bool
+        seed: int
 ) -> None:
     """
-    Run a simulation in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
+    Run a given number of simulations in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
 
     Parameters
     ----------
@@ -102,50 +137,40 @@ def run(
        Association for Computing Machinery.
     """
 
-    def print_environment(observation, action):
-        print(f"History[{len(observation['history'])}]:", end="")
-        for p_col in observation['history'][:5]:
-            print(" {:.3f}".format(p_col), end="")
-        print(f"\tAction: {action}\t", end="")
-        print(f"Reward: {'{:.3f}'.format(observation['reward'])}")
-
     rl = RLib(
         agent_type=agent_type,
         agent_params=agent_params,
         ext_type=IEEE_802_11_CW
     )
+    rl.init(seed)
 
-    exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
-    var = Ns3AIRL(memblock_key, Env, Act)
+    for _ in range(NUM_REPS - 1):
+        exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
+        var = Ns3AIRL(memblock_key, Env, Act)
 
-    try:
-        ns3_process = exp.run(ns3_args, show_output=True)
+        try:
+            ns3_process = exp.run(ns3_args, show_output=True)
 
-        while not var.isFinish():
-            with var as data:
-                if data is None:
-                    break
+            while not var.isFinish():
+                with var as data:
+                    if data is None:
+                        break
 
-                observation = {
-                    'history': data.env.history[:HISTORY_LENGTH],
-                    'reward': data.env.reward
-                }
-                action = rl.sample(**observation)
-                data.act.action = action
+                    observation = {
+                        'history': preprocess(data.env.history, ns3_args['historyLength']),
+                        'reward': data.env.reward
+                    }
+                    data.act.action = rl.sample(**observation)
 
-                print_environment(observation, action) if verbose else None
+            ns3_process.wait()
+        finally:
+            del exp
+            ns3_args['rng'] += 1
 
-        ns3_process.wait()
-    finally:
-        del exp
+    rl.save()
 
 
 if __name__ == '__main__':
-
-    assert HISTORY_LENGTH <= MAX_HISTORY_LENGTH, \
-        f"HISTORY_LENGTH={HISTORY_LENGTH} exceeded MAX_HISTORY_LENGTH={MAX_HISTORY_LENGTH}, " +\
-        f"reduce HISTORY_LENGTH value in 'reinforced_lib/exts/wifi/ieee_802_11_cw.py' file!"
-    
     args = ArgumentParser()
 
     # Python arguments
@@ -159,34 +184,38 @@ if __name__ == '__main__':
     args.add_argument('--CW', default=0, type=int)
     args.add_argument('--dryRun', default=False, action='store_true')
     args.add_argument('--envStepTime', default=INTERACTION_PERIOD, type=float)
-    args.add_argument('--nonZeroStart', default=False, action='store_true')
+    args.add_argument('--historyLength', default=HISTORY_LENGTH, type=int)
+    args.add_argument('--nonZeroStart', default=True, action='store_true')
     args.add_argument('--nWifi', default=5, type=int)
     args.add_argument('--rng', default=42, type=int)
     args.add_argument('--scenario', default='basic', type=str)
-    args.add_argument('--seed', default=-1, type=int)
     args.add_argument('--simTime', default=SIMULATION_TIME, type=float)
     args.add_argument('--tracing', default=False, action='store_true')
     args.add_argument('--verbose', default=False, action='store_true')
 
     args = vars(args.parse_args())
 
-    args['RngRun'] = args['pythonSeed']
-    args['historyLength'] = HISTORY_LENGTH
-    agent = args.pop('agent')
+    assert args['historyLength'] <= MAX_HISTORY_LENGTH, \
+        f"HISTORY_LENGTH={args['historyLength']} exceeded MAX_HISTORY_LENGTH={MAX_HISTORY_LENGTH}, " +\
+        f"reduce HISTORY_LENGTH value in 'reinforced_lib/exts/wifi/ieee_802_11_cw.py' file!"
 
+    agent = args.pop('agent')
     agent_type = {
         'DQN': DQN
     }
     default_params = {
-        # DQN parameters are set according to the Table I from the cited article
         'DQN': {
             'q_network':                        q_network,
             'optimizer':                        optax.sgd(DQN_LEARNING_RATE),
-            'experience_replay_batch_size':     BATCH_SIZE,
-            'discount':                         REWARD_DISCOUNT,
             'experience_replay_buffer_size':    REPLAY_BUFFER_SIZE,
-            'tau':                              SOFT_UPDATE_COEFFICIENT
+            'experience_replay_batch_size':     REPLAY_BUFFER_BATCH_SIZE,
+            'experience_replay_steps':          REPLAY_BUFFER_STEPS,
+            'discount':                         REWARD_DISCOUNT,
+            'epsilon':                          EPSILON,
+            'epsilon_decay':                    EPSILON_DECAY,
+            'epsilon_min':                      EPSILON_MIN,
+            'tau':                              SOFT_UPDATE
         }
     }
 
-    run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], args.pop('pythonSeed'), args['verbose'])
+    run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], args.pop('pythonSeed'))
