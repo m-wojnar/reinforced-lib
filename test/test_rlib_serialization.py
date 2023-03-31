@@ -26,9 +26,9 @@ class TestRLibSerialization(unittest.TestCase):
             agent_type=ThompsonSampling,
             agent_params={"decay": 0.0},
             ext_type=IEEE_802_11_ax_RA,
-            loggers_type=CsvLogger,
-            loggers_sources=['n_failed', 'n_successful', ('action', SourceType.METRIC)],
-            loggers_params={'csv_path': f'output_reload={reload}_new-decay={new_decay}.csv'}
+            logger_types=CsvLogger,
+            logger_sources=['n_failed', 'n_successful', ('action', SourceType.METRIC)],
+            logger_params={'csv_path': f'output_reload={reload}_new-decay={new_decay}.csv'}
         )
 
         actions = []

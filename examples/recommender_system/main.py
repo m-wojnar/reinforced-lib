@@ -22,9 +22,9 @@ def run(episodes: int, seed: int) -> None:
         agent_type=EGreedy,
         agent_params={'e': 0.25},
         ext_type=RecommenderSystemExt,
-        loggers_type=PlotsLogger,
-        loggers_sources=[('action', SourceType.METRIC), ('cumulative', SourceType.METRIC)],
-        loggers_params={'plots_scatter': True}
+        logger_types=PlotsLogger,
+        logger_sources=[('action', SourceType.METRIC), ('cumulative', SourceType.METRIC)],
+        logger_params={'plots_scatter': True}
     )
     rl.init(seed)
 
@@ -33,7 +33,7 @@ def run(episodes: int, seed: int) -> None:
     _, reward, *_ = env.step(act)
 
     for i in range(1, episodes):
-        act = rl.sample(action=act, reward=reward, time=i)
+        act = rl.sample(reward=reward, time=i)
         _, reward, *_ = env.step(act)
 
 

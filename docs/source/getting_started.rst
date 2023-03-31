@@ -95,8 +95,8 @@ real time. Below is the simplest example of using the built-in logger ``StdoutLo
     rlib = rfl.RLib(
         agent_type=ThompsonSampling,
         ext_type=IEEE_802_11_ax_RA,
-        logger_type=StdoutLogger,
-        loggers_sources='n_successful'
+        logger_types=StdoutLogger,
+        logger_sources='n_successful'
     )
 
 You can easily change the logger type, add more sources, and customize the parameters of the logger:
@@ -106,9 +106,9 @@ You can easily change the logger type, add more sources, and customize the param
     rlib = rfl.RLib(
         agent_type=ThompsonSampling,
         ext_type=IEEE_802_11_ax_RA,
-        logger_type=PlotsLogger,
-        loggers_sources=['n_successful', 'alpha', ('action', SourceType.METRIC)],
-        loggers_params={'plots_smoothing': 0.9}
+        logger_types=PlotsLogger,
+        logger_sources=['n_successful', 'alpha', ('action', SourceType.METRIC)],
+        logger_params={'plots_smoothing': 0.9}
     )
 
 Note that ``n_successful`` is the observation name, ``alpha`` is name of the attribute of the ``ThompsonSampling``
@@ -124,8 +124,8 @@ You can also plug multiple loggers to one source:
     rlib = rfl.RLib(
         agent_type=ThompsonSampling,
         ext_type=IEEE_802_11_ax_RA,
-        logger_type=[StdoutLogger, CsvLogger, PlotsLogger],
-        loggers_sources='n_successful'
+        logger_types=[StdoutLogger, CsvLogger, PlotsLogger],
+        logger_sources='n_successful'
     )
 
 Or mix different loggers and sources:
@@ -135,8 +135,8 @@ Or mix different loggers and sources:
     rlib = rfl.RLib(
         agent_type=ThompsonSampling,
         ext_type=IEEE_802_11_ax_RA,
-        logger_type=[StdoutLogger, CsvLogger, PlotsLogger],
-        loggers_sources=['n_successful', 'alpha', ('action', SourceType.METRIC)]
+        logger_types=[StdoutLogger, CsvLogger, PlotsLogger],
+        logger_sources=['n_successful', 'alpha', ('action', SourceType.METRIC)]
     )
 
 In this case remember to provide a list of loggers that has the same length as the list of sources, because given loggers
