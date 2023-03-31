@@ -608,7 +608,11 @@ recordHistory()
     float errs = sent - received;           // Errors (...)
     float ratio;
 
-    ratio = errs / sent;
+    if (sent == 0)
+        ratio = 0.0;
+    else
+        ratio = errs / sent;
+
     history.push_front(ratio);
 
     // Remove the oldest observation if we have filled the history
