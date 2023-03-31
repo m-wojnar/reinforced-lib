@@ -127,7 +127,7 @@ def run(
     agent_params : dict
         Parameters of the agent.
     seed : int
-        Number used to initialize the JAX and the ns-3 pseudo-random number generator.
+        Number used to initialize the random number generator. If None, the agent is loaded from the checkpoint.
     run_id : int
         Number of the current simulation.
 
@@ -139,16 +139,15 @@ def run(
        Association for Computing Machinery.
     """
 
-    rl = RLib(
-        agent_type=agent_type,
-        agent_params=agent_params,
-        ext_type=IEEE_802_11_CW
-    )
-
     if seed is not None:
+        rl = RLib(
+            agent_type=agent_type,
+            agent_params=agent_params,
+            ext_type=IEEE_802_11_CW
+        )
         rl.init(seed)
     else:
-        rl.load(f'checkpoints/run_{run_id - 1}.pkl.lz4', restore_loggers=False)
+        rl = RLib.load(f'checkpoints/run_{run_id - 1}.pkl.lz4')
 
     exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
     var = Ns3AIRL(memblock_key, Env, Act)
