@@ -547,17 +547,14 @@ class RLib:
             )
         
         for agent_id, agent_container in experiment_state["agents"].items():
-            if agent_id < len(rlib._agent_containers):
-                rlib._agent_containers[agent_id] = agent_container
-            else:
-                while agent_id > len(rlib._agent_containers):
-                    rlib.init()
+            while agent_id >= len(rlib._agent_containers):
+                rlib.init()
 
-                rlib._agent_containers.append(AgentContainer(
-                    state=agent_container["state"],
-                    key=agent_container["key"],
-                    action=agent_container["action"],
-                    step=agent_container["step"]
-                ))
+            rlib._agent_containers[agent_id] = AgentContainer(
+                state=agent_container["state"],
+                key=agent_container["key"],
+                action=agent_container["action"],
+                step=agent_container["step"]
+            )
 
         return rlib
