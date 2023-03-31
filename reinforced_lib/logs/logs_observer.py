@@ -15,8 +15,8 @@ class LogsObserver:
     """
 
     def __init__(self) -> None:
-        self._loggers_instances = {}
-        self._loggers_sources = defaultdict(list)
+        self._logger_instances = {}
+        self._logger_sources = defaultdict(list)
 
         self._observations_loggers = defaultdict(list)
         self._agent_state_loggers = defaultdict(list)
@@ -45,7 +45,7 @@ class LogsObserver:
         elif not isinstance(source, str):
             raise IncorrectSourceTypeError(type(source))
 
-        logger = self._loggers_instances.get(logger_type, logger_type(**logger_params))
+        logger = self._logger_instances.get(logger_type, logger_type(**logger_params))
 
         if isinstance(source, tuple):
             if source[1] == SourceType.OBSERVATION:
@@ -59,15 +59,15 @@ class LogsObserver:
             self._agent_state_loggers[logger].append((source, source))
             self._metrics_loggers[logger].append((source, source))
 
-        self._loggers_sources[logger].append(source)
-        self._loggers_instances[logger_type] = logger
+        self._logger_sources[logger].append(source)
+        self._logger_instances[logger_type] = logger
 
     def init_loggers(self):
         """
         Initializes all loggers by calling their ``init`` method.
         """
 
-        for logger, sources in self._loggers_sources.items():
+        for logger, sources in self._logger_sources.items():
             logger.init(sources)
 
     def finish_loggers(self):
@@ -75,7 +75,7 @@ class LogsObserver:
         Finalizes the work of all loggers by calling their ``finish`` method.
         """
 
-        for logger in self._loggers_sources.keys():
+        for logger in self._logger_sources.keys():
             logger.finish()
 
     def update_observations(self, observations: Any) -> None:

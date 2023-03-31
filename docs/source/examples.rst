@@ -419,9 +419,9 @@ agent, previously constructed extension and optionally some loggers to visualise
             agent_type=EGreedy,
             agent_params={'e': 0.25},
             ext_type=RecommenderSystemExt,
-            loggers_type=PlotsLogger,
-            loggers_sources=[('action', SourceType.METRIC), ('cumulative', SourceType.METRIC)],
-            loggers_params={'scatter': True}
+            logger_types=PlotsLogger,
+            logger_sources=[('action', SourceType.METRIC), ('cumulative', SourceType.METRIC)],
+            logger_params={'scatter': True}
         )
         rl.init(seed)
 

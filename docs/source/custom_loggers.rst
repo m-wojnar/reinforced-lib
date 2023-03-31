@@ -18,9 +18,9 @@ We will present creating a custom logger on the example of the ``CsvLogger`` :re
     class CsvLogger(BaseLogger)
 
 First, we must define a loggers constructor. The ``__init__`` function can take any arguments that can be passed later
-by the ``loggers_params`` parameter in the ``RLib`` :ref:`class <RLib class>` constructor, but remember to always
-include the ``**kwargs`` in the arguments list. The values provided in ``loggers_params`` are passed to instances
-of all loggers listed in ``loggers_type``, so it is important to choose parameter names carefully.
+by the ``logger_params`` parameter in the ``RLib`` :ref:`class <RLib class>` constructor, but remember to always
+include the ``**kwargs`` in the arguments list. The values provided in ``logger_params`` are passed to instances
+of all loggers listed in ``logger_type``, so it is important to choose parameter names carefully.
 For example, constructor parameters of ``PlotsLogger`` start with the prefix ``plots_*`` and parameters of
 ``CsvLogger`` start with ``csv_*``. Below is an example constructor of ``CsvLogger``:
 

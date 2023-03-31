@@ -6,16 +6,13 @@ MANAGERS=("ns3::IdealWifiManager" "ns3::MinstrelHtWifiManager")
 MANAGERS_NAMES=("Ideal" "Minstrel")
 MANAGERS_LEN=${#MANAGERS[@]}
 
-SHIFT=0
-SEED_SHIFT=100
-
 LOSS_MODEL="LogDistance"
+SEED_SHIFT=100
 
 ### Basic scenarios
 
 run_equal_distance() {
-  N_REP=10
-  N_POINTS=13
+  N_POINTS=9
   DISTANCE=$1
 
   for (( i = 0; i < MANAGERS_LEN; i++ )); do
@@ -24,8 +21,9 @@ run_equal_distance() {
     ARRAY_SHIFT=0
 
     for (( j = 0; j < N_POINTS; j++)); do
-      N_WIFI=$(( j == 0 ? 1 : 4 * j))
+      N_WIFI=$(( j == 0 ? 1 : 2 * j))
       SIM_TIME=$(( 10 * N_WIFI + 50 ))
+      N_REP=$(( N_WIFI <= 4 ? 6 : (N_WIFI / 2) * (N_WIFI / 2) ))
 
       START=$ARRAY_SHIFT
       END=$(( ARRAY_SHIFT + N_REP - 1 ))
@@ -34,8 +32,6 @@ run_equal_distance() {
 
       sbatch -p gpu --array=$START-$END "$TOOLS_DIR/slurm/distance/classic.sh" "$SEED_SHIFT" "$MANAGER" "$MANAGER_NAME" "$N_WIFI" "$DISTANCE" "$SIM_TIME" "$LOSS_MODEL"
     done
-
-    SHIFT=$(( SHIFT + N_POINTS * N_REP ))
   done
 }
 
@@ -53,8 +49,6 @@ run_rwpm() {
     MANAGER_NAME=${MANAGERS_NAMES[$i]}
 
     sbatch -p gpu --array=$START-$END "$TOOLS_DIR/slurm/rwpm/classic.sh" "$SEED_SHIFT" "$MANAGER" "$MANAGER_NAME" "$N_WIFI" "$SIM_TIME" "$NODE_SPEED" "$LOSS_MODEL"
-
-    SHIFT=$(( SHIFT + N_REP ))
   done
 
 }
@@ -73,8 +67,6 @@ run_moving() {
     MANAGER_NAME=${MANAGERS_NAMES[$i]}
 
     sbatch -p gpu --array=$START-$END "$TOOLS_DIR/slurm/moving/classic.sh" "$SEED_SHIFT" "$MANAGER" "$MANAGER_NAME" "$VELOCITY" "$SIM_TIME" "$INTERVAL" "$LOSS_MODEL"
-
-    SHIFT=$(( SHIFT + VELOCITIES_LEN * N_REP ))
   done
 }
 
@@ -94,15 +86,13 @@ run_power() {
     MANAGER_NAME=${MANAGERS_NAMES[$i]}
 
     sbatch -p gpu --array=$START-$END "$TOOLS_DIR/slurm/power/classic.sh" "$SEED_SHIFT" "$MANAGER" "$MANAGER_NAME" "$DELTA" "$INTERVAL" "$VELOCITY" "$START_POS" "$LOSS_MODEL"
-
-    SHIFT=$(( SHIFT + N_REP ))
   done
 }
 
 ### Run section
 
-echo -e "\nQueue equal distance (d=0) scenario"
-run_equal_distance 0
+echo -e "\nQueue equal distance (d=1) scenario"
+run_equal_distance 1
 
 echo -e "\nQueue equal distance (d=20) scenario"
 run_equal_distance 20

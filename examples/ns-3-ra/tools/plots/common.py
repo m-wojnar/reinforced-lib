@@ -14,8 +14,7 @@ ALL_MANAGERS = {
     'Minstrel': 'Minstrel',
     'EGreedy': r'$\varepsilon$-greedy',
     'UCB': 'Upper confidence bound',
-    'ThompsonSampling': 'Thompson sampling',
-    'Ideal': 'Ideal'
+    'ThompsonSampling': 'Thompson sampling'
 }
 MIN_REPS = 5
 CONFIDENCE_INTERVAL = 0.99
@@ -40,7 +39,7 @@ PLOT_PARAMS = {
     'ytick.major.width': 0.5,
 }
 
-COLORS = pl.cm.viridis(np.linspace(0., 1., len(ALL_MANAGERS)))
+COLORS = pl.cm.viridis(np.linspace(0., 1., len(ALL_MANAGERS) + 1))
 
 
 def get_thr_ci(

@@ -56,11 +56,11 @@ class RLib:
         Type of the selected extension. Must inherit from the ``BaseExt`` class.
     ext_params : dict, optional
         Parameters of the selected extension.
-    loggers_type : type or list[type], optional
+    logger_types : type or list[type], optional
         Types of the selected logging modules. Must inherit from the ``BaseLogger`` class.
-    loggers_sources : Source or list[Source], optional
+    logger_sources : Source or list[Source], optional
         Sources to log.
-    loggers_params : dict, optional
+    logger_params : dict, optional
         Parameters of the selected loggers.
     no_ext_mode : bool, default=False
         Pass observations directly to the agent (do not use the extensions).
@@ -78,9 +78,9 @@ class RLib:
             agent_params: Dict[str, Any] = None,
             ext_type: type = None,
             ext_params: Dict[str, Any] = None,
-            loggers_type: Union[type, List[type]] = None,
-            loggers_sources: Union[Source, List[Source]] = None,
-            loggers_params: Dict[str, Any] = None,
+            logger_types: Union[type, List[type]] = None,
+            logger_sources: Union[Source, List[Source]] = None,
+            logger_params: Dict[str, Any] = None,
             no_ext_mode: bool = False,
             save_directory: str = None,
             auto_checkpoint: int = None
@@ -99,9 +99,9 @@ class RLib:
         self._ext_type = ext_type
         self._ext_params = ext_params
 
-        self._loggers_type = loggers_type
-        self._loggers_sources = loggers_sources
-        self._loggers_params = loggers_params
+        self._logger_types = logger_types
+        self._logger_sources = logger_sources
+        self._logger_params = logger_params
         self._logs_observer = LogsObserver()
         self._init_loggers = True
         self._cumulative_reward = 0.0
@@ -112,8 +112,8 @@ class RLib:
         if agent_type:
             self.set_agent(agent_type, agent_params)
 
-        if loggers_type and loggers_sources:
-            self.set_loggers(loggers_type, loggers_sources, loggers_params)
+        if logger_types and logger_sources:
+            self.set_loggers(logger_types, logger_sources, logger_params)
 
     def __del__(self) -> None:
         """
@@ -196,39 +196,39 @@ class RLib:
 
     def set_loggers(
             self,
-            loggers_types: Union[type, List[type]],
-            loggers_sources: Union[Source, List[Source]],
-            loggers_params: Dict[str, Any] = None
+            logger_types: Union[type, List[type]],
+            logger_sources: Union[Source, List[Source]],
+            logger_params: Dict[str, Any] = None
     ) -> None:
         """
         Initializes loggers that log observations from the environment, agents state, or training metrics.
-        ``loggers_types`` and ``loggers_sources`` arguments can be objects of appropriate types or lists
+        ``logger_types`` and ``logger_sources`` arguments can be objects of appropriate types or lists
         of objects. If the user passes two objects or lists of the same lengths, the function initializes the modules
         with the corresponding types and names. If the user passes one object (or list with only one object)
-        and a list with multiple objects, the function broadcasts the passed objects. The ``loggers_sources`` items
+        and a list with multiple objects, the function broadcasts the passed objects. The ``logger_sources`` items
         can be names of the logger sources (e.g., "action") or tuples containing the name and the ``SourceType``
         (e.g., ``("action", SourceType.OBSERVATION)``). If the name itself is inconclusive, the behaviour depends
         on the implementation of the logger.
 
         Parameters
         ----------
-        loggers_types : type or list[type]
+        logger_types : type or list[type]
             Types of the selected logging modules.
-        loggers_sources : Source or list[Source]
+        logger_sources : Source or list[Source]
             Sources to log.
-        loggers_params : dict, optional
+        logger_params : dict, optional
             Parameters of the selected logging modules.
         """
 
         if len(self._agent_containers) > 0:
             raise ForbiddenLoggerSetError()
 
-        loggers_params = loggers_params if loggers_params else {}
-        loggers_types, loggers_sources = self._object_to_list(loggers_types), self._object_to_list(loggers_sources)
-        loggers_types, loggers_sources = self._broadcast(loggers_types, loggers_sources)
+        logger_params = logger_params if logger_params else {}
+        logger_types, logger_sources = self._object_to_list(logger_types), self._object_to_list(logger_sources)
+        logger_types, logger_sources = self._broadcast(logger_types, logger_sources)
 
-        for logger_type, source in zip(loggers_types, loggers_sources):
-            self._logs_observer.add_logger(source, logger_type, loggers_params)
+        for logger_type, source in zip(logger_types, logger_sources):
+            self._logs_observer.add_logger(source, logger_type, logger_params)
 
     @staticmethod
     def _object_to_list(obj: Union[Any, List[Any]]) -> List[Any]:
@@ -478,9 +478,9 @@ class RLib:
             },
             "ext_type": self._ext_type,
             "ext_params": self._ext_params,
-            "loggers_type": self._loggers_type,
-            "loggers_sources": self._loggers_sources,
-            "loggers_params": self._loggers_params,
+            "logger_types": self._logger_types,
+            "logger_sources": self._logger_sources,
+            "logger_params": self._logger_params,
             "save_directory": self._save_directory,
             "auto_checkpoint": self._auto_checkpoint
         }
@@ -532,11 +532,11 @@ class RLib:
         else:
             rlib.set_agent(experiment_state["agent_type"], experiment_state["agent_params"])
 
-        if restore_loggers and experiment_state["loggers_type"]:
+        if restore_loggers and experiment_state["logger_types"]:
             rlib.set_loggers(
-                experiment_state["loggers_type"],
-                experiment_state["loggers_sources"],
-                experiment_state["loggers_params"]
+                experiment_state["logger_type"],
+                experiment_state["logger_sources"],
+                experiment_state["logger_params"]
             )
         
         for agent_id, agent_container in experiment_state["agents"].items():
