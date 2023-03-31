@@ -24,7 +24,6 @@ from reinforced_lib.exts.wifi import IEEE_802_11_CW
 
 INTERACTION_PERIOD = 1e-2
 SIMULATION_TIME = 60
-NUM_REPS = 15
 MAX_HISTORY_LENGTH = 512
 HISTORY_LENGTH = 300
 
@@ -109,7 +108,8 @@ def run(
         mempool_key: int,
         agent_type: type,
         agent_params: Dict[str, Any],
-        seed: int
+        seed: int,
+        run_id: int
 ) -> None:
     """
     Run a given number of simulations in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
@@ -128,6 +128,8 @@ def run(
         Parameters of the agent.
     seed : int
         Number used to initialize the JAX and the ns-3 pseudo-random number generator.
+    run_id : int
+        Number of the current simulation.
 
     References
     ----------
@@ -142,32 +144,34 @@ def run(
         agent_params=agent_params,
         ext_type=IEEE_802_11_CW
     )
-    rl.init(seed)
 
-    for _ in range(NUM_REPS - 1):
-        exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
-        var = Ns3AIRL(memblock_key, Env, Act)
+    if seed is not None:
+        rl.init(seed)
+    else:
+        rl.load(f'checkpoints/run_{run_id - 1}.pkl.lz4', restore_loggers=False)
 
-        try:
-            ns3_process = exp.run(ns3_args, show_output=True)
+    exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
+    var = Ns3AIRL(memblock_key, Env, Act)
 
-            while not var.isFinish():
-                with var as data:
-                    if data is None:
-                        break
+    try:
+        ns3_process = exp.run(ns3_args, show_output=True)
 
-                    observation = {
-                        'history': preprocess(data.env.history, ns3_args['historyLength']),
-                        'reward': data.env.reward
-                    }
-                    data.act.action = rl.sample(**observation)
+        while not var.isFinish():
+            with var as data:
+                if data is None:
+                    break
 
-            ns3_process.wait()
-        finally:
-            del exp
-            ns3_args['rng'] += 1
+                observation = {
+                    'history': preprocess(data.env.history, ns3_args['historyLength']),
+                    'reward': data.env.reward
+                }
+                data.act.action = rl.sample(**observation)
 
-    rl.save()
+        ns3_process.wait()
+    finally:
+        del exp
+
+    rl.save(agent_ids=0, path=f'checkpoints/run_{run_id}.pkl.lz4')
 
 
 if __name__ == '__main__':
@@ -177,7 +181,8 @@ if __name__ == '__main__':
     args.add_argument('--agent', default="DQN", type=str)
     args.add_argument('--mempoolKey', default=1234, type=int)
     args.add_argument('--ns3Path', required=True, type=str)
-    args.add_argument('--pythonSeed', default=42, type=int)
+    args.add_argument('--pythonSeed', default=None, type=int)
+    args.add_argument('--runId', required=True, type=int)
 
     # ns3 arguments
     args.add_argument('--agentType', default='discrete', type=str)
@@ -186,9 +191,9 @@ if __name__ == '__main__':
     args.add_argument('--envStepTime', default=INTERACTION_PERIOD, type=float)
     args.add_argument('--historyLength', default=HISTORY_LENGTH, type=int)
     args.add_argument('--nonZeroStart', default=True, action='store_true')
-    args.add_argument('--nWifi', default=5, type=int)
+    args.add_argument('--nWifi', default=55, type=int)
     args.add_argument('--rng', default=42, type=int)
-    args.add_argument('--scenario', default='basic', type=str)
+    args.add_argument('--scenario', default='convergence', type=str)
     args.add_argument('--simTime', default=SIMULATION_TIME, type=float)
     args.add_argument('--tracing', default=False, action='store_true')
     args.add_argument('--verbose', default=False, action='store_true')
@@ -218,4 +223,5 @@ if __name__ == '__main__':
         }
     }
 
-    run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], args.pop('pythonSeed'))
+    run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent],
+        default_params[agent], args.pop('pythonSeed'), args.pop('runId'))
