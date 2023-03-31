@@ -134,8 +134,3 @@ dmypy.json
 
 # vscode files
 .vscode/
-
-# Other
-examples/ns-3-ccod/scratch/cw.cc
-examples/ns-3-ccod/scratch/scenario.h
-examples/ns-3-ccod/sdbx.ipynb

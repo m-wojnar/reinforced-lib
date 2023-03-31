@@ -1,4 +1,5 @@
 chex~=0.1.5
+cloudpickle~=2.2.0
 dm-haiku~=0.0.9
 gymnasium~=0.27.1
 jax~=0.4.6

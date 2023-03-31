@@ -5,6 +5,7 @@ import os
 import pickle
 from typing import Any, Dict, List, Tuple, Union
 
+import cloudpickle
 import gymnasium as gym
 import jax.random
 import lz4.frame
@@ -485,7 +486,7 @@ class RLib:
         }
 
         with lz4.frame.open(path, 'wb') as f:
-            f.write(pickle.dumps(experiment_state))
+            f.write(cloudpickle.dumps(experiment_state))
         
         return path
     
