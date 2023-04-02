@@ -10,21 +10,21 @@ from ctypes import *
 from typing import Any, Dict
 
 import haiku as hk
-import numpy as np
 import optax
 from chex import Array
 
 from py_interface import *
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import DQN
-from reinforced_lib.exts.wifi import IEEE_802_11_CW
+from reinforced_lib.exts.wifi import IEEE_802_11_CCOD
+from reinforced_lib.logs import SourceType, TensorboardLogger
 
 
 # DRL settings, according to Table I from the cited article
 
 INTERACTION_PERIOD = 1e-2
 SIMULATION_TIME = 60
-MAX_HISTORY_LENGTH = 512
+MAX_HISTORY_LENGTH = IEEE_802_11_CCOD.max_history_length
 HISTORY_LENGTH = 300
 
 LSTM_HIDDEN_SIZE = 8
@@ -74,34 +74,6 @@ def q_network(x: Array) -> Array:
     return hk.nets.MLP([128, 64, 7])(h_t)
 
 
-def preprocess(history: Array, history_length: int) -> Array:
-    """
-    Preprocess the history according to the CCOD algorithm.
-
-    Parameters
-    ----------
-    history : array_like
-        History of the transmission failure probability.
-    history_length : int
-        Length of the history.
-
-    Returns
-    -------
-    array_like
-        Preprocessed history.
-    """
-
-    history = history[:history_length]
-    window = history_length // 2
-    res = np.empty((4, 2))
-
-    for i, pos in enumerate(range(0, history_length, window // 2)):
-        res[i, 0] = np.mean(history[pos:pos + window])
-        res[i, 1] = np.std(history[pos:pos + window])
-
-    return np.clip(res, 0, 1)
-
-
 def run(
         ns3_args: Dict[str, Any],
         ns3_path: str,
@@ -112,7 +84,7 @@ def run(
         run_id: int
 ) -> None:
     """
-    Run a given number of simulations in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
+    Run a CCOD simulation in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
 
     Parameters
     ----------
@@ -129,7 +101,7 @@ def run(
     seed : int
         Number used to initialize the random number generator. If None, the agent is loaded from the checkpoint.
     run_id : int
-        Number of the current simulation.
+        Number of the current simulation. Used to load the agent from the previous checkpoint and save the current one.
 
     References
     ----------
@@ -143,7 +115,10 @@ def run(
         rl = RLib(
             agent_type=agent_type,
             agent_params=agent_params,
-            ext_type=IEEE_802_11_CW
+            ext_type=IEEE_802_11_CCOD,
+            ext_params={'history_length': ns3_args['historyLength']},
+            logger_types=TensorboardLogger,
+            logger_sources=[('action', SourceType.METRIC), ('reward', SourceType.METRIC)]
         )
         rl.init(seed)
     else:
@@ -161,7 +136,7 @@ def run(
                     break
 
                 observation = {
-                    'history': preprocess(data.env.history, ns3_args['historyLength']),
+                    'history': data.env.history,
                     'reward': data.env.reward
                 }
                 data.act.action = rl.sample(**observation)
@@ -200,8 +175,7 @@ if __name__ == '__main__':
     args = vars(args.parse_args())
 
     assert args['historyLength'] <= MAX_HISTORY_LENGTH, \
-        f"HISTORY_LENGTH={args['historyLength']} exceeded MAX_HISTORY_LENGTH={MAX_HISTORY_LENGTH}, " +\
-        f"reduce HISTORY_LENGTH value in 'reinforced_lib/exts/wifi/ieee_802_11_cw.py' file!"
+        f"HISTORY_LENGTH={args['historyLength']} exceeded MAX_HISTORY_LENGTH={MAX_HISTORY_LENGTH}!"
 
     agent = args.pop('agent')
     agent_type = {
