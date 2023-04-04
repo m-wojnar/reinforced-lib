@@ -1,3 +1,38 @@
+/*
+MIT License
+
+Copyright (c) 2023 Witold Wydmański
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+
+The program below is a modified version of the original authored by Witold Wydmański,
+which can be found at https://github.com/wwydmanski/RLinWiFi/blob/master/linear-mesh/cw.cc.
+
+The original code was for the following research article:
+W. Wydmański and S. Szott, "Contention Window Optimization in IEEE 802.11ax Networks 
+with Deep Reinforcement Learning" (URL: https://ieeexplore.ieee.org/document/9417575),
+2021 IEEE Wireless Communications and Networking Conference (WCNC), 2021,
+doi: 10.1109/WCNC49053.2021.9417575.
+*/
+
 #include <chrono>
 #include <filesystem>
 #include <map>
