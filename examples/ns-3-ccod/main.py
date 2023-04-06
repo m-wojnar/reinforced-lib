@@ -80,9 +80,7 @@ def run(
         mempool_key: int,
         agent_type: type,
         agent_params: Dict[str, Any],
-        seed: int,
-        run_id: int,
-        is_training: bool
+        rlib_args: Dict[str, Any]
 ) -> None:
     """
     Run a CCOD simulation in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
@@ -99,12 +97,11 @@ def run(
         Type of the selected agent.
     agent_params : dict
         Parameters of the agent.
-    seed : int
-        Number used to initialize the random number generator. If -1, the agent is loaded from the checkpoint.
-    run_id : int
-        Number of the current simulation. Used to load the agent from the previous checkpoint and save the current one.
-    is_training : bool
-        If True, the agent is trained. Otherwise, it is tested.
+    rlib_args : dict
+        Arguments used by Reinforced-lib. If `load_path` is not None, the agent will be loaded from the
+        specified path. If `is_training` is True, the agent will be updated during the interaction with
+        the simulator. If `save_path` is not None and `is_training` is True, the agent will be saved to
+        the specified path.
 
     References
     ----------
@@ -114,7 +111,7 @@ def run(
        Association for Computing Machinery.
     """
 
-    if seed != -1:
+    if not rlib_args['load_path']:
         rl = RLib(
             agent_type=agent_type,
             agent_params=agent_params,
@@ -123,9 +120,9 @@ def run(
             logger_types=TensorboardLogger,
             logger_sources=[('action', SourceType.METRIC), ('reward', SourceType.METRIC)]
         )
-        rl.init(seed)
+        rl.init(rlib_args['seed'])
     else:
-        rl = RLib.load(f'checkpoints/run_{run_id - 1}.pkl.lz4')
+        rl = RLib.load(rlib_args['load_path'])
 
     exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
     var = Ns3AIRL(memblock_key, Env, Act)
@@ -142,14 +139,14 @@ def run(
                     'history': data.env.history,
                     'reward': data.env.reward
                 }
-                data.act.action = rl.sample(**observation, is_training=is_training)
+                data.act.action = rl.sample(**observation, is_training=rlib_args['is_training'])
 
         ns3_process.wait()
     finally:
         del exp
 
-    if is_training:
-        rl.save(agent_ids=0, path=f'checkpoints/run_{run_id}.pkl.lz4')
+    if rlib_args['is_training'] and rlib_args['save_path']:
+        rl.save(agent_ids=0, path=rlib_args['save_path'])
 
 
 if __name__ == '__main__':
@@ -157,10 +154,11 @@ if __name__ == '__main__':
 
     # Python arguments
     args.add_argument('--agent', default="DQN", type=str)
+    args.add_argument('--loadPath', default='', type=str)
     args.add_argument('--mempoolKey', default=1234, type=int)
     args.add_argument('--ns3Path', required=True, type=str)
-    args.add_argument('--pythonSeed', default=-1, type=int)
-    args.add_argument('--runId', required=True, type=int)
+    args.add_argument('--pythonSeed', default=42, type=int)
+    args.add_argument('--savePath', default='', type=str)
     args.add_argument('--training', default=True, type=bool)
 
     # ns3 arguments
@@ -201,5 +199,11 @@ if __name__ == '__main__':
         }
     }
 
-    run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent],
-        default_params[agent], args.pop('pythonSeed'), args.pop('runId'), args.pop('training'))
+    rlib_args = {
+        'seed':             args.pop('pythonSeed'),
+        'is_training':      args.pop('training'),
+        'load_path':        args.pop('loadPath'),
+        'save_path':        args.pop('savePath')
+    }
+
+    run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], rlib_args)
