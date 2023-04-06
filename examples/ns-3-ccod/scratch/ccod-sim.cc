@@ -376,7 +376,7 @@ main (int argc, char *argv[])
     bool useRts = false;
     int mcs = 11;
     int channelWidth = 20;
-    int guardInterval = 3200;
+    int guardInterval = 800;
     string offeredLoad = "150";
     int port = 1025;
     string outputCsv = "cw.csv";
