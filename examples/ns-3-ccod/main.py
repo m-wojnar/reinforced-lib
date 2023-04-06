@@ -81,7 +81,8 @@ def run(
         agent_type: type,
         agent_params: Dict[str, Any],
         seed: int,
-        run_id: int
+        run_id: int,
+        is_training: bool
 ) -> None:
     """
     Run a CCOD simulation in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
@@ -99,9 +100,11 @@ def run(
     agent_params : dict
         Parameters of the agent.
     seed : int
-        Number used to initialize the random number generator. If None, the agent is loaded from the checkpoint.
+        Number used to initialize the random number generator. If -1, the agent is loaded from the checkpoint.
     run_id : int
         Number of the current simulation. Used to load the agent from the previous checkpoint and save the current one.
+    is_training : bool
+        If True, the agent is trained. Otherwise, it is tested.
 
     References
     ----------
@@ -111,7 +114,7 @@ def run(
        Association for Computing Machinery.
     """
 
-    if seed is not None:
+    if seed != -1:
         rl = RLib(
             agent_type=agent_type,
             agent_params=agent_params,
@@ -139,13 +142,14 @@ def run(
                     'history': data.env.history,
                     'reward': data.env.reward
                 }
-                data.act.action = rl.sample(**observation)
+                data.act.action = rl.sample(**observation, is_training=is_training)
 
         ns3_process.wait()
     finally:
         del exp
 
-    rl.save(agent_ids=0, path=f'checkpoints/run_{run_id}.pkl.lz4')
+    if is_training:
+        rl.save(agent_ids=0, path=f'checkpoints/run_{run_id}.pkl.lz4')
 
 
 if __name__ == '__main__':
@@ -155,8 +159,9 @@ if __name__ == '__main__':
     args.add_argument('--agent', default="DQN", type=str)
     args.add_argument('--mempoolKey', default=1234, type=int)
     args.add_argument('--ns3Path', required=True, type=str)
-    args.add_argument('--pythonSeed', default=None, type=int)
+    args.add_argument('--pythonSeed', default=-1, type=int)
     args.add_argument('--runId', required=True, type=int)
+    args.add_argument('--training', default=True, type=bool)
 
     # ns3 arguments
     args.add_argument('--agentType', default='discrete', type=str)
@@ -197,4 +202,4 @@ if __name__ == '__main__':
     }
 
     run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent],
-        default_params[agent], args.pop('pythonSeed'), args.pop('runId'))
+        default_params[agent], args.pop('pythonSeed'), args.pop('runId'), args.pop('training'))
