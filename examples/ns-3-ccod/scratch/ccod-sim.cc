@@ -399,9 +399,9 @@ main (int argc, char *argv[])
     cmd.AddValue("historyLength", "Length of history window", history_length);
     cmd.AddValue("nonZeroStart", "Start only after history buffer is filled", non_zero_start);
     cmd.AddValue("nWifi", "Number of wifi 802.11ax STA devices", nWifi);
-    cmd.AddValue("rng", "Number of RngRun", rng);
+    // cmd.AddValue("rng", "Number of RngRun", rng);
     cmd.AddValue("scenario", "Scenario for analysis: basic, convergence, reaction", scenario);
-    cmd.AddValue("seed", "Random seed", simSeed);
+    // cmd.AddValue("seed", "Random seed", simSeed);
     cmd.AddValue("simTime", "Simulation time in seconds. Default: 10s", simulationTime);
     cmd.AddValue("tracing", "Enable pcap tracing", tracing);
     cmd.AddValue("verbose", "Tell echo applications to log if true", verbose);
@@ -422,7 +422,7 @@ main (int argc, char *argv[])
          << "--nonZeroStart: " << non_zero_start << endl
          << "--nWifi: " << nWifi << endl
          << "--scenario: " << scenario << endl
-         << "--seed: " << simSeed << endl
+         << "--RngRun: " << RngSeedManager::GetRun () << endl
          << "--simulationTime: " << simulationTime << endl << endl;
     
     // Set the ns3-ai operation lock
@@ -746,9 +746,9 @@ set_nodes(int channelWidth, int guardInterval, int rng, int32_t simSeed, NodeCon
     stack.Install(wifiStaNode);
 
     //Random
-    if(simSeed!=-1)
-        RngSeedManager::SetSeed(simSeed);
-    RngSeedManager::SetRun(rng);
+    //if(simSeed!=-1)
+    //    RngSeedManager::SetSeed(simSeed);
+    //RngSeedManager::SetRun(rng);
 
     Ipv4AddressHelper address;
     address.SetBase("192.168.1.0", "255.255.255.0");

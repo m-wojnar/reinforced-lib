@@ -24,7 +24,7 @@ python3 "$TOOLS_DIR/create_test_checkpoint.py" --loadPath="$CHECKPOINT_LOAD_PATH
 
 for (( i = 1; i <= NUM_REPS; i += 1)); do
   echo "Testing ${AGENT} ${SCENARIO} ${N_WIFI} simulation [${i}/${NUM_REPS}]"
-  python3 main.py --ns3Path="$NS3_DIR" --agent="$AGENT" --agentType="$AGENT_TYPE" --sampleOnly --nWifi="$N_WIFI" --scenario="$SCENARIO" --pythonSeed="$SEED" --rng="$SEED" --loadPath="$LOAD_PATH"
+  python3 main.py --ns3Path="$NS3_DIR" --agent="$AGENT" --agentType="$AGENT_TYPE" --sampleOnly --nWifi="$N_WIFI" --scenario="$SCENARIO" --pythonSeed="$SEED" --seed="$SEED" --loadPath="$LOAD_PATH"
 
   SEED=$(( SEED + 1 ))
 done

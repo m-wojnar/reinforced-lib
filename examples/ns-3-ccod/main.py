@@ -169,8 +169,8 @@ if __name__ == '__main__':
     args.add_argument('--historyLength', default=HISTORY_LENGTH, type=int)
     args.add_argument('--nonZeroStart', default=True, action='store_true')
     args.add_argument('--nWifi', default=55, type=int)
-    args.add_argument('--rng', default=42, type=int)
     args.add_argument('--scenario', default='convergence', type=str)
+    args.add_argument('--seed', default=42, type=int)
     args.add_argument('--simTime', default=SIMULATION_TIME, type=float)
     args.add_argument('--tracing', default=False, action='store_true')
     args.add_argument('--verbose', default=False, action='store_true')
@@ -180,7 +180,9 @@ if __name__ == '__main__':
     assert args['historyLength'] <= MAX_HISTORY_LENGTH, \
         f"HISTORY_LENGTH={args['historyLength']} exceeded MAX_HISTORY_LENGTH={MAX_HISTORY_LENGTH}!"
 
+    args['RngRun'] = args.pop('seed')
     agent = args.pop('agent')
+
     agent_type = {
         'DQN': DQN
     }
