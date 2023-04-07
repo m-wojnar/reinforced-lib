@@ -158,8 +158,8 @@ if __name__ == '__main__':
     args.add_argument('--mempoolKey', default=1234, type=int)
     args.add_argument('--ns3Path', required=True, type=str)
     args.add_argument('--pythonSeed', default=42, type=int)
+    args.add_argument('--sampleOnly', default=False, action='store_true')
     args.add_argument('--savePath', default='', type=str)
-    args.add_argument('--training', default=True, type=bool)
 
     # ns3 arguments
     args.add_argument('--agentType', default='discrete', type=str)
@@ -186,24 +186,24 @@ if __name__ == '__main__':
     }
     default_params = {
         'DQN': {
-            'q_network':                        q_network,
-            'optimizer':                        optax.sgd(DQN_LEARNING_RATE),
-            'experience_replay_buffer_size':    REPLAY_BUFFER_SIZE,
-            'experience_replay_batch_size':     REPLAY_BUFFER_BATCH_SIZE,
-            'experience_replay_steps':          REPLAY_BUFFER_STEPS,
-            'discount':                         REWARD_DISCOUNT,
-            'epsilon':                          EPSILON,
-            'epsilon_decay':                    EPSILON_DECAY,
-            'epsilon_min':                      EPSILON_MIN,
-            'tau':                              SOFT_UPDATE
+            'q_network': q_network,
+            'optimizer': optax.sgd(DQN_LEARNING_RATE),
+            'experience_replay_buffer_size': REPLAY_BUFFER_SIZE,
+            'experience_replay_batch_size': REPLAY_BUFFER_BATCH_SIZE,
+            'experience_replay_steps': REPLAY_BUFFER_STEPS,
+            'discount': REWARD_DISCOUNT,
+            'epsilon': EPSILON,
+            'epsilon_decay': EPSILON_DECAY,
+            'epsilon_min': EPSILON_MIN,
+            'tau': SOFT_UPDATE
         }
     }
 
     rlib_args = {
-        'seed':             args.pop('pythonSeed'),
-        'is_training':      args.pop('training'),
-        'load_path':        args.pop('loadPath'),
-        'save_path':        args.pop('savePath')
+        'seed': args.pop('pythonSeed'),
+        'is_training': not args.pop('sampleOnly'),
+        'load_path': args.pop('loadPath'),
+        'save_path': args.pop('savePath')
     }
 
     run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], rlib_args)

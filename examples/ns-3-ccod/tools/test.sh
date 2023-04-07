@@ -15,11 +15,11 @@ LAST_RUN=14
 NUM_REPS=10
 SEED=200
 
-LOAD_PATH="$RLIB_DIR/checkpoints/${AGENT}_${SCENARIO}_${N_WIFI}_run_${LAST_RUN}.pkl.lz4"
+LOAD_PATH="$RLIB_DIR/checkpoints/${AGENT}_${SCENARIO}_${N_WIFI}_test.pkl.lz4"
 
 for (( i = 1; i <= NUM_REPS; i += 1)); do
   echo "Testing ${AGENT} ${SCENARIO} ${N_WIFI} simulation [${i}/${NUM_REPS}]"
-  python3 main.py --ns3Path="$NS3_DIR" --agent="$AGENT" --agentType="$AGENT_TYPE" --nWifi="$N_WIFI" --scenario="$SCENARIO" --pythonSeed="$SEED" --rng="$SEED" --loadPath="$LOAD_PATH"
+  python3 main.py --ns3Path="$NS3_DIR" --agent="$AGENT" --agentType="$AGENT_TYPE" --sampleOnly --nWifi="$N_WIFI" --scenario="$SCENARIO" --pythonSeed="$SEED" --rng="$SEED" --loadPath="$LOAD_PATH"
 
   SEED=$(( SEED + 1 ))
 done
