@@ -1,3 +1,5 @@
+from typing import Tuple
+
 from chex import Array
 
 import gymnasium as gym
@@ -77,13 +79,21 @@ class IEEE_802_11_CCOD(BaseExt):
         return 1.
 
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(0, np.inf, (1,), np.int32)))
-    def obs_space_shape(self) -> tuple:
+    def obs_space_shape(self) -> Tuple:
         return 4, 2
 
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
-    def act_space_shape(self) -> tuple:
+    def act_space_shape(self) -> Tuple:
         return tuple((1,))
 
     @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
     def act_space_size(self) -> int:
         return 7
+
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
+    def min_action(self) -> Tuple:
+        return 0
+
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
+    def max_action(self) -> Tuple:
+        return 6
