@@ -81,7 +81,7 @@ struct Env
 
 struct Act
 {
-    uint32_t action;
+    float action;
 } Packed;
 
 Ns3AIRL<Env, Act> * m_env = new Ns3AIRL<Env, Act> (DEFAULT_MEMBLOCK_KEY);
@@ -693,7 +693,7 @@ ScheduleNextStateRead(double envStepTime)
 
         // 2. get action from DQN agent
     auto act = m_env->ActionGetterCond();
-    uint32_t current_action = act->action;
+    float current_action = act->action;
     m_env->GetCompleted();
 
     // Act according to the retrived action

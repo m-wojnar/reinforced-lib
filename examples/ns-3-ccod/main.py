@@ -10,12 +10,13 @@ from ctypes import *
 from typing import Any, Dict
 
 import haiku as hk
+import jax.numpy as jnp
 import optax
 from chex import Array
 
 from py_interface import *
 from reinforced_lib import RLib
-from reinforced_lib.agents.deep import DQN
+from reinforced_lib.agents.deep import DQN, DDPG
 from reinforced_lib.exts.wifi import IEEE_802_11_CCOD
 from reinforced_lib.logs import SourceType, TensorboardLogger
 
@@ -27,13 +28,19 @@ SIMULATION_TIME = 60
 MAX_HISTORY_LENGTH = IEEE_802_11_CCOD.max_history_length
 HISTORY_LENGTH = 300
 
-LSTM_HIDDEN_SIZE = 8
-REWARD_DISCOUNT = 0.7
-
 DQN_LEARNING_RATE = 4e-4
-EPSILON = 0.9
-EPSILON_DECAY = 0.99991
-EPSILON_MIN = 0.001
+DQN_EPSILON = 0.9
+DQN_EPSILON_DECAY = 0.99991
+DQN_EPSILON_MIN = 0.001
+
+DDPG_Q_LEARNING_RATE = 4e-3
+DDPG_A_LEARNING_RATE = 4e-4
+DDPG_NOISE = 4.0
+DDPG_NOISE_DECAY = 0.99994
+DDPG_NOISE_MIN = 0.001
+
+REWARD_DISCOUNT = 0.7
+LSTM_HIDDEN_SIZE = 8
 SOFT_UPDATE = 4e-3
 
 REPLAY_BUFFER_SIZE = 18000
@@ -52,7 +59,7 @@ class Env(Structure):
 class Act(Structure):
     _pack_ = 1
     _fields_ = [
-        ('action', c_uint32)
+        ('action', c_float)
     ]
 
 
@@ -61,17 +68,41 @@ memory_size = 4096
 simulation = 'ccod-sim'
 
 
-@hk.transform_with_state
-def q_network(x: Array) -> Array:
-    if x.ndim == 2:
-        x = x[None, ...]
+def add_batch_dim(x: Array, base_ndims: jnp.int32) -> Array:
+    if x.ndim == base_ndims:
+        return x[None, ...]
+    else:
+        return x
 
-    core = hk.LSTM(LSTM_HIDDEN_SIZE)
+
+def apply_lstm(x: Array, hidden_size: jnp.int32) -> Array:
+    core = hk.LSTM(hidden_size)
     initial_state = core.initial_state(x.shape[0])
     _, lstm_state = hk.dynamic_unroll(core, x, initial_state, time_major=False)
+    return lstm_state.hidden
 
-    h_t = lstm_state.hidden
-    return hk.nets.MLP([128, 64, 7])(h_t)
+
+@hk.transform_with_state
+def dqn_network(x: Array) -> Array:
+    x = add_batch_dim(x, base_ndims=2)
+    x = apply_lstm(x, LSTM_HIDDEN_SIZE)
+    return hk.nets.MLP([128, 64, 7])(x)
+
+
+@hk.transform_with_state
+def ddpg_q_network(s: Array, a: Array) -> Array:
+    s = add_batch_dim(s, base_ndims=2)
+    s = apply_lstm(s, LSTM_HIDDEN_SIZE)
+    a = add_batch_dim(a, base_ndims=1)
+    x = jnp.concatenate([s, a], axis=1)
+    return hk.nets.MLP([128, 64, 1])(x)
+
+
+@hk.transform_with_state
+def ddpg_a_network(s: Array) -> Array:
+    s = add_batch_dim(s, base_ndims=2)
+    s = apply_lstm(s, LSTM_HIDDEN_SIZE)
+    return hk.nets.MLP([128, 64, 1])(s)
 
 
 def run(
@@ -184,19 +215,34 @@ if __name__ == '__main__':
     agent = args.pop('agent')
 
     agent_type = {
-        'DQN': DQN
+        'DQN': DQN,
+        'DDPG': DDPG
     }
     default_params = {
         'DQN': {
-            'q_network': q_network,
-            'optimizer': optax.sgd(DQN_LEARNING_RATE),
+            'q_network': dqn_network,
+            'optimizer': optax.adam(DQN_LEARNING_RATE),
             'experience_replay_buffer_size': REPLAY_BUFFER_SIZE,
             'experience_replay_batch_size': REPLAY_BUFFER_BATCH_SIZE,
             'experience_replay_steps': REPLAY_BUFFER_STEPS,
             'discount': REWARD_DISCOUNT,
-            'epsilon': EPSILON,
-            'epsilon_decay': EPSILON_DECAY,
-            'epsilon_min': EPSILON_MIN,
+            'epsilon': DQN_EPSILON,
+            'epsilon_decay': DQN_EPSILON_DECAY,
+            'epsilon_min': DQN_EPSILON_MIN,
+            'tau': SOFT_UPDATE
+        },
+        'DDPG': {
+            'a_network': ddpg_a_network,
+            'a_optimizer': optax.adam(DDPG_A_LEARNING_RATE),
+            'q_network': ddpg_q_network,
+            'q_optimizer': optax.adam(DDPG_Q_LEARNING_RATE),
+            'experience_replay_buffer_size': REPLAY_BUFFER_SIZE,
+            'experience_replay_batch_size': REPLAY_BUFFER_BATCH_SIZE,
+            'experience_replay_steps': REPLAY_BUFFER_STEPS,
+            'discount': REWARD_DISCOUNT,
+            'noise': DDPG_NOISE,
+            'noise_decay': DDPG_NOISE_DECAY,
+            'noise_min': DDPG_NOISE_MIN,
             'tau': SOFT_UPDATE
         }
     }
