@@ -47,8 +47,8 @@ Deep Expected SARSA
     :members:
 
 
-Deep Double Q-Learning
-----------------------
+Deep Double Q-Learning (DQN)
+----------------------------
 
 .. currentmodule:: reinforced_lib.agents.deep.dqn
 
@@ -57,6 +57,20 @@ Deep Double Q-Learning
     :members:
 
 .. autoclass:: DQN
+    :show-inheritance:
+    :members:
+
+
+Deep Deterministic Policy Gradient (DDPG)
+-----------------------------------------
+
+.. currentmodule:: reinforced_lib.agents.deep.ddpg
+
+.. autoclass:: DDPGState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: DDPG
     :show-inheritance:
     :members:
 
@@ -89,7 +103,7 @@ Exp3
     :members:
 
 
-Particle Filter (Core)
+Particle filter (Core)
 ----------------------
 
 .. automodule:: reinforced_lib.agents.core.particle_filter
@@ -97,7 +111,7 @@ Particle Filter (Core)
     :members:
 
 
-Particle Filter (Wi-Fi)
+Particle filter (Wi-Fi)
 -----------------------
 
 .. currentmodule:: reinforced_lib.agents.wifi.particle_filter
@@ -125,7 +139,7 @@ Softmax
     :members:
 
 
-Thompson Sampling
+Thompson sampling
 -----------------
 
 .. currentmodule:: reinforced_lib.agents.mab.thompson_sampling
@@ -139,8 +153,8 @@ Thompson Sampling
     :members:
 
 
-UCB
----
+Upper confidence bound (UCB)
+----------------------------
 
 .. currentmodule:: reinforced_lib.agents.mab.ucb
 
