@@ -253,10 +253,10 @@ class ExpectedSarsa(BaseAgent):
 
         q_values_target, _ = q_network.apply(params_target, net_state_target, q_target_key, next_states)
         probs_target = jax.nn.softmax(q_values_target / tau)
-        target = rewards + (1 - terminals) * discount * jnp.sum(probs_target * q_values_target, axis=-1)
+        target = rewards + (1 - terminals) * discount * jnp.sum(probs_target * q_values_target, axis=-1, keepdims=True)
 
         target = jax.lax.stop_gradient(target)
-        loss = jnp.square(target - jnp.squeeze(q_values)).mean()
+        loss = optax.l2_loss(q_values, target).mean()
 
         return loss, state
 

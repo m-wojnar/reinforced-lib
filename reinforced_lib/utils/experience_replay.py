@@ -100,8 +100,8 @@ def experience_replay(
         return ReplayBuffer(
             states=jnp.empty((buffer_size, *obs_space_shape)),
             actions=jnp.empty((buffer_size, *act_space_shape)),
-            rewards=jnp.empty(buffer_size),
-            terminals=jnp.empty(buffer_size, dtype=jnp.bool_),
+            rewards=jnp.empty((buffer_size, 1)),
+            terminals=jnp.empty((buffer_size, 1), dtype=jnp.bool_),
             next_states=jnp.empty((buffer_size, *obs_space_shape)),
             size=0,
             ptr=0

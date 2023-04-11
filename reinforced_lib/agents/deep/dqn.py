@@ -244,7 +244,6 @@ class DQN(BaseAgent):
     def loss_fn(
             params: hk.Params,
             key: PRNGKey,
-            net_state: hk.State,
             dqn_state: DQNState,
             batch: Tuple,
             q_network: hk.TransformedWithState,
@@ -263,8 +262,6 @@ class DQN(BaseAgent):
             The parameters of the Q-network.
         key : PRNGKey
             A PRNG key used as the random key.
-        net_state : hk.State
-            The state of the Q-network.
         dqn_state : DQNState
             The state of the double Q-learning agent.
         batch : Tuple
@@ -283,14 +280,14 @@ class DQN(BaseAgent):
         states, actions, rewards, terminals, next_states = batch
         q_key, q_target_key = jax.random.split(key)
 
-        q_values, state = q_network.apply(params, net_state, q_key, states)
+        q_values, state = q_network.apply(params, dqn_state.state, q_key, states)
         q_values = jnp.take_along_axis(q_values, actions.astype(jnp.int32), axis=-1)
 
         q_values_target, _ = q_network.apply(dqn_state.params_target, dqn_state.state_target, q_target_key, next_states)
-        target = rewards + (1 - terminals) * discount * jnp.max(q_values_target, axis=-1)
+        target = rewards + (1 - terminals) * discount * jnp.max(q_values_target, axis=-1, keepdims=True)
 
         target = jax.lax.stop_gradient(target)
-        loss = jnp.square(target - jnp.squeeze(q_values)).mean()
+        loss = optax.l2_loss(q_values, target).mean()
 
         return loss, state
 
@@ -361,11 +358,9 @@ class DQN(BaseAgent):
                 batch_key, network_key, key = jax.random.split(key, 3)
                 batch = experience_replay.sample(replay_buffer, batch_key)
 
-                loss_params = (network_key, net_state, state, batch)
-                params, net_state, opt_state, _ = step_fn(params, loss_params, opt_state)
-
-                params_target = jax.tree_map(lambda x, y: x * tau + y * (1 - tau), params, params_target)
-                state_target = jax.tree_map(lambda x, y: x * tau + y * (1 - tau), net_state, state_target)
+                params, net_state, opt_state, _ = step_fn(params, (network_key, state, batch), opt_state)
+                params_target, state_target = optax.incremental_update(
+                    (params, net_state), (params_target, state_target), tau)
 
         return DQNState(
             params=params,
