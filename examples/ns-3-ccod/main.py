@@ -113,7 +113,8 @@ def run(
         mempool_key: int,
         agent_type: type,
         agent_params: Dict[str, Any],
-        rlib_args: Dict[str, Any]
+        rlib_args: Dict[str, Any],
+        csv_path: str
 ) -> None:
     """
     Run a CCOD simulation in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
@@ -144,6 +145,8 @@ def run(
        Association for Computing Machinery.
     """
 
+    csv_file = open(csv_path, "w") if csv_path else None
+
     if not rlib_args['load_path']:
         rl = RLib(
             agent_type=agent_type,
@@ -163,6 +166,7 @@ def run(
     try:
         ns3_process = exp.run(ns3_args, show_output=True)
 
+        time = 0.0
         while not var.isFinish():
             with var as data:
                 if data is None:
@@ -172,11 +176,14 @@ def run(
                     'history': data.env.history,
                     'reward': data.env.reward
                 }
+                csv_file.write(f"DQN,{time},{observation['reward']}\n") if csv_file else None
                 data.act.action = rl.sample(**observation, is_training=rlib_args['is_training'])
+            time += INTERACTION_PERIOD
 
         ns3_process.wait()
     finally:
         del exp
+        csv_file.close() if csv_file else None
 
     if rlib_args['is_training'] and rlib_args['save_path']:
         rl.save(agent_ids=0, path=rlib_args['save_path'])
@@ -193,6 +200,7 @@ if __name__ == '__main__':
     args.add_argument('--pythonSeed', default=42, type=int)
     args.add_argument('--sampleOnly', default=False, action='store_true')
     args.add_argument('--savePath', default='', type=str)
+    args.add_argument('--csvPath', default="", type=str)
 
     # ns3 arguments
     args.add_argument('--agentType', default='discrete', type=str)
@@ -256,4 +264,12 @@ if __name__ == '__main__':
         'save_path': args.pop('savePath')
     }
 
-    run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], rlib_args)
+    run(
+        args, 
+        args.pop('ns3Path'), 
+        args.pop('mempoolKey'), 
+        agent_type[agent], 
+        default_params[agent], 
+        rlib_args, 
+        args.pop('csvPath')
+    )
