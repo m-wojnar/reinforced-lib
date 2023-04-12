@@ -69,8 +69,10 @@ simulation = 'ccod-sim'
 
 
 def add_batch_dim(x: Array, base_ndims: jnp.int32) -> Array:
-    if x.ndim == base_ndims:
+    if x.ndim == base_ndims and base_ndims > 1:
         return x[None, ...]
+    elif x.ndim == base_ndims and base_ndims == 1:
+        return x[..., None]
     else:
         return x
 
@@ -102,7 +104,7 @@ def ddpg_q_network(s: Array, a: Array) -> Array:
 def ddpg_a_network(s: Array) -> Array:
     s = add_batch_dim(s, base_ndims=2)
     s = apply_lstm(s, LSTM_HIDDEN_SIZE)
-    return hk.nets.MLP([128, 64, 1])(s)
+    return hk.nets.MLP([128, 64, 1])(s).flatten()
 
 
 def run(
