@@ -9,10 +9,10 @@ cd "$RLIB_DIR"
 AGENT="DQN"
 AGENT_TYPE="discrete"
 
-SCENARIO="basic"
-N_WIFI=5
+SCENARIO="convergence"
+N_WIFI=55
 
-LAST_RUN=14
+LAST_RUN=11
 NUM_REPS=10
 SEED=200
 
@@ -23,8 +23,9 @@ LOAD_PATH="$CHECKPOINT_SAVE_PATH"
 python3 "$TOOLS_DIR/create_test_checkpoint.py" --loadPath="$CHECKPOINT_LOAD_PATH" --savePath="$CHECKPOINT_SAVE_PATH" --agent="$AGENT"
 
 for (( i = 1; i <= NUM_REPS; i += 1)); do
+  CSV_PATH="$RLIB_DIR/outputs/${AGENT}_${SCENARIO}_${N_WIFI}_run${i}.csv"
   echo "Testing ${AGENT} ${SCENARIO} ${N_WIFI} simulation [${i}/${NUM_REPS}]"
-  python3 main.py --ns3Path="$NS3_DIR" --agent="$AGENT" --agentType="$AGENT_TYPE" --sampleOnly --nWifi="$N_WIFI" --scenario="$SCENARIO" --pythonSeed="$SEED" --seed="$SEED" --loadPath="$LOAD_PATH"
+  python3 main.py --ns3Path="$NS3_DIR" --agent="$AGENT" --agentType="$AGENT_TYPE" --sampleOnly --nWifi="$N_WIFI" --scenario="$SCENARIO" --pythonSeed="$SEED" --seed="$SEED" --loadPath="$LOAD_PATH" --csvPath="$CSV_PATH"
 
   SEED=$(( SEED + 1 ))
 done

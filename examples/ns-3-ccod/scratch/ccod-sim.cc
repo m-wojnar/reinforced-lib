@@ -69,6 +69,8 @@ doi: 10.1109/WCNC49053.2021.9417575.
 using namespace std;
 using namespace ns3;
 
+bool dry_run = false;
+
 /***** ns3-ai structures *****/
 
 // ns3-ai structures
@@ -348,11 +350,12 @@ double simulationTime = 10; //seconds
 // double current_time = 0.0;
 bool verbose = false;
 int end_delay = 0;
-bool dry_run = false;
 
 Ptr<FlowMonitor> monitor;
 FlowMonitorHelper flowmon;
 ofstream outfile ("CW_data.csv", fstream::out);
+string rewardCsvPath = "";
+std::ostringstream rewardCsvOutput;
 
 uint32_t CW = 0;
 
@@ -393,6 +396,7 @@ main (int argc, char *argv[])
 
     CommandLine cmd;
     cmd.AddValue("agentType", "Type of agent actions: discrete, continuous", type);
+    cmd.AddValue("csvPath", "Save an reward output file in the CSV format", rewardCsvPath);
     cmd.AddValue("CW", "Value of Contention Window", CW);
     cmd.AddValue("dryRun", "Execute scenario with BEB and no agent interaction", dry_run);
     cmd.AddValue("envStepTime", "Step time in seconds. Default: 0.1s", envStepTime);
@@ -426,7 +430,9 @@ main (int argc, char *argv[])
          << "--simulationTime: " << simulationTime << endl << endl;
     
     // Set the ns3-ai operation lock
-    m_env->SetCond(2, 0);
+    if (!dry_run) {
+        m_env->SetCond(2, 0);
+    }
 
     if (verbose)
     {
@@ -516,6 +522,17 @@ main (int argc, char *argv[])
         myfile << std::endl;
     }
     myfile.close();
+
+    // Save reward file in CSV format
+    if (dry_run)
+    {
+        std::string rewardCsvString = rewardCsvOutput.str ();
+        if (!rewardCsvPath.empty ())
+        {
+            std::ofstream csvFile (rewardCsvPath);
+            csvFile << rewardCsvString;
+        }
+    }
 
     Simulator::Destroy();
     cout << "Packets registered by handler: " << g_rxPktNum << " Packets" << endl;
@@ -679,25 +696,36 @@ ScheduleNextStateRead(double envStepTime)
 {
     Simulator::Schedule(Seconds(envStepTime), &ScheduleNextStateRead, envStepTime);
 
+    static double curr_time = 0.0;
+
     recordHistory();
     float reward = getReward();
 
-    // Here is the ns3-ai communication with python agent
+    if (!dry_run)
+    {
+        // Here is the ns3-ai communication with python agent
         // 1. push history and reward to DQN agent as observation
-    auto env = m_env->EnvSetterCond();
-    for (int i = 0; i < history.size(); i++) {
-        env->history[i] = history.at(i);
+        auto env = m_env->EnvSetterCond();
+        for (int i = 0; i < history.size(); i++) {
+            env->history[i] = history.at(i);
+        }
+        env->reward = reward;
+        m_env->SetCompleted();
+
+            // 2. get action from DQN agent
+        auto act = m_env->ActionGetterCond();
+        float current_action = act->action;
+        m_env->GetCompleted();
+
+        // Act according to the retrived action
+        execute_action((float) current_action);
     }
-    env->reward = reward;
-    m_env->SetCompleted();
+    else
+    {
+        rewardCsvOutput << "CSMA," << curr_time << "," << reward << endl;
+    }
 
-        // 2. get action from DQN agent
-    auto act = m_env->ActionGetterCond();
-    float current_action = act->action;
-    m_env->GetCompleted();
-
-    // Act according to the retrived action
-    execute_action((float) current_action);
+    curr_time += envStepTime;
 }
 
 void

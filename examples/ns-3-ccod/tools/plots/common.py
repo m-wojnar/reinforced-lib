@@ -12,7 +12,7 @@ TOOLS_DIR = os.path.join(os.path.expanduser("~"), 'reinforced-lib/examples/ns-3-
 DATA_FILE = os.path.join(TOOLS_DIR, 'plots', 'all_results.csv')
 
 ALL_MANAGERS = {
-    'CSMA': 'CSMA/CA',
+    'CSMA': 'Standard 802.11',
     'DQN': 'DQN'
 }
 CONFIDENCE_INTERVAL = 0.99
