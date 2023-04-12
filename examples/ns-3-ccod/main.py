@@ -104,7 +104,7 @@ def ddpg_q_network(s: Array, a: Array) -> Array:
 def ddpg_a_network(s: Array) -> Array:
     s = add_batch_dim(s, base_ndims=2)
     s = apply_lstm(s, LSTM_HIDDEN_SIZE)
-    return hk.nets.MLP([128, 64, 1])(s).flatten()
+    return hk.nets.MLP([128, 64, 1])(s).squeeze()
 
 
 def run(
