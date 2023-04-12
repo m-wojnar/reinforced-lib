@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 
 from reinforced_lib import RLib
+from reinforced_lib.agents.deep.ddpg import DDPGState
 from reinforced_lib.agents.deep.dqn import DQNState
 
 
@@ -30,6 +31,22 @@ if __name__ == '__main__':
             replay_buffer=None,
             prev_env_state=None,
             epsilon=0
+        )
+    elif args.agent == 'DDPG':
+        rl._agent_containers[0].state = DDPGState(
+            q_params=None,
+            q_state=None,
+            q_params_target=None,
+            q_state_target=None,
+            q_opt_state=None,
+            a_params=rl._agent_containers[0].state.a_params,
+            a_state=rl._agent_containers[0].state.a_state,
+            a_params_target=None,
+            a_state_target=None,
+            a_opt_state=None,
+            replay_buffer=None,
+            prev_env_state=None,
+            noise=0
         )
 
     rl.save(agent_ids=0, path=args.savePath)
