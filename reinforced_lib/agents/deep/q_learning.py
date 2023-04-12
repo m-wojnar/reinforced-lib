@@ -46,10 +46,10 @@ class QLearningState(AgentState):
 
 class QLearning(BaseAgent):
     r"""
-    Deep Q-learning agent [6]_ with :math:`\epsilon`-greedy exploration and experience replay buffer to learn from the
-    past experiences. The agent uses a Q-network to estimate the Q-values :math:`Q^{\pi}(s, a)` of the action-value
-    function under the policy :math:`\pi`. The Q-network is trained to minimize the Bellman error. This agent
-    follows the off-policy learning paradigm and is suitable for environments with discrete action spaces.
+    Deep Q-learning agent [6]_ with :math:`\epsilon`-greedy exploration and experience replay buffer. The agent uses
+    a deep neural network to approximate the Q-value function. The Q-network is trained to minimize the Bellman
+    error. This agent follows the on-policy learning paradigm and is suitable for environments with discrete action
+    spaces.
 
     Parameters
     ----------
@@ -234,8 +234,8 @@ class QLearning(BaseAgent):
             discount: Scalar
     ) -> Tuple[Scalar, hk.State]:
         r"""
-        Loss is the Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r + \gamma 
-        \max_{a'} Q(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state, :math:`a` is the 
+        Loss is the mean squared Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r +
+        \gamma \max_{a'} Q(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state, :math:`a` is the
         current action, :math:`r` is the reward, :math:`s'` is the next state, :math:`\gamma` is  the discount factor, 
         :math:`Q(s, a)` is the Q-value of the state-action pair. Loss can be calculated on a batch of transitions.
 
