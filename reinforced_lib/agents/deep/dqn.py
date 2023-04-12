@@ -54,11 +54,10 @@ class DQNState(AgentState):
 
 class DQN(BaseAgent):
     r"""
-    Double Q-learning agent [8]_ with :math:`\epsilon`-greedy exploration and experience replay buffer to learn from
-    the past experiences. The agent uses two Q-networks to stabilize the learning process and avoid overestimation of
-    the Q-values. The main Q-network is trained to minimize the Bellman error. The target Q-network is updated with
-    a soft update. This agent follows the off-policy learning paradigm and is suitable for environments with discrete
-    action spaces.
+    Double Q-learning agent [8]_ with :math:`\epsilon`-greedy exploration and experience replay buffer. The agent
+    uses two Q-networks to stabilize the learning process and avoid overestimation of the Q-values. The main Q-network
+    is trained to minimize the Bellman error. The target Q-network is updated with a soft update. This agent follows
+    the off-policy learning paradigm and is suitable for environments with discrete action spaces.
 
     Parameters
     ----------
@@ -250,8 +249,8 @@ class DQN(BaseAgent):
             discount: Scalar
     ) -> Tuple[Scalar, hk.State]:
         r"""
-        Loss is the Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r + \gamma 
-        \max_{a'} Q'(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state, :math:`a` is the
+        Loss is the mean squared Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r +
+        \gamma \max_{a'} Q'(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state, :math:`a` is the
         current action, :math:`r` is the reward, :math:`s'` is the next state, :math:`\gamma` is  the discount factor, 
         :math:`Q(s, a)` is the Q-value of the main Q-network, :math:`Q'(s', a')` is the Q-value of the target
         Q-network. Loss can be calculated on a batch of transitions.

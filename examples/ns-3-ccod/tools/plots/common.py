@@ -12,8 +12,9 @@ TOOLS_DIR = os.path.join(os.path.expanduser("~"), 'reinforced-lib/examples/ns-3-
 DATA_FILE = os.path.join(TOOLS_DIR, 'plots', 'all_results.csv')
 
 ALL_MANAGERS = {
-    'CSMA': 'CSMA/CA',
-    'DQN': 'DQN'
+    'CSMA': 'Standard 802.11',
+    'DQN': 'CCOD w/ DQN',
+    'DDPG': 'CCOD w/ DDPG'
 }
 CONFIDENCE_INTERVAL = 0.99
 
@@ -37,7 +38,7 @@ PLOT_PARAMS = {
     'ytick.major.width': 0.5,
 }
 
-COLORS = pl.cm.viridis(np.linspace(0.25, 0.5, len(ALL_MANAGERS)))
+COLORS = pl.cm.viridis(np.linspace(0., 0.75, len(ALL_MANAGERS)))
 
 
 def get_thr_ci(

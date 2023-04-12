@@ -69,12 +69,11 @@ class DDPGState(AgentState):
 class DDPG(BaseAgent):
     r"""
     Deep deterministic policy gradient [9]_ [10]_ agent with white Gaussian noise exploration and experience replay
-    buffer to learn from the past experiences. The agent simultaneously learns a Q-function and a policy. The Q-function
-    is updated using the Bellman equation. The policy is learned using the gradient of the Q-function with respect to
-    the policy parameters. The agent uses two Q-networks (critics) and two policy networks (actors) to stabilize the
-    learning process and avoid overestimation. The main Q-network is trained to minimize the mean squared Bellman error.
-    The policy network is trained to maximize the Q-value. The target networks are updated with a soft update. This
-    agent follows the off-policy learning paradigm and is suitable for environments with continuous action spaces.
+    buffer. The agent simultaneously learns a Q-function and a policy. The Q-function is updated using the Bellman
+    equation. The policy is learned using the gradient of the Q-function with respect to the policy parameters,
+    it is trained to maximize the Q-value. The agent uses two Q-networks (critics) and two policy networks (actors)
+    to stabilize the learning process and avoid overestimation. The target networks are updated with a soft update.
+    This agent follows the off-policy learning paradigm and is suitable for environments with continuous action spaces.
 
     Parameters
     ----------
