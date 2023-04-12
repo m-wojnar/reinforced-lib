@@ -1,4 +1,4 @@
-#!/usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -l
+#!/bin/zsh
 
 NS3_DIR="${NS3_DIR:=$HOME/ns-3.37}"
 RLIB_DIR="${RLIB_DIR:=$HOME/reinforced-lib/examples/ns-3-ccod}"
@@ -8,8 +8,8 @@ cd "$RLIB_DIR"
 AGENT="DQN"
 AGENT_TYPE="discrete"
 
-SCENARIO="basic"
-N_WIFI=5
+SCENARIO="convergence"
+N_WIFI=55
 
 NUM_REPS=14
 SEED=100
