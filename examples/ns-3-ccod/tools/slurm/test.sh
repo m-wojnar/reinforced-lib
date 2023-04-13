@@ -6,8 +6,8 @@ TOOLS_DIR="${TOOLS_DIR:=$HOME/reinforced-lib/examples/ns-3-ccod/tools}"
 
 cd "$RLIB_DIR"
 
-AGENT="DQN"
-AGENT_TYPE="discrete"
+AGENT="DDPG"
+AGENT_TYPE="continuous"
 
 SCENARIO="convergence"
 N_WIFI=55

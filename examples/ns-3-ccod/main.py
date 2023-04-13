@@ -111,6 +111,7 @@ def run(
         ns3_args: Dict[str, Any],
         ns3_path: str,
         mempool_key: int,
+        agent_name: str,
         agent_type: type,
         agent_params: Dict[str, Any],
         rlib_args: Dict[str, Any],
@@ -176,7 +177,7 @@ def run(
                     'history': data.env.history,
                     'reward': data.env.reward
                 }
-                csv_file.write(f"DQN,{time},{observation['reward']}\n") if csv_file else None
+                csv_file.write(f"{agent_name},{time},{observation['reward']}\n") if csv_file else None
                 data.act.action = rl.sample(**observation, is_training=rlib_args['is_training'])
             time += INTERACTION_PERIOD
 
@@ -268,6 +269,7 @@ if __name__ == '__main__':
         args, 
         args.pop('ns3Path'), 
         args.pop('mempoolKey'), 
+        agent,
         agent_type[agent], 
         default_params[agent], 
         rlib_args, 
