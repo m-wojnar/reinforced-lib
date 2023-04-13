@@ -7,8 +7,7 @@ import pandas as pd
 from scipy.stats import t
 
 
-# TOOLS_DIR = os.getenv('TOOLS_DIR', os.path.join(os.path.expanduser("~"), 'reinforced-lib/examples/ns-3-ccod/tools'))
-TOOLS_DIR = os.path.join(os.path.expanduser("~"), 'reinforced-lib/examples/ns-3-ccod/tools')
+TOOLS_DIR = os.getenv('TOOLS_DIR', os.path.join(os.path.expanduser("~"), 'reinforced-lib/examples/ns-3-ccod/tools'))
 DATA_FILE = os.path.join(TOOLS_DIR, 'plots', 'all_results.csv')
 
 ALL_MANAGERS = {
