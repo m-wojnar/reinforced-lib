@@ -5,17 +5,14 @@ import pandas as pd
 from common import *
 
 
-WINDOW = 1
-DATA_FILE = "/Users/wciezobka/agh/reinforced-lib/examples/ns-3-ccod/tools/plots/all_results.csv"
-
 INTERACTION_PERIOD = 1e-2
 THR_SCALE = 5 * 150 * INTERACTION_PERIOD * 10
+WINDOW = 1
 
 
 def plot_results() -> None:
     df = pd.read_csv(DATA_FILE)
 
-    plt.plot([-1, 0], [-2, 0], markersize=3, label="Agent", c="white")
     for i, (manager, manager_name) in enumerate(ALL_MANAGERS.items()):
         df_i = df[df["agent"] == manager]
         df_i["throughput"] = df_i["throughput"].rolling(window=WINDOW).mean() if WINDOW > 1 else df_i["throughput"]
