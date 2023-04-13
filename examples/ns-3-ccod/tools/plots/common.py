@@ -13,8 +13,7 @@ DATA_FILE = os.path.join(TOOLS_DIR, 'plots', 'all_results.csv')
 
 ALL_MANAGERS = {
     'CSMA': 'Standard 802.11',
-    'DQN': 'CCOD w/ DQN',
-    'DDPG': 'CCOD w/ DDPG'
+    'DQN': 'CCOD w/ DQN'
 }
 CONFIDENCE_INTERVAL = 0.99
 
@@ -38,7 +37,7 @@ PLOT_PARAMS = {
     'ytick.major.width': 0.5,
 }
 
-COLORS = pl.cm.viridis(np.linspace(0., 0.75, len(ALL_MANAGERS)))
+COLORS = pl.cm.viridis(np.linspace(0.25, 0.75, len(ALL_MANAGERS)))
 
 
 def get_thr_ci(

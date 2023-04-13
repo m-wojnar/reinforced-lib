@@ -36,21 +36,17 @@ def plot_results(ax: plt.Axes, delta: float, interval: float, velocity: float) -
     ax.set_ylim((0, 125))
 
     ax.set_ylabel('Station throughput [Mb/s]')
-    ax.set_title(fr'$\Delta$ = {delta} dB, 1/$\lambda$ = {interval} s')
+    ax.set_xlabel('Time [s]')
 
+    ax.legend()
     ax.grid()
 
 
 if __name__ == '__main__':
     plt.rcParams.update(PLOT_PARAMS)
-    fig, axes = plt.subplots(2, 1, sharex='col')
+    fig, ax = plt.subplots()
 
-    for delta, interval, ax in zip([5, 15], [4, 8], axes.flatten()):
-        plot_results(ax, delta, interval, velocity=0)
-
-    axes[0].tick_params('x', labelbottom=False, bottom=False)
-    axes[1].set_xlabel('Time [s]')
-    axes[0].legend(ncol=2)
+    plot_results(ax, delta=5., interval=4., velocity=0.)
 
     plt.savefig(f'power-thr.pdf', bbox_inches='tight')
     plt.clf()

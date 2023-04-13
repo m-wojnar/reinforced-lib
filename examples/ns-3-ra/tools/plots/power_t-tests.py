@@ -33,6 +33,7 @@ def plot_results(delta: float, interval: float, time: float) -> None:
 
 if __name__ == '__main__':
     plt.rcParams.update(PLOT_PARAMS)
+    plt.rcParams['figure.figsize'] = (4, 5)
 
     for delta, interval, time in zip([5, 15], [4, 8], [23, 33]):
         plot_results(delta, interval, time)

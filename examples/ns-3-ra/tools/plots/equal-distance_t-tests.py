@@ -33,8 +33,9 @@ def plot_results(distance: float, n_wifi: int) -> None:
 
 if __name__ == '__main__':
     plt.rcParams.update(PLOT_PARAMS)
+    plt.rcParams['figure.figsize'] = (4, 5)
 
     n_wifi_to_compare = 4
 
-    for distance in [0, 20]:
+    for distance in [1, 20]:
         plot_results(distance, n_wifi_to_compare)
