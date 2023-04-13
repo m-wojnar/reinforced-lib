@@ -12,9 +12,10 @@ AGENT_TYPE="discrete"
 SCENARIO="convergence"
 N_WIFI=55
 
-LAST_RUN=11
+LAST_RUN=14
 NUM_REPS=10
 SEED=200
+MEMPOOL_KEY=1234
 
 CHECKPOINT_LOAD_PATH="$RLIB_DIR/checkpoints/${AGENT}_${SCENARIO}_${N_WIFI}_run_${LAST_RUN}.pkl.lz4"
 CHECKPOINT_SAVE_PATH="$RLIB_DIR/checkpoints/${AGENT}_${SCENARIO}_${N_WIFI}_test.pkl.lz4"
@@ -25,7 +26,7 @@ python3 "$TOOLS_DIR/create_test_checkpoint.py" --loadPath="$CHECKPOINT_LOAD_PATH
 for (( i = 1; i <= NUM_REPS; i += 1)); do
   CSV_PATH="$RLIB_DIR/outputs/${AGENT}_${SCENARIO}_${N_WIFI}_run${i}.csv"
   echo "Testing ${AGENT} ${SCENARIO} ${N_WIFI} simulation [${i}/${NUM_REPS}]"
-  python3 main.py --ns3Path="$NS3_DIR" --agent="$AGENT" --agentType="$AGENT_TYPE" --sampleOnly --nWifi="$N_WIFI" --scenario="$SCENARIO" --pythonSeed="$SEED" --seed="$SEED" --loadPath="$LOAD_PATH" --csvPath="$CSV_PATH"
+  python3 main.py --ns3Path="$NS3_DIR" --agent="$AGENT" --agentType="$AGENT_TYPE" --sampleOnly --nWifi="$N_WIFI" --scenario="$SCENARIO" --pythonSeed="$SEED" --seed="$SEED" --loadPath="$LOAD_PATH" --csvPath="$CSV_PATH" --mempoolKey="$MEMPOOL_KEY"
 
   SEED=$(( SEED + 1 ))
 done
