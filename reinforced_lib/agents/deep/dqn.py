@@ -54,11 +54,10 @@ class DQNState(AgentState):
 
 class DQN(BaseAgent):
     r"""
-    Double Q-learning agent [8]_ with :math:`\epsilon`-greedy exploration and experience replay buffer to learn from
-    the past experiences. The agent uses two Q-networks to stabilize the learning process and avoid overestimation of
-    the Q-values. The main Q-network is trained to minimize the Bellman error. The target Q-network is updated with
-    a soft update. This agent follows the off-policy learning paradigm and is suitable for environments with discrete
-    action spaces.
+    Double Q-learning agent [8]_ with :math:`\epsilon`-greedy exploration and experience replay buffer. The agent
+    uses two Q-networks to stabilize the learning process and avoid overestimation of the Q-values. The main Q-network
+    is trained to minimize the Bellman error. The target Q-network is updated with a soft update. This agent follows
+    the off-policy learning paradigm and is suitable for environments with discrete action spaces.
 
     Parameters
     ----------
@@ -244,15 +243,14 @@ class DQN(BaseAgent):
     def loss_fn(
             params: hk.Params,
             key: PRNGKey,
-            net_state: hk.State,
             dqn_state: DQNState,
             batch: Tuple,
             q_network: hk.TransformedWithState,
             discount: Scalar
     ) -> Tuple[Scalar, hk.State]:
         r"""
-        Loss is the Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r + \gamma 
-        \max_{a'} Q'(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state, :math:`a` is the
+        Loss is the mean squared Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r +
+        \gamma \max_{a'} Q'(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state, :math:`a` is the
         current action, :math:`r` is the reward, :math:`s'` is the next state, :math:`\gamma` is  the discount factor, 
         :math:`Q(s, a)` is the Q-value of the main Q-network, :math:`Q'(s', a')` is the Q-value of the target
         Q-network. Loss can be calculated on a batch of transitions.
@@ -263,8 +261,6 @@ class DQN(BaseAgent):
             The parameters of the Q-network.
         key : PRNGKey
             A PRNG key used as the random key.
-        net_state : hk.State
-            The state of the Q-network.
         dqn_state : DQNState
             The state of the double Q-learning agent.
         batch : Tuple
@@ -283,14 +279,14 @@ class DQN(BaseAgent):
         states, actions, rewards, terminals, next_states = batch
         q_key, q_target_key = jax.random.split(key)
 
-        q_values, state = q_network.apply(params, net_state, q_key, states)
+        q_values, state = q_network.apply(params, dqn_state.state, q_key, states)
         q_values = jnp.take_along_axis(q_values, actions.astype(jnp.int32), axis=-1)
 
         q_values_target, _ = q_network.apply(dqn_state.params_target, dqn_state.state_target, q_target_key, next_states)
-        target = rewards + (1 - terminals) * discount * jnp.max(q_values_target, axis=-1)
+        target = rewards + (1 - terminals) * discount * jnp.max(q_values_target, axis=-1, keepdims=True)
 
         target = jax.lax.stop_gradient(target)
-        loss = jnp.square(target - jnp.squeeze(q_values)).mean()
+        loss = optax.l2_loss(q_values, target).mean()
 
         return loss, state
 
@@ -361,11 +357,9 @@ class DQN(BaseAgent):
                 batch_key, network_key, key = jax.random.split(key, 3)
                 batch = experience_replay.sample(replay_buffer, batch_key)
 
-                loss_params = (network_key, net_state, state, batch)
-                params, net_state, opt_state, _ = step_fn(params, loss_params, opt_state)
-
-                params_target = jax.tree_map(lambda x, y: x * tau + y * (1 - tau), params, params_target)
-                state_target = jax.tree_map(lambda x, y: x * tau + y * (1 - tau), net_state, state_target)
+                params, net_state, opt_state, _ = step_fn(params, (network_key, state, batch), opt_state)
+                params_target, state_target = optax.incremental_update(
+                    (params, net_state), (params_target, state_target), tau)
 
         return DQNState(
             params=params,

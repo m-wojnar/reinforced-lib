@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Tuple
 
 import gymnasium as gym
 import numpy as np
@@ -40,11 +40,11 @@ class Gymnasium(BaseExt):
         return terminal or truncated
 
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
-    def obs_space_shape(self) -> tuple:
+    def obs_space_shape(self) -> Tuple:
         return self.env.observation_space.shape
 
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
-    def act_space_shape(self) -> tuple:
+    def act_space_shape(self) -> Tuple:
         return self.env.action_space.shape
 
     @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
@@ -53,3 +53,11 @@ class Gymnasium(BaseExt):
             return self.env.action_space.n
 
         raise AttributeError()
+
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
+    def min_action(self) -> Tuple:
+        return self.env.action_space.low
+
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
+    def max_action(self) -> Tuple:
+        return self.env.action_space.high

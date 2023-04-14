@@ -5,6 +5,7 @@ import os
 import pickle
 from typing import Any, Dict, List, Tuple, Union
 
+import cloudpickle
 import gymnasium as gym
 import jax.random
 import lz4.frame
@@ -181,6 +182,9 @@ class RLib:
         if not issubclass(ext_type, BaseExt):
             raise IncorrectExtensionTypeError(ext_type)
 
+        self._ext_type = ext_type
+        self._ext_params = ext_params
+
         ext_params = ext_params if ext_params else {}
         self._ext = ext_type(**ext_params)
 
@@ -221,6 +225,10 @@ class RLib:
 
         if len(self._agent_containers) > 0:
             raise ForbiddenLoggerSetError()
+
+        self._logger_types = logger_types
+        self._logger_sources = logger_sources
+        self._logger_params = logger_params
 
         logger_params = logger_params if logger_params else {}
         logger_types, logger_sources = self._object_to_list(logger_types), self._object_to_list(logger_sources)
@@ -485,7 +493,7 @@ class RLib:
         }
 
         with lz4.frame.open(path, 'wb') as f:
-            f.write(pickle.dumps(experiment_state))
+            f.write(cloudpickle.dumps(experiment_state))
         
         return path
     
@@ -533,23 +541,20 @@ class RLib:
 
         if restore_loggers and experiment_state["logger_types"]:
             rlib.set_loggers(
-                experiment_state["logger_type"],
+                experiment_state["logger_types"],
                 experiment_state["logger_sources"],
                 experiment_state["logger_params"]
             )
         
         for agent_id, agent_container in experiment_state["agents"].items():
-            if agent_id < len(rlib._agent_containers):
-                rlib._agent_containers[agent_id] = agent_container
-            else:
-                while agent_id > len(rlib._agent_containers):
-                    rlib.init()
+            while agent_id >= len(rlib._agent_containers):
+                rlib.init()
 
-                rlib._agent_containers.append(AgentContainer(
-                    state=agent_container["state"],
-                    key=agent_container["key"],
-                    action=agent_container["action"],
-                    step=agent_container["step"]
-                ))
+            rlib._agent_containers[agent_id] = AgentContainer(
+                state=agent_container["state"],
+                key=agent_container["key"],
+                action=agent_container["action"],
+                step=agent_container["step"]
+            )
 
         return rlib

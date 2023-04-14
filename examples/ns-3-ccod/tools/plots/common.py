@@ -4,19 +4,17 @@ from typing import Tuple
 import matplotlib.pylab as pl
 import numpy as np
 import pandas as pd
-from scipy.stats import t, ttest_ind
+from scipy.stats import t
 
 
-TOOLS_DIR = os.getenv('TOOLS_DIR', os.path.join(os.path.expanduser("~"), 'reinforced-lib/examples/ns-3-ra/tools'))
+TOOLS_DIR = os.getenv('RLIB_DIR', os.path.join(os.path.expanduser("~"), 'reinforced-lib/examples/ns-3-ccod'))
 DATA_FILE = os.path.join(TOOLS_DIR, 'outputs', 'all_results.csv')
 
 ALL_MANAGERS = {
-    'Minstrel': 'Minstrel',
-    'EGreedy': r'$\varepsilon$-greedy',
-    'UCB': 'Upper confidence bound',
-    'ThompsonSampling': 'Thompson sampling'
+    'CSMA': 'Standard 802.11',
+    'DQN': 'CCOD w/ DQN',
+    'DDPG': 'CCOD w/ DDPG'
 }
-MIN_REPS = 5
 CONFIDENCE_INTERVAL = 0.99
 
 COLUMN_WIDTH = 3.5
@@ -39,7 +37,7 @@ PLOT_PARAMS = {
     'ytick.major.width': 0.5,
 }
 
-COLORS = pl.cm.viridis(np.linspace(0., 1., len(ALL_MANAGERS) + 1))
+COLORS = pl.cm.viridis(np.linspace(0., 0.75, len(ALL_MANAGERS)))
 
 
 def get_thr_ci(
@@ -47,10 +45,6 @@ def get_thr_ci(
         column: str,
         ci_interval: float = CONFIDENCE_INTERVAL
 ) -> Tuple[pd.Series, pd.Series, pd.Series]:
-    count = data.groupby([column])['throughput'].count()
-    mask = count[count >= MIN_REPS].index.tolist()
-
-    data = data[data[column].isin(mask)]
     data = data.groupby([column])['throughput']
 
     measurements = data.count()
@@ -64,17 +58,3 @@ def get_thr_ci(
     ci_high = mean + z * std / np.sqrt(measurements)
 
     return mean, ci_low, ci_high
-
-
-def get_thr_ttest(data: pd.DataFrame) -> np.ndarray:
-    throughputs = [data[data.wifiManager == manager]['throughput'] for manager in ALL_MANAGERS]
-
-    n = len(throughputs)
-    results = np.zeros((n, n))
-
-    for i in range(n):
-        for j in range(i, n):
-            stats, pval = ttest_ind(throughputs[i], throughputs[j], equal_var=False)
-            results[i, j] = pval
-
-    return results

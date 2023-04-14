@@ -33,6 +33,7 @@ def plot_results(velocity: float, distance: float) -> None:
 
 if __name__ == '__main__':
     plt.rcParams.update(PLOT_PARAMS)
+    plt.rcParams['figure.figsize'] = (4, 5)
 
     distance_to_compare = 10
 

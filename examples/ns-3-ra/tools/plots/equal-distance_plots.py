@@ -26,21 +26,17 @@ def plot_results(ax: plt.Axes, distance: float) -> None:
     ax.set_ylim((0, 125))
 
     ax.set_ylabel('Aggregate throughput [Mb/s]')
-    ax.set_title(fr'$\rho$ = {distance} m')
+    ax.set_xlabel('Number of stations')
 
+    ax.legend()
     ax.grid()
 
 
 if __name__ == '__main__':
     plt.rcParams.update(PLOT_PARAMS)
-    fig, axes = plt.subplots(2, 1, sharex='col')
+    fig, ax = plt.subplots()
 
-    for distance, ax in zip([1, 20], axes):
-        plot_results(ax, distance)
-
-    axes[0].tick_params('x', labelbottom=False, bottom=False)
-    axes[1].set_xlabel('Number of stations')
-    axes[1].legend()
+    plot_results(ax, distance=1.)
 
     plt.savefig(f'equal-distance-thr.pdf', bbox_inches='tight')
     plt.clf()

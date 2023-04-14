@@ -43,10 +43,10 @@ class ExpectedSarsaState(AgentState):
 
 class ExpectedSarsa(BaseAgent):
     r"""
-    Deep expected SARSA agent with temperature parameter :math:`\tau` and experience replay buffer to learn from the
-    past experiences. The agent uses a Q-network to estimate the Q-values :math:`Q^{\pi}(s, a)` of the action-value
-    function under the policy :math:`\pi`. The Q-network is trained to minimize the Bellman error. This agent
-    follows the on-policy learning paradigm and is suitable for environments with discrete action spaces.
+    Deep expected SARSA agent with temperature parameter :math:`\tau` and experience replay buffer. The agent uses
+    a deep neural network to approximate the Q-value function. The Q-network is trained to minimize the Bellman
+    error. This agent follows the on-policy learning paradigm and is suitable for environments with discrete action
+    spaces.
 
     Parameters
     ----------
@@ -213,10 +213,11 @@ class ExpectedSarsa(BaseAgent):
             tau: Scalar
     ) -> Tuple[Scalar, hk.State]:
         r"""
-        Loss is the Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r + \gamma
-        \sum_{a'} \pi(a'|s') Q(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state, :math:`a` is
-        the current action, :math:`r` is the reward, :math:`s'` is the next state, :math:`\gamma` is  the discount factor,
-        :math:`Q(s, a)` is the Q-value of the state-action pair. Loss can be calculated on a batch of transitions.
+        Loss is the mean squared Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r +
+        \gamma \sum_{a'} \pi(a'|s') Q(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state,
+        :math:`a` is the current action, :math:`r` is the reward, :math:`s'` is the next state, :math:`\gamma` is
+        the discount factor, :math:`Q(s, a)` is the Q-value of the state-action pair. Loss can be calculated on a batch
+        of transitions.
 
         Parameters
         ----------
@@ -253,10 +254,10 @@ class ExpectedSarsa(BaseAgent):
 
         q_values_target, _ = q_network.apply(params_target, net_state_target, q_target_key, next_states)
         probs_target = jax.nn.softmax(q_values_target / tau)
-        target = rewards + (1 - terminals) * discount * jnp.sum(probs_target * q_values_target, axis=-1)
+        target = rewards + (1 - terminals) * discount * jnp.sum(probs_target * q_values_target, axis=-1, keepdims=True)
 
         target = jax.lax.stop_gradient(target)
-        loss = jnp.square(target - jnp.squeeze(q_values)).mean()
+        loss = optax.l2_loss(q_values, target).mean()
 
         return loss, state
 

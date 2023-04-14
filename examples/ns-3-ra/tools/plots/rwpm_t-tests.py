@@ -36,6 +36,7 @@ def plot_results(velocity: float) -> None:
 
 if __name__ == '__main__':
     plt.rcParams.update(PLOT_PARAMS)
+    plt.rcParams['figure.figsize'] = (4, 5)
 
     for velocity in [0., 1.4]:
         plot_results(velocity)

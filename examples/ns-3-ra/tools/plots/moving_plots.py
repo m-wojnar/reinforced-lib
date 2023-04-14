@@ -25,21 +25,17 @@ def plot_results(ax: plt.Axes, velocity: float) -> None:
     ax.set_ylim((0, 125))
 
     ax.set_ylabel('Station throughput [Mb/s]')
-    ax.set_title(fr'$\nu$ = {velocity} m/s')
+    ax.set_xlabel('Distance from AP [m]')
 
+    ax.legend()
     ax.grid()
 
 
 if __name__ == '__main__':
     plt.rcParams.update(PLOT_PARAMS)
-    fig, axes = plt.subplots(2, 1, sharex='col')
+    fig, ax = plt.subplots()
 
-    for velocity, ax in zip([1, 2], axes):
-        plot_results(ax, velocity)
-
-    axes[0].tick_params('x', labelbottom=False, bottom=False)
-    axes[1].set_xlabel('Distance from AP [m]')
-    axes[1].legend()
+    plot_results(ax, velocity=1.)
 
     plt.savefig(f'moving-thr.pdf', bbox_inches='tight')
     plt.clf()

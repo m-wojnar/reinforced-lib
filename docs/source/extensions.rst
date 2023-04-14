@@ -36,3 +36,13 @@ IEEE 802.11ax RA
 .. autoclass:: IEEE_802_11_ax_RA
     :show-inheritance:
     :members:
+
+
+IEEE 802.11 CCOD
+----------------
+
+.. currentmodule:: reinforced_lib.exts.wifi.ieee_802_11_ccod
+
+.. autoclass:: IEEE_802_11_CCOD
+    :show-inheritance:
+    :members:

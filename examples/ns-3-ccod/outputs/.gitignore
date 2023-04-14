@@ -1,0 +1,4 @@
+*
+!.gitignore
+!combine_basic_results.sh
+!combine_csv_files.sh
