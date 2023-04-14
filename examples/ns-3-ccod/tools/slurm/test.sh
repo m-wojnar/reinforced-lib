@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -l
 
 NS3_DIR="${NS3_DIR:=$HOME/ns-3.37}"
 RLIB_DIR="${RLIB_DIR:=$HOME/reinforced-lib/examples/ns-3-ccod}"
@@ -14,7 +14,7 @@ N_WIFI=55
 
 LAST_RUN=14
 NUM_REPS=10
-SEED=200
+SEED=300
 MEMPOOL_KEY=1234
 
 CHECKPOINT_LOAD_PATH="$RLIB_DIR/checkpoints/${AGENT}_${SCENARIO}_${N_WIFI}_run_${LAST_RUN}.pkl.lz4"

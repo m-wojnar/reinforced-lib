@@ -21,12 +21,13 @@ from reinforced_lib.exts.wifi import IEEE_802_11_CCOD
 from reinforced_lib.logs import SourceType, TensorboardLogger
 
 
-# DRL settings, according to Table I from the cited article
+# DRL settings, according to the cited article and its source code
 
 INTERACTION_PERIOD = 1e-2
 SIMULATION_TIME = 60
 MAX_HISTORY_LENGTH = IEEE_802_11_CCOD.max_history_length
 HISTORY_LENGTH = 300
+THR_SCALE = 5 * 150 * INTERACTION_PERIOD * 10
 
 DQN_LEARNING_RATE = 4e-4
 DQN_EPSILON = 0.9
@@ -111,11 +112,9 @@ def run(
         ns3_args: Dict[str, Any],
         ns3_path: str,
         mempool_key: int,
-        agent_name: str,
         agent_type: type,
         agent_params: Dict[str, Any],
-        rlib_args: Dict[str, Any],
-        csv_path: str
+        rlib_args: Dict[str, Any]
 ) -> None:
     """
     Run a CCOD simulation in the ns-3 simulator [1]_ with the ns3-ai library [2]_.
@@ -135,8 +134,8 @@ def run(
     rlib_args : dict
         Arguments used by Reinforced-lib. If `load_path` is not None, the agent will be loaded from the
         specified path. If `is_training` is True, the agent will be updated during the interaction with
-        the simulator. If `save_path` is not None and `is_training` is True, the agent will be saved to
-        the specified path.
+        the simulator. If `save_path` is not empty and `is_training` is True, the agent will be saved to
+        the specified path. If `csv_path` is not empty, the results will be saved to the specified path.
 
     References
     ----------
@@ -146,7 +145,8 @@ def run(
        Association for Computing Machinery.
     """
 
-    csv_file = open(csv_path, "w") if csv_path else None
+    csv_path = rlib_args['csv_path']
+    csv_file = open(csv_path, 'w') if csv_path else None
 
     if not rlib_args['load_path']:
         rl = RLib(
@@ -166,8 +166,8 @@ def run(
 
     try:
         ns3_process = exp.run(ns3_args, show_output=True)
+        step = 0
 
-        time = 0.0
         while not var.isFinish():
             with var as data:
                 if data is None:
@@ -177,9 +177,13 @@ def run(
                     'history': data.env.history,
                     'reward': data.env.reward
                 }
-                csv_file.write(f"{agent_name},{time},{observation['reward']}\n") if csv_file else None
                 data.act.action = rl.sample(**observation, is_training=rlib_args['is_training'])
-            time += INTERACTION_PERIOD
+
+                csv_file.write(
+                    f"{agent_type.__name__},{ns3_args['scenario']},{ns3_args['nWifi']},{ns3_args['RngRun']},"
+                    f"{step * INTERACTION_PERIOD},{observation['reward'] * THR_SCALE}\n"
+                ) if csv_file else None
+                step += 1
 
         ns3_process.wait()
     finally:
@@ -194,14 +198,14 @@ if __name__ == '__main__':
     args = ArgumentParser()
 
     # Python arguments
-    args.add_argument('--agent', default="DQN", type=str)
+    args.add_argument('--agent', default='DQN', type=str)
     args.add_argument('--loadPath', default='', type=str)
     args.add_argument('--mempoolKey', default=1234, type=int)
     args.add_argument('--ns3Path', required=True, type=str)
     args.add_argument('--pythonSeed', default=42, type=int)
     args.add_argument('--sampleOnly', default=False, action='store_true')
     args.add_argument('--savePath', default='', type=str)
-    args.add_argument('--csvPath', default="", type=str)
+    args.add_argument('--csvPath', default='', type=str)
 
     # ns3 arguments
     args.add_argument('--agentType', default='discrete', type=str)
@@ -262,16 +266,15 @@ if __name__ == '__main__':
         'seed': args.pop('pythonSeed'),
         'is_training': not args.pop('sampleOnly'),
         'load_path': args.pop('loadPath'),
-        'save_path': args.pop('savePath')
+        'save_path': args.pop('savePath'),
+        'csv_path': args.pop('csvPath')
     }
 
     run(
         args, 
         args.pop('ns3Path'), 
         args.pop('mempoolKey'), 
-        agent,
-        agent_type[agent], 
+        agent_type[agent],
         default_params[agent], 
-        rlib_args, 
-        args.pop('csvPath')
+        rlib_args
     )

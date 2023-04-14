@@ -1,18 +1,18 @@
-#!/bin/zsh
+#!/usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -l
 
 NS3_DIR="${NS3_DIR:=$HOME/ns-3.37}"
 RLIB_DIR="${RLIB_DIR:=$HOME/reinforced-lib/examples/ns-3-ccod}"
 
 cd "$RLIB_DIR"
 
-AGENT="DQN"
-AGENT_TYPE="discrete"
+AGENT="DDPG"
+AGENT_TYPE="continuous"
 
 SCENARIO="convergence"
 N_WIFI=55
 
 NUM_REPS=14
-SEED=100
+SEED=200
 MEMPOOL_KEY=1234
 
 for (( i = 1; i <= NUM_REPS; i += 1)); do
