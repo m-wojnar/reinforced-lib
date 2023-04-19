@@ -101,8 +101,8 @@ class ThompsonSampling(BaseAgent):
         """
 
         return ThompsonSamplingState(
-            alpha=jnp.zeros(n_arms),
-            beta=jnp.zeros(n_arms)
+            alpha=jnp.zeros((n_arms,1)),
+            beta=jnp.zeros((n_arms,1))
         )
 
     @staticmethod
