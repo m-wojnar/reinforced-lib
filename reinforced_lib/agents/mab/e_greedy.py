@@ -110,8 +110,8 @@ class EGreedy(BaseAgent):
         """
 
         return EGreedyState(
-            Q=(optimistic_start * jnp.ones(n_arms)),
-            N=jnp.ones(n_arms, dtype=jnp.int32)
+            Q=(optimistic_start * jnp.ones((n_arms, 1))),
+            N=jnp.ones((n_arms, 1), dtype=jnp.int32)
         )
 
     @staticmethod

@@ -119,7 +119,7 @@ class Softmax(BaseAgent):
         """
 
         return SoftmaxState(
-            H=jnp.zeros(n_arms),
+            H=jnp.zeros((n_arms, 1)),
             r=0.0,
             n=1
         )
@@ -219,4 +219,4 @@ class Softmax(BaseAgent):
             Selected action.
         """
 
-        return jax.random.categorical(key, state.H / tau)
+        return jax.random.categorical(key, state.H.squeeze() / tau)

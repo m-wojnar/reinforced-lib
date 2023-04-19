@@ -106,7 +106,7 @@ class Exp3(BaseAgent):
         """
 
         return Exp3State(
-            omega=jnp.ones(n_arms) / n_arms
+            omega=jnp.ones((n_arms, 1)) / n_arms
         )
 
     @staticmethod
@@ -189,4 +189,4 @@ class Exp3(BaseAgent):
         """
 
         pi = (1 - gamma) * state.omega / state.omega.sum() + gamma / state.omega.size
-        return jax.random.categorical(key, jnp.log(pi))
+        return jax.random.categorical(key, jnp.log(pi.squeeze()))

@@ -107,8 +107,8 @@ class UCB(BaseAgent):
         """
 
         return UCBState(
-            R=jnp.zeros(n_arms),
-            N=jnp.ones(n_arms)
+            R=jnp.zeros((n_arms, 1)),
+            N=jnp.ones((n_arms, 1))
         )
 
     @staticmethod
