@@ -12,7 +12,12 @@ from reinforced_lib.agents.mab import ThompsonSampling
 from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
 
-def run(ra_sim_args: Dict[str, Any], seed: int) -> Tuple[str, float, float, float]:
+def run(
+        ra_sim_args: Dict[str, Any],
+        agent_type: type,
+        agent_params: Dict[str, Any],
+        seed: int
+) -> Tuple[str, float, float, float]:
     """
     Run a simulation in the ra-sim simulator.
 
@@ -20,6 +25,10 @@ def run(ra_sim_args: Dict[str, Any], seed: int) -> Tuple[str, float, float, floa
     ----------
     ra_sim_args : dict
         Arguments passed to the simulator.
+    agent_type : type
+        Type of the selected agent.
+    agent_params : dict
+        Parameters of the agent.
     seed : int
         Integer used as the random key.
 
@@ -30,7 +39,8 @@ def run(ra_sim_args: Dict[str, Any], seed: int) -> Tuple[str, float, float, floa
     """
 
     rl = RLib(
-        agent_type=ThompsonSampling,
+        agent_type=agent_type,
+        agent_params=agent_params,
         ext_type=IEEE_802_11_ax_RA
     )
     rl.init(seed)
@@ -76,7 +86,7 @@ if __name__ == '__main__':
     print(params_str_template.format(args.n_wifi, args.simulation_time, args.initial_position, args.velocity))
 
     start = perf_counter()
-    csv_results, mcs, rate, thr = run(ra_sim_args, args.seed)
+    csv_results, mcs, rate, thr = run(ra_sim_args, ThompsonSampling, {}, args.seed)
     end = perf_counter()
 
     print(results_str_template.format(end - start, thr, rate, mcs))
