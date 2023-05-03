@@ -22,20 +22,20 @@ def optimize_params():
     params_grid = [
         (EGreedy, 'e-greedy', {
             'e': np.power(2., np.arange(0, 10)) / 1000,
-            'alpha': np.linspace(0., 1., 11),
-            'optimistic_start': [0.] + np.power(2., np.arange(2, 11, 2))
+            'alpha': np.power(2., np.arange(0, 10)) / 1000,
+            'optimistic_start': np.concatenate([[0.], np.power(2., np.arange(2, 11, 2))])
         }),
         (Exp3, 'exp3', {
             'gamma': np.power(2., np.arange(0, 10)) / 1000,
         }),
         (Softmax, 'softmax', {
             'lr':  np.power(2., np.arange(3, 12, 2)) / 1000,
-            'alpha': np.linspace(0., 1., 11),
+            'alpha': np.power(2., np.arange(0, 10)) / 1000,
             'tau': np.power(2., np.arange(-3, 4)),
-            'multiplier': np.power(10., np.arange(-4, 1))
+            'multiplier': np.power(10., np.arange(-3, 1))
         }),
         (ThompsonSampling, 'ts', {
-            'decay': [0.] + np.power(2., np.arange(-4, 6))
+            'decay': np.concatenate([[0.], np.power(2., np.arange(-4, 6))])
         }),
         (UCB, 'ucb', {
             'c': np.power(2., np.arange(-2, 7)),

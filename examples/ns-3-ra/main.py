@@ -150,9 +150,9 @@ if __name__ == '__main__':
         'ParticleFilter': ParticleFilter
     }
     default_params = {
-        'EGreedy': {'e': 0.01, 'alpha': 0.1, 'optimistic_start': 128.0},
-        'Exp3': {'gamma': 0.15},
-        'Softmax': {'lr': 0.256, 'alpha': 0.5, 'tau': 1.0, 'multiplier': 0.01},
+        'EGreedy': {'e': 0.008, 'alpha': 0.032, 'optimistic_start': 64.0},
+        'Exp3': {'gamma': 0.128},
+        'Softmax': {'lr': 2.048, 'alpha': 0.016, 'tau': 4.0, 'multiplier': 0.01},
         'ThompsonSampling': {'decay': 2.0},
         'UCB': {'c': 16.0, 'gamma': 0.996},
         'ParticleFilter': {'scale': 4.0, 'num_particles': 900}
