@@ -39,7 +39,7 @@ def optimize_params():
         }),
         (UCB, 'ucb', {
             'c': np.power(2., np.arange(-2, 7)),
-            'gamma': np.power(2., np.arange(-10, 0)),
+            'gamma': 1 - np.power(2., np.arange(-10, 0)),
         }),
     ]
 
