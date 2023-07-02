@@ -38,7 +38,7 @@ def ra_sim_eval():
     fig, axs = plt.subplots(1, 2, sharey='row', figsize=(COLUMN_WIDTH / 2, COLUMN_HEIGHT / 2))
     cbar_ax = fig.add_axes([0.9, 0.313, 0.015, 0.475])
 
-    sns.heatmap(df_ns3, ax=axs[0], vmin=18, vmax=45, cbar_ax=cbar_ax, cmap='viridis', square=True)
+    sns.heatmap(df_ns3, ax=axs[0], vmin=20, vmax=45, cbar_ax=cbar_ax, cmap='viridis', square=True)
     axs[0].set_title('ns-3')
     axs[0].set_xlabel(r'Discount factor $\gamma$')
     axs[0].set_ylabel(r'Degree of exploration c')
@@ -46,7 +46,7 @@ def ra_sim_eval():
     axs[0].set_xticklabels(gammas)
     axs[0].tick_params(axis='both', which='major', labelsize=7)
 
-    sns.heatmap(df_ra, ax=axs[1], vmin=18, vmax=42, cbar=False, cmap='viridis', square=True)
+    sns.heatmap(df_ra, ax=axs[1], vmin=20, vmax=45, cbar=False, cmap='viridis', square=True)
     axs[1].set_title('ra-sim')
     axs[1].set_xlabel(r'Discount factor $\gamma$')
     axs[1].set_xticks(np.arange(len(gammas)) + 0.5)
