@@ -37,11 +37,7 @@ class StdoutLogger(BaseLogger):
         """
 
         if len(self._values) > 0:
-            for name in self._names:
-                if name in self._values:
-                    print(f'{name}: {self._values[name]}', end='\t')
-
-            print()
+            print('\t'.join(f'{name}: {value}' for name, value in self._values.items()))
 
     def log_scalar(self, source: Source, value: Scalar) -> None:
         """
@@ -55,7 +51,8 @@ class StdoutLogger(BaseLogger):
             Scalar to log.
         """
 
-        self._print(source, value)
+        self._values[self.source_to_name(source)] = value
+        self._print()
 
     def log_array(self, source: Source, value: Array) -> None:
         """
@@ -100,27 +97,14 @@ class StdoutLogger(BaseLogger):
             Value of any type to log.
         """
 
-        self._print(source, json.dumps(value))
+        self._values[self.source_to_name(source)] = json.dumps(value)
+        self._print()
 
-    def _print(self, source: Source, value: Any) -> None:
+    def _print(self) -> None:
         """
-        Prints a new row to the standard output if there is any value update.
-
-        Parameters
-        ----------
-        source : Source
-            Source of the logged value.
-        value : any
-            Value of any type to log.
+        Prints a new row to the standard output if all values has already been filled.
         """
 
-        if not (name := self.source_to_name(source)) in self._values:
-            self._values[name] = value
-            return
-
-        for name in self._names:
-            if name in self._values:
-                print(f'{name}: {self._values[name]}', end='\t')
-
-        self._values = {}
-        print()
+        if len(self._values) == len(self._names):
+            print('\t'.join(f'{name}: {self._values[name]}' for name in self._names))
+            self._values = {}
