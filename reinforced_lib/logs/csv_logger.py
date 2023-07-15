@@ -1,29 +1,24 @@
 import json
 import os.path
-from typing import Any, Dict, List
+from collections import defaultdict
+from typing import Any, Dict
 
 import jax.numpy as jnp
 import numpy as np
 from chex import Array, Scalar
 
 from reinforced_lib.logs import BaseLogger, Source
-from reinforced_lib.utils.exceptions import UnsupportedCustomLogsError
-from utils import timestamp
+from reinforced_lib.utils import timestamp
 
 
 class CsvLogger(BaseLogger):
     """
-    Logger that saves values in CSV [1]_ format.
+    Logger that saves values in CSV format.
 
     Parameters
     ----------
     csv_path : str, default="~/rlib-logs-[date]-[time].csv"
         Path to the output file.
-
-    References
-    ----------
-    .. [1] Shafranovich, Y. (2005). Common Format and MIME Type for Comma-Separated Values (CSV) Files
-       (RFC No. 4180). RFC Editor. https://www.rfc-editor.org/rfc/rfc4180.txt
     """
 
     def __init__(self, csv_path: str = None, **kwargs) -> None:
@@ -33,34 +28,32 @@ class CsvLogger(BaseLogger):
             csv_path = f'rlib-logs-{timestamp()}.csv'
             csv_path = os.path.join(os.path.expanduser("~"), csv_path)
 
-        self._file = open(csv_path, 'w')
+        self._csv_path = csv_path
+        self._current_values = set()
+        self._step = 0
 
-        self._columns_values = {}
-        self._columns_names = []
-
-    def init(self, sources: List[Source]) -> None:
-        """
-        Creates a list of all source names and writes the header to the output file.
-
-        Parameters
-        ----------
-        sources : list[Source]
-            List containing all sources to log.
-        """
-
-        if None in sources:
-            raise UnsupportedCustomLogsError(type(self))
-
-        self._columns_names = list(map(self.source_to_name, sources))
-        header = ','.join(self._columns_names)
-        self._file.write(f'{header}\n')
+        self._values = defaultdict(list)
+        self._steps = defaultdict(list)
 
     def finish(self) -> None:
         """
-        Closes the output file.
+        Saves the logged values to the CSV file.
         """
 
-        self._file.close()
+        file = open(self._csv_path, 'w')
+        file.write(','.join(self._values.keys()) + '\n')
+
+        rows, cols = self._step + 1, len(self._values)
+        csv_array = np.full((rows, cols), fill_value='', dtype=object)
+
+        for j, (name, values) in enumerate(self._values.items()):
+            for i, v in enumerate(values):
+                csv_array[self._steps[name][i], j] = v
+
+        for row in csv_array:
+            file.write(','.join(map(str, row)) + '\n')
+
+        file.close()
 
     def log_scalar(self, source: Source, value: Scalar, *_) -> None:
         """
@@ -74,12 +67,11 @@ class CsvLogger(BaseLogger):
             Scalar to log.
         """
 
-        self._columns_values[self.source_to_name(source)] = value
-        self._save()
+        self._log(source, value)
 
     def log_array(self, source: Source, value: Array, *_) -> None:
         """
-        Logs an array as a JSON [2]_ string.
+        Logs an array as a JSON string.
 
         Parameters
         ----------
@@ -92,11 +84,11 @@ class CsvLogger(BaseLogger):
         if isinstance(value, (np.ndarray, jnp.ndarray)):
             value = value.tolist()
 
-        self.log_other(source, value)
+        self._log(source, f"\"{json.dumps(value)}\"")
 
     def log_dict(self, source: Source, value: Dict, *_) -> None:
         """
-        Logs a dictionary as a JSON [2]_ string.
+        Logs a dictionary as a JSON string.
 
         Parameters
         ----------
@@ -106,11 +98,11 @@ class CsvLogger(BaseLogger):
             Dictionary to log.
         """
 
-        self.log_other(source, value)
+        self._log(source, f"\"{json.dumps(value)}\"")
 
     def log_other(self, source: Source, value: Any, *_) -> None:
         """
-        Logs an object as a JSON [2]_ string.
+        Logs an object as a JSON string.
 
         Parameters
         ----------
@@ -118,24 +110,28 @@ class CsvLogger(BaseLogger):
             Source of the logged value.
         value : any
             Value of any type to log.
+        """
 
-        References
+        self._log(source, f"\"{json.dumps(value)}\"")
+
+    def _log(self, source: Source, value: Any) -> None:
+        """
+        Saves the logged value and controls the current step.
+
+        Parameters
         ----------
-        .. [2] Felipe Pezoa, Juan L. Reutter, Fernando Suarez, Martin Ugarte, and Domagoj Vrgoc. 2016.
-           Foundations of JSON Schema. In Proceedings of the 25th International Conference on World Wide Web
-           (WWW '16). International World Wide Web Conferences Steering Committee, Republic and Canton of Geneva,
-           CHE, 263–273. https://doi.org/10.1145/2872427.2883029
+        source : Source
+            Source of the logged value.
+        value : any
+            Value to log.
         """
 
-        self._columns_values[self.source_to_name(source)] = f"\"{json.dumps(value)}\""
-        self._save()
+        name = self.source_to_name(source)
 
-    def _save(self) -> None:
-        """
-        Writes a new row to the output file if the values for all columns has already been filled.
-        """
+        if name in self._current_values:
+            self._step += 1
+            self._current_values.clear()
 
-        if len(self._columns_values) == len(self._columns_names):
-            line = ','.join(str(self._columns_values[name]) for name in self._columns_names)
-            self._file.write(f'{line}\n')
-            self._columns_values = {}
+        self._current_values.add(name)
+        self._values[name].append(value)
+        self._steps[name].append(self._step)

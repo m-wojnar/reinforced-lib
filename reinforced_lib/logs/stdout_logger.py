@@ -1,5 +1,5 @@
 import json
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 import jax.numpy as jnp
 import numpy as np
@@ -17,19 +17,6 @@ class StdoutLogger(BaseLogger):
         super().__init__(**kwargs)
 
         self._values = {}
-        self._names = []
-
-    def init(self, sources: List[Source]) -> None:
-        """
-        Creates a list of all source names.
-
-        Parameters
-        ----------
-        sources : list[Source]
-            List containing all sources to log.
-        """
-
-        self._names = list(map(self.source_to_name, filter(lambda s: s is not None, sources)))
 
     def finish(self) -> None:
         """
@@ -37,7 +24,7 @@ class StdoutLogger(BaseLogger):
         """
 
         if len(self._values) > 0:
-            print('\t'.join(f'{name}: {self._values[name]}' for name in self._names if name in self._values))
+            print('\t'.join(f'{n}: {v}' for n, v in self._values.items()))
 
     def log_scalar(self, source: Source, value: Scalar, custom: bool) -> None:
         """
@@ -53,11 +40,11 @@ class StdoutLogger(BaseLogger):
             Whether the source is a custom source.
         """
 
-        self._print(source, value, custom)
+        self._log(source, value, custom)
 
     def log_array(self, source: Source, value: Array, custom: bool) -> None:
         """
-        Logs an array as a JSON [2]_ string.
+        Logs an array as a JSON string.
 
         Parameters
         ----------
@@ -72,11 +59,11 @@ class StdoutLogger(BaseLogger):
         if isinstance(value, (np.ndarray, jnp.ndarray)):
             value = value.tolist()
 
-        self.log_other(source, value, custom)
+        self._log(source, json.dumps(value), custom)
 
     def log_dict(self, source: Source, value: Dict, custom: bool) -> None:
         """
-        Logs a dictionary as a JSON [2]_ string.
+        Logs a dictionary as a JSON string.
 
         Parameters
         ----------
@@ -88,11 +75,11 @@ class StdoutLogger(BaseLogger):
             Whether the source is a custom source.
         """
 
-        self.log_other(source, value, custom)
+        self._log(source, json.dumps(value), custom)
 
     def log_other(self, source: Source, value: Any, custom: bool) -> None:
         """
-        Logs an object as a JSON [2]_ string.
+        Logs an object as a JSON string.
 
         Parameters
         ----------
@@ -104,11 +91,12 @@ class StdoutLogger(BaseLogger):
             Whether the source is a custom source.
         """
 
-        self._print(source, json.dumps(value), custom)
+        self._log(source, json.dumps(value), custom)
 
-    def _print(self, source: Source, value: Any, custom: bool) -> None:
+    def _log(self, source: Source, value: Any, custom: bool) -> None:
         """
-        Prints a new row to the standard output if all values has already been filled.
+        Prints a new row to the standard output if there is a new value for a
+        standard source or the source is custom.
 
         Parameters
         ----------
@@ -119,12 +107,14 @@ class StdoutLogger(BaseLogger):
         custom : bool
             Whether the source is a custom source.
         """
+
+        name = self.source_to_name(source)
 
         if not custom:
-            self._values[self.source_to_name(source)] = value
-
-            if len(self._values) == len(self._names):
-                print('\t'.join(f'{name}: {self._values[name]}' for name in self._names))
+            if name in self._values:
+                print('\t'.join(f'{n}: {v}' for n, v in self._values.items()))
                 self._values = {}
+
+            self._values[name] = value
         else:
-            print(f'{self.source_to_name(source)}: {value}')
+            print(f'{name}: {value}')

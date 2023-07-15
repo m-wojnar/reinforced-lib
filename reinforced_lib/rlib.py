@@ -15,8 +15,7 @@ from reinforced_lib.exts import BaseExt
 from reinforced_lib.logs import Source
 from reinforced_lib.logs.logs_observer import LogsObserver
 from reinforced_lib.utils.exceptions import *
-from reinforced_lib.utils import is_scalar
-from utils import timestamp
+from reinforced_lib.utils import is_scalar, timestamp
 
 
 @dataclass

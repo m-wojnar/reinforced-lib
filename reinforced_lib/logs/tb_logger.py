@@ -10,7 +10,7 @@ from reinforced_lib.logs import BaseLogger, Source
 
 class TensorboardLogger(BaseLogger):
     """
-    Logger that saves values in TensorBoard [4]_ format. Offers a possibility to log to Comet [5]_.
+    Logger that saves values in TensorBoard [2]_ format. Offers a possibility to log to Comet [3]_.
 
     Parameters
     ----------
@@ -21,8 +21,8 @@ class TensorboardLogger(BaseLogger):
 
     References
     ----------
-    .. [4] TensorBoard. https://www.tensorflow.org/tensorboard
-    .. [5] Comet. https://www.comet.ml
+    .. [2] TensorBoard. https://www.tensorflow.org/tensorboard
+    .. [3] Comet. https://www.comet.ml
     """
 
     def __init__(
@@ -36,15 +36,15 @@ class TensorboardLogger(BaseLogger):
         if tb_comet_config is None:
             tb_comet_config = {'disabled': True}
 
-        self._summary_writer = SummaryWriter(log_dir=tb_log_dir, comet_config=tb_comet_config)
-        self._step = defaultdict(int)
+        self._writer = SummaryWriter(log_dir=tb_log_dir, comet_config=tb_comet_config)
+        self._steps = defaultdict(int)
 
     def finish(self) -> None:
         """
         Closes the summary writer.
         """
 
-        self._summary_writer.close()
+        self._writer.close()
 
     def log_scalar(self, source: Source, value: Scalar, *_) -> None:
         """
@@ -58,8 +58,8 @@ class TensorboardLogger(BaseLogger):
             Scalar to log.
         """
 
-        self._summary_writer.add_scalar(self.source_to_name(source), value, self._step[source])
-        self._step[source] += 1
+        self._writer.add_scalar(self.source_to_name(source), value, self._steps[source])
+        self._steps[source] += 1
 
     def log_array(self, source: Source, value: Array, *_) -> None:
         """
@@ -73,12 +73,12 @@ class TensorboardLogger(BaseLogger):
             Array to log.
         """
 
-        self._summary_writer.add_histogram(self.source_to_name(source), value, self._step[source])
-        self._step[source] += 1
+        self._writer.add_histogram(self.source_to_name(source), value, self._steps[source])
+        self._steps[source] += 1
 
     def log_dict(self, source: Source, value: Dict, *_) -> None:
         """
-        Logs a dictionary as a JSON [2]_ string.
+        Logs a dictionary as a JSON string.
 
         Parameters
         ----------
@@ -92,7 +92,7 @@ class TensorboardLogger(BaseLogger):
 
     def log_other(self, source: Source, value: Any, *_) -> None:
         """
-        Logs an object as a JSON [2]_ string.
+        Logs an object as a JSON string.
 
         Parameters
         ----------
@@ -102,5 +102,5 @@ class TensorboardLogger(BaseLogger):
             Dictionary to log.
         """
 
-        self._summary_writer.add_text(self.source_to_name(source), json.dumps(value), self._step[source])
-        self._step[source] += 1
+        self._writer.add_text(self.source_to_name(source), json.dumps(value), self._steps[source])
+        self._steps[source] += 1
