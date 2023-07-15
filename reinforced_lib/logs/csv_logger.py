@@ -8,6 +8,7 @@ import numpy as np
 from chex import Array, Scalar
 
 from reinforced_lib.logs import BaseLogger, Source
+from reinforced_lib.utils.exceptions import UnsupportedCustomLogsError
 
 
 class CsvLogger(BaseLogger):
@@ -48,6 +49,9 @@ class CsvLogger(BaseLogger):
             List containing all sources to log.
         """
 
+        if None in sources:
+            raise UnsupportedCustomLogsError(type(self))
+
         self._columns_names = list(map(self.source_to_name, sources))
         header = ','.join(self._columns_names)
         self._file.write(f'{header}\n')
@@ -59,7 +63,7 @@ class CsvLogger(BaseLogger):
 
         self._file.close()
 
-    def log_scalar(self, source: Source, value: Scalar) -> None:
+    def log_scalar(self, source: Source, value: Scalar, *_) -> None:
         """
         Logs a scalar as a standard value in a column.
 
@@ -74,7 +78,7 @@ class CsvLogger(BaseLogger):
         self._columns_values[self.source_to_name(source)] = value
         self._save()
 
-    def log_array(self, source: Source, value: Array) -> None:
+    def log_array(self, source: Source, value: Array, *_) -> None:
         """
         Logs an array as a JSON [2]_ string.
 
@@ -91,7 +95,7 @@ class CsvLogger(BaseLogger):
 
         self.log_other(source, value)
 
-    def log_dict(self, source: Source, value: Dict) -> None:
+    def log_dict(self, source: Source, value: Dict, *_) -> None:
         """
         Logs a dictionary as a JSON [2]_ string.
 
@@ -105,7 +109,7 @@ class CsvLogger(BaseLogger):
 
         self.log_other(source, value)
 
-    def log_other(self, source: Source, value: Any) -> None:
+    def log_other(self, source: Source, value: Any, *_) -> None:
         """
         Logs an object as a JSON [2]_ string.
 

@@ -50,19 +50,6 @@ class PlotsLogger(BaseLogger):
         assert 1 > self._plots_smoothing >= 0
 
         self._plots_values = defaultdict(list)
-        self._plots_names = []
-
-    def init(self, sources: List[Source]) -> None:
-        """
-        Creates a list of all source names.
-
-        Parameters
-        ----------
-        sources : list[Source]
-            List containing all sources to log.
-        """
-
-        self._plots_names = list(map(self.source_to_name, sources))
 
     def finish(self) -> None:
         """
@@ -135,7 +122,7 @@ class PlotsLogger(BaseLogger):
 
         return smoothed
 
-    def log_scalar(self, source: Source, value: Scalar) -> None:
+    def log_scalar(self, source: Source, value: Scalar, *_) -> None:
         """
         Adds a given scalar to the plot values.
 
@@ -149,7 +136,7 @@ class PlotsLogger(BaseLogger):
 
         self._plots_values[self.source_to_name(source)].append(value)
 
-    def log_array(self, source: Source, value: Array) -> None:
+    def log_array(self, source: Source, value: Array, *_) -> None:
         """
         Adds a given array to the plot values.
 

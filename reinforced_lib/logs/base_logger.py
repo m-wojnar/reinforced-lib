@@ -13,7 +13,7 @@ class SourceType(Enum):
     METRIC = 2
 
 
-Source = Union[Tuple[str, SourceType], str]
+Source = Union[Tuple[str, SourceType], str, None]
 
 
 class BaseLogger(ABC):
@@ -43,7 +43,7 @@ class BaseLogger(ABC):
 
         pass
 
-    def log_scalar(self, source: Source, value: Scalar) -> None:
+    def log_scalar(self, source: Source, value: Scalar, custom: bool) -> None:
         """
         Method of the logger interface used for logging scalar values.
 
@@ -53,11 +53,13 @@ class BaseLogger(ABC):
             Source of the logged value.
         value : float
             Scalar to log.
+        custom : bool
+            Whether the source is a custom source.
         """
 
         raise UnsupportedLogTypeError(type(self), type(value))
 
-    def log_array(self, source: Source, value: Array) -> None:
+    def log_array(self, source: Source, value: Array, custom: bool) -> None:
         """
         Method of the logger interface used for logging arrays.
 
@@ -67,11 +69,13 @@ class BaseLogger(ABC):
             Source of the logged value.
         value : array_like
             Array to log.
+        custom : bool
+            Whether the source is a custom source.
         """
 
         raise UnsupportedLogTypeError(type(self), type(value))
 
-    def log_dict(self, source: Source, value: Dict) -> None:
+    def log_dict(self, source: Source, value: Dict, custom: bool) -> None:
         """
         Method of the logger interface used for logging dictionaries.
 
@@ -81,11 +85,13 @@ class BaseLogger(ABC):
             Source of the logged value.
         value : dict
             Dictionary to log.
+        custom : bool
+            Whether the source is a custom source.
         """
 
         raise UnsupportedLogTypeError(type(self), type(value))
 
-    def log_other(self, source: Source, value: Any) -> None:
+    def log_other(self, source: Source, value: Any, custom: bool) -> None:
         """
         Method of the logger interface used for logging other values.
 
@@ -95,6 +101,8 @@ class BaseLogger(ABC):
             Source of the logged value.
         value : any
             Value of any type to log.
+        custom : bool
+            Whether the source is a custom source.
         """
 
         raise UnsupportedLogTypeError(type(self), type(value))

@@ -21,6 +21,7 @@ class LogsObserver:
         self._observations_loggers = defaultdict(list)
         self._agent_state_loggers = defaultdict(list)
         self._metrics_loggers = defaultdict(list)
+        self._custom_loggers = defaultdict(list)
 
     def add_logger(self, source: Source, logger_type: type, logger_params: Dict[str, Any]) -> None:
         """
@@ -42,7 +43,7 @@ class LogsObserver:
         if isinstance(source, tuple):
             if len(source) != 2 or not isinstance(source[0], str) or not hasattr(source[1], 'name'):
                 raise IncorrectSourceTypeError(type(source))
-        elif not isinstance(source, str):
+        elif source is not None and not isinstance(source, str):
             raise IncorrectSourceTypeError(type(source))
 
         logger = self._logger_instances.get(logger_type, logger_type(**logger_params))
@@ -58,6 +59,8 @@ class LogsObserver:
             self._observations_loggers[logger].append((source, source))
             self._agent_state_loggers[logger].append((source, source))
             self._metrics_loggers[logger].append((source, source))
+        elif source is None:
+            self._custom_loggers[logger] = [(None, None)]
 
         self._logger_sources[logger].append(source)
         self._logger_instances[logger_type] = logger
@@ -119,8 +122,22 @@ class LogsObserver:
 
         self._update(self._metrics_loggers, lambda name: metric if name == metric_name else None)
 
+    def update_custom(self, value: Any, name: str) -> None:
+        """
+        Passes custom values to loggers.
+
+        Parameters
+        ----------
+        value : any
+            Value to log.
+        name : str
+            Name of the value.
+        """
+
+        self._update(self._custom_loggers, lambda _: (name, value))
+
     @staticmethod
-    def _update(loggers: Dict[BaseLogger, List[str]], get_value: Callable) -> None:
+    def _update(loggers: Dict[BaseLogger, List[Source]], get_value: Callable) -> None:
         """
         Passes values to the appropriate loggers and method based on the type and the source of the value.
 
@@ -135,11 +152,16 @@ class LogsObserver:
         for logger, sources in loggers.items():
             for source, name in sources:
                 if (value := get_value(name)) is not None:
+                    if name is None:
+                        source, value = value
+
+                    custom = name is None
+
                     if jnp.isscalar(value) or (hasattr(value, 'ndim') and value.ndim == 0):
-                        logger.log_scalar(source, value)
+                        logger.log_scalar(source, value, custom)
                     elif isinstance(value, dict):
-                        logger.log_dict(source, value)
+                        logger.log_dict(source, value, custom)
                     elif isinstance(value, (list, tuple)) or (hasattr(value, 'ndim') and value.ndim == 1):
-                        logger.log_array(source, value)
+                        logger.log_array(source, value, custom)
                     else:
-                        logger.log_other(source, value)
+                        logger.log_other(source, value, custom)

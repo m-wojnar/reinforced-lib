@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from typing import Any, Dict
 
 from chex import Array, Scalar
@@ -35,14 +36,8 @@ class TensorboardLogger(BaseLogger):
         if tb_comet_config is None:
             tb_comet_config = {'disabled': True}
 
-        if tb_log_dir is None:
-            self._summary_writer = SummaryWriter(comet_config=tb_comet_config)
-        else:
-            self._summary_writer = SummaryWriter(log_dir=tb_log_dir, comet_config=tb_comet_config)
-
-        self._scalar_step = 0
-        self._histogram_step = 0
-        self._text_step = 0
+        self._summary_writer = SummaryWriter(log_dir=tb_log_dir, comet_config=tb_comet_config)
+        self._step = defaultdict(int)
 
     def finish(self) -> None:
         """
@@ -51,7 +46,7 @@ class TensorboardLogger(BaseLogger):
 
         self._summary_writer.close()
 
-    def log_scalar(self, source: Source, value: Scalar) -> None:
+    def log_scalar(self, source: Source, value: Scalar, *_) -> None:
         """
         Adds a given scalar to the summary writer.
 
@@ -63,10 +58,10 @@ class TensorboardLogger(BaseLogger):
             Scalar to log.
         """
 
-        self._summary_writer.add_scalar(self.source_to_name(source), value, self._scalar_step)
-        self._scalar_step += 1
+        self._summary_writer.add_scalar(self.source_to_name(source), value, self._step[source])
+        self._step[source] += 1
 
-    def log_array(self, source: Source, value: Array) -> None:
+    def log_array(self, source: Source, value: Array, *_) -> None:
         """
         Adds a given array to the summary writer as a histogram.
 
@@ -78,10 +73,10 @@ class TensorboardLogger(BaseLogger):
             Array to log.
         """
 
-        self._summary_writer.add_histogram(self.source_to_name(source), value, self._histogram_step)
-        self._histogram_step += 1
+        self._summary_writer.add_histogram(self.source_to_name(source), value, self._step[source])
+        self._step[source] += 1
 
-    def log_dict(self, source: Source, value: Dict) -> None:
+    def log_dict(self, source: Source, value: Dict, *_) -> None:
         """
         Logs a dictionary as a JSON [2]_ string.
 
@@ -93,9 +88,9 @@ class TensorboardLogger(BaseLogger):
             Dictionary to log.
         """
 
-        self.log_other(source, value)
+        self.log_other(source, value, None)
 
-    def log_other(self, source: Source, value: Any) -> None:
+    def log_other(self, source: Source, value: Any, *_) -> None:
         """
         Logs an object as a JSON [2]_ string.
 
@@ -107,5 +102,5 @@ class TensorboardLogger(BaseLogger):
             Dictionary to log.
         """
 
-        self._summary_writer.add_text(self.source_to_name(source), json.dumps(value), self._text_step)
-        self._text_step += 1
+        self._summary_writer.add_text(self.source_to_name(source), json.dumps(value), self._step[source])
+        self._step[source] += 1

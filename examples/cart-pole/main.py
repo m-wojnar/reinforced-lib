@@ -10,6 +10,7 @@ gym.logger.set_level(40)
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import QLearning
 from reinforced_lib.exts import Gymnasium
+from reinforced_lib.logs import StdoutLogger, TensorboardLogger
 
 
 @hk.transform_with_state
@@ -40,7 +41,8 @@ def run(num_epochs: int, render_every: int, seed: int) -> None:
             'epsilon_decay': 0.9975
         },
         ext_type=Gymnasium,
-        ext_params={'env_id': 'CartPole-v1'}
+        ext_params={'env_id': 'CartPole-v1'},
+        logger_types=[StdoutLogger, TensorboardLogger]
     )
 
     for epoch in range(num_epochs):
@@ -60,7 +62,7 @@ def run(num_epochs: int, render_every: int, seed: int) -> None:
             terminal = env_state[2] or env_state[3]
             epoch_len += 1
 
-        print(f'Epoch {epoch} finished with {epoch_len} steps')
+        rl.log('epoch_len', epoch_len)
 
 
 if __name__ == '__main__':

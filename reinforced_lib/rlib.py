@@ -112,7 +112,7 @@ class RLib:
         if agent_type:
             self.set_agent(agent_type, agent_params)
 
-        if logger_types and logger_sources:
+        if logger_types:
             self.set_loggers(logger_types, logger_sources, logger_params)
 
     def __del__(self) -> None:
@@ -558,3 +558,17 @@ class RLib:
             )
 
         return rlib
+
+    def log(self, name: str, value: Any) -> None:
+        """
+        Logs a custom value to the experiment's loggers.
+
+        Parameters
+        ----------
+        name : str
+            The name of the value to log.
+        value : Any
+            The value to log.
+        """
+
+        self._logs_observer.update_custom(value, name)

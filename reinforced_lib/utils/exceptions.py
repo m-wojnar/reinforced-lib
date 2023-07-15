@@ -212,3 +212,20 @@ class IncorrectSourceTypeError(IncorrectTypeError):
 
     def __init__(self, provided_type: type) -> None:
         super().__init__(provided_type, 'source')
+
+
+class UnsupportedCustomLogsError(Exception):
+    """
+    Raised when the user tries to log custom values with a logger that does not support custom logging.
+
+    Parameters
+    ----------
+    logger_type : type
+        Type of the used logger.
+    """
+
+    def __init__(self, logger_type: type) -> None:
+        self._logger_name = logger_type.__name__
+
+    def __str__(self) -> str:
+        return f'Logger {self._logger_name} does not support custom logging.'
