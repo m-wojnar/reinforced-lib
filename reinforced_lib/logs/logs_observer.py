@@ -1,11 +1,10 @@
 from collections import defaultdict
 from typing import Any, Callable, Dict, List
 
-import jax.numpy as jnp
-
 from reinforced_lib.agents import BaseAgent
 from reinforced_lib.logs import BaseLogger, Source, SourceType
 from reinforced_lib.utils.exceptions import IncorrectLoggerTypeError, IncorrectSourceTypeError
+from reinforced_lib.utils import is_scalar, is_array, is_dict
 
 
 class LogsObserver:
@@ -157,11 +156,11 @@ class LogsObserver:
 
                     custom = name is None
 
-                    if jnp.isscalar(value) or (hasattr(value, 'ndim') and value.ndim == 0):
+                    if is_scalar(value):
                         logger.log_scalar(source, value, custom)
-                    elif isinstance(value, dict):
+                    elif is_dict(value):
                         logger.log_dict(source, value, custom)
-                    elif isinstance(value, (list, tuple)) or (hasattr(value, 'ndim') and value.ndim == 1):
+                    elif is_array(value):
                         logger.log_array(source, value, custom)
                     else:
                         logger.log_other(source, value, custom)

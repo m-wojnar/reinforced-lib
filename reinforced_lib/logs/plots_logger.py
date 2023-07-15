@@ -1,6 +1,5 @@
 import os.path
 from collections import defaultdict
-from datetime import datetime
 from typing import List
 
 import jax.numpy as jnp
@@ -8,6 +7,7 @@ import matplotlib.pyplot as plt
 from chex import Array, Scalar
 
 from reinforced_lib.logs import BaseLogger, Source
+from utils import timestamp
 
 
 class PlotsLogger(BaseLogger):
@@ -80,10 +80,8 @@ class PlotsLogger(BaseLogger):
                     plt.scatter(xs, val, c=f'C{i % 10}', label=i if label else '', marker='.', s=4)
                 plt.legend()
 
-        now = datetime.now()
-
         for name, values in self._plots_values.items():
-            filename = f'rlib-plot-{name}-{now.strftime("%Y%m%d")}-{now.strftime("%H%M%S")}.{self._plots_ext}'
+            filename = f'rlib-plot-{name}-{timestamp()}.{self._plots_ext}'
 
             if self._plots_scatter:
                 scatterplot(values, True)

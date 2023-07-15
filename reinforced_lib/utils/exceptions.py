@@ -135,6 +135,15 @@ class IncorrectSpaceError(Exception):
         return 'Cannot find corresponding Gymnasium space.'
 
 
+class UnimplementedSpaceError(Exception):
+    """
+    Raised when an observation space is required but not implemented.
+    """
+
+    def __str__(self) -> str:
+        return 'Appropriate observation space is not implemented.'
+
+
 class IncompatibleSpacesError(Exception):
     """
     Raised when the observation spaces of two different modules are not compatible.

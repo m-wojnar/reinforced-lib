@@ -1,6 +1,5 @@
 import json
 import os.path
-from datetime import datetime
 from typing import Any, Dict, List
 
 import jax.numpy as jnp
@@ -9,6 +8,7 @@ from chex import Array, Scalar
 
 from reinforced_lib.logs import BaseLogger, Source
 from reinforced_lib.utils.exceptions import UnsupportedCustomLogsError
+from utils import timestamp
 
 
 class CsvLogger(BaseLogger):
@@ -30,8 +30,7 @@ class CsvLogger(BaseLogger):
         super().__init__(**kwargs)
 
         if csv_path is None:
-            now = datetime.now()
-            csv_path = f'rlib-logs-{now.strftime("%Y%m%d")}-{now.strftime("%H%M%S")}.csv'
+            csv_path = f'rlib-logs-{timestamp()}.csv'
             csv_path = os.path.join(os.path.expanduser("~"), csv_path)
 
         self._file = open(csv_path, 'w')

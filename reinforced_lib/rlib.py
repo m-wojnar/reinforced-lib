@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import datetime
 import os
 import pickle
 from typing import Any, Dict, List, Tuple, Union
@@ -9,7 +8,6 @@ import cloudpickle
 import gymnasium as gym
 import jax.random
 import lz4.frame
-import numpy as np
 from chex import dataclass
 
 from reinforced_lib.agents import BaseAgent
@@ -17,6 +15,8 @@ from reinforced_lib.exts import BaseExt
 from reinforced_lib.logs import Source
 from reinforced_lib.logs.logs_observer import LogsObserver
 from reinforced_lib.utils.exceptions import *
+from reinforced_lib.utils import is_scalar
+from utils import timestamp
 
 
 @dataclass
@@ -461,14 +461,13 @@ class RLib:
 
         if agent_ids is None:
             agent_ids = list(range(len(self._agent_containers)))
-        elif np.isscalar(agent_ids) or (hasattr(agent_ids, 'ndim') and agent_ids.ndim == 0):
+        elif is_scalar(agent_ids):
             agent_ids = [agent_ids]
 
         agent_containers = [self._agent_containers[agent_id] for agent_id in agent_ids]
 
         if path is None:
-            timestamp = datetime.datetime.now()
-            path = os.path.join(self._save_directory, f"rlib-checkpoint-{timestamp.date()}-{timestamp.time()}.pkl.lz4")
+            path = os.path.join(self._save_directory, f"rlib-checkpoint-{timestamp()}.pkl.lz4")
         elif path[-8:] != self._lz4_ext:
             path = path + self._lz4_ext
 
@@ -572,3 +571,51 @@ class RLib:
         """
 
         self._logs_observer.update_custom(value, name)
+
+    def to_tflite(self, path: str = None, agent_id: int = None, sample_only: bool = False) -> None:
+        """
+        Converts the agent to a TensorFlow Lite model and saves it to a file.
+
+        Parameters
+        ----------
+        path : str, optional
+            Path to the output file.
+        agent_id : int, optional
+            The identifier of the agent instance to convert. If specified,
+            state of the selected agent will be saved.
+        sample_only : bool
+            Flag indicating if the method should save only the sample function.
+        """
+
+        if not self._agent:
+            raise NoAgentError()
+
+        if len(self._agent_containers) == 0:
+            self.init()
+
+        if path is None:
+            path = self._save_directory
+
+        if agent_id is None:
+            init_tfl, update_tfl, sample_tfl = self._agent.export(
+                init_key=jax.random.PRNGKey(42)
+            )
+        else:
+            init_tfl, update_tfl, sample_tfl = self._agent.export(
+                init_key=self._agent_containers[agent_id].key,
+                state=self._agent_containers[agent_id].state
+            )
+
+        base_name = self._agent.__class__.__name__
+        base_name += f'-{agent_id}-' if agent_id is not None else '-'
+        base_name += timestamp()
+
+        with open(os.path.join(path, f'rlib-{base_name}-sample.tflite'), 'wb') as f:
+            f.write(sample_tfl)
+
+        if not sample_only:
+            with open(os.path.join(path, f'rlib-{base_name}-init.tflite'), 'wb') as f:
+                f.write(init_tfl)
+
+            with open(os.path.join(path, f'rlib-{base_name}-update.tflite'), 'wb') as f:
+                f.write(update_tfl)
