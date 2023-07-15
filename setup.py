@@ -27,10 +27,13 @@ setup(
     author='Maksymilian Wojnar and Wojciech Ciężobka',
     url='https://github.com/m-wojnar/reinforced-lib',
     download_url='https://github.com/m-wojnar/reinforced-lib/archive/refs/tags/v0.2.0.tar.gz',
-    keywords='machine-learning, reinforcement-learning, reinforcement-learning-agent, jax',
+    keywords='deep-reinforcement-learning, jax, library, machine-learning, reinforcement-learning',
     python_requires='>=3.8, <4',
     install_requires=read_requirements('requirements/requirements.txt'),
-    extras_require={'dev': read_requirements('requirements/requirements-dev.txt')},
+    extras_require={
+        'docs': read_requirements('requirements/requirements-docs.txt'),
+        'full': read_requirements('requirements/requirements-full.txt')
+    },
     include_package_data=True,
     classifiers=[
         'Development Status :: 4 - Beta',
