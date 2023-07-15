@@ -166,7 +166,7 @@ def experience_replay(
             Tuple containing the batch of states, actions, rewards, terminals and next states.
         """
 
-        idxs = jax.random.randint(key, shape=(batch_size,), minval=0, maxval=buffer.size)
+        idxs = jax.random.uniform(key, shape=(batch_size,), minval=0, maxval=buffer.size).astype(jnp.int32)
 
         states = buffer.states[idxs]
         actions = buffer.actions[idxs]
