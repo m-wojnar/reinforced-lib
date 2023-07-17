@@ -1,12 +1,12 @@
 from argparse import ArgumentParser
 from ctypes import *
 
+from ext import IEEE_802_11_ax_RA
+from particle_filter import ParticleFilter
 from py_interface import *
 
 from reinforced_lib import RLib
 from reinforced_lib.agents.mab import *
-from reinforced_lib.agents.wifi import *
-from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
 
 class Env(Structure):
@@ -154,7 +154,7 @@ if __name__ == '__main__':
         'Softmax': {'lr': 2.048, 'alpha': 0.016, 'tau': 4.0, 'multiplier': 0.01},
         'ThompsonSampling': {'decay': 2.0},
         'UCB': {'c': 16.0, 'gamma': 0.996},
-        'ParticleFilter': {'scale': 4.0, 'num_particles': 900}
+        'ParticleFilter': {'scale': 4.0, 'particles_num': 900}
     }
 
     run(args, args.pop('ns3Path'), args.pop('mempoolKey'), agent_type[agent], default_params[agent], args.pop('seed'))

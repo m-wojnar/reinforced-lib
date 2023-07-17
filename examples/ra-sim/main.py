@@ -5,10 +5,11 @@ import gymnasium as gym
 gym.logger.set_level(40)
 
 import sim
+from ext import IEEE_802_11_ax_RA
 from utils import ResultsManager, params_str_template, results_str_template
+
 from reinforced_lib import RLib
-from reinforced_lib.agents.mab import ThompsonSampling
-from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
+from reinforced_lib.agents.mab import *
 
 
 def run(

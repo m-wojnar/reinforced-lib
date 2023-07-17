@@ -8,12 +8,12 @@ from reinforced_lib.exts import BaseExt, observation, parameter
 
 class IEEE_802_11_CCOD(BaseExt):
     """
-    The IEEE 802.11 extension for the CCOD algorithm [3]_. Provides the preprocessed history
+    The IEEE 802.11 extension for the CCOD algorithm [1]_. Provides the preprocessed history
     of the transmission failure probability and default parameters for DRL agents.
 
     References
     ----------
-    .. [3] W. Wydmański and S. Szott, "Contention Window Optimization in IEEE 802.11ax
+    .. [1] W. Wydmański and S. Szott, "Contention Window Optimization in IEEE 802.11ax
        Networks with Deep Reinforcement Learning," 2021 IEEE Wireless Communications and
        Networking Conference (WCNC), 2021. https://doi.org/10.1109/WCNC49053.2021.9417575
     """

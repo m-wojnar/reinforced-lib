@@ -1,4 +1,4 @@
-from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
+from ext import IEEE_802_11_ax_RA
 
 
 class ResultsManager:

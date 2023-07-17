@@ -1,7 +1,7 @@
 chex~=0.1.81
 cloudpickle~=2.2.1
-dm-haiku~=0.0.9
-gymnasium~=0.28.1
+dm-haiku~=0.0.10
+gymnasium~=0.29.0
 jax~=0.4.13
 jaxlib~=0.4.13
 lz4~=4.3.2

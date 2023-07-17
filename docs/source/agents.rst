@@ -103,28 +103,6 @@ Exp3
     :members:
 
 
-Particle filter (Core)
-----------------------
-
-.. automodule:: reinforced_lib.agents.core.particle_filter
-    :show-inheritance:
-    :members:
-
-
-Particle filter (Wi-Fi)
------------------------
-
-.. currentmodule:: reinforced_lib.agents.wifi.particle_filter
-
-.. autoclass:: ParticleFilterState
-    :show-inheritance:
-    :members:
-
-.. autoclass:: ParticleFilter
-    :show-inheritance:
-    :members:
-
-
 Softmax
 ---------------
 
@@ -163,5 +141,13 @@ Upper confidence bound (UCB)
     :members:
 
 .. autoclass:: UCB
+    :show-inheritance:
+    :members:
+
+
+Particle filter (Core)
+----------------------
+
+.. automodule:: reinforced_lib.agents.core.particle_filter
     :show-inheritance:
     :members:

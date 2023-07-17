@@ -13,10 +13,11 @@ import jax.numpy as jnp
 import optax
 from chex import Array
 
+from ext import IEEE_802_11_CCOD
 from py_interface import *
+
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import DQN, DDPG
-from reinforced_lib.exts.wifi import IEEE_802_11_CCOD
 from reinforced_lib.logs import SourceType, TensorboardLogger
 
 
