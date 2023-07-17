@@ -607,7 +607,8 @@ class RLib:
         else:
             init_tfl, update_tfl, sample_tfl = self._agent.export(
                 init_key=self._agent_containers[agent_id].key,
-                state=self._agent_containers[agent_id].state
+                state=self._agent_containers[agent_id].state,
+                sample_only=sample_only
             )
 
         base_name = self._agent.__class__.__name__

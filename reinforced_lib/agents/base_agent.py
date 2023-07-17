@@ -85,7 +85,7 @@ class BaseAgent(ABC):
 
         raise NotImplementedError()
 
-    def export(self, init_key: PRNGKey, state: AgentState = None) -> tuple[any, any, any]:
+    def export(self, init_key: PRNGKey, state: AgentState = None, sample_only: bool = False) -> tuple[any, any, any]:
         """
         Exports the agent to TensorFlow Lite format.
 
@@ -95,6 +95,8 @@ class BaseAgent(ABC):
             Key used to initialize the agent.
         state : AgentState, optional
             State of the agent to be exported. If not specified, the agent is initialized with ``init_key``.
+        sample_only : bool, optional
+            If ``True``, the exported agent will only be able to sample actions, but not update its state.
         """
 
         import tensorflow as tf
@@ -165,8 +167,11 @@ class BaseAgent(ABC):
             action = self.sample(state, sample_key, *args, **kwargs)
             return action, key
 
-        if state is None:
-            state = init()
+        if not sample_only:
+            if state is None:
+                state = init()
+            else:
+                state = TfLiteState(state=state, key=init_key)
 
             update_args = append_value(state, 'state', self.update_observation_space.sample())
             sample_args = append_value(state, 'state', self.sample_observation_space.sample())
@@ -176,10 +181,12 @@ class BaseAgent(ABC):
             sample_tfl = make_converter(sample, sample_args).convert()
 
             return init_tfl, update_tfl, sample_tfl
-        else:
+        elif state is not None:
             sample_args = append_value(init_key, 'key', self.sample_observation_space.sample())
 
             init_tfl = make_converter(get_key, []).convert()
             sample_tfl = make_converter(partial(sample_without_state, state), sample_args).convert()
 
             return init_tfl, None, sample_tfl
+        else:
+            raise ValueError('Either `state` must be provided or `sample_only` must be False.')
