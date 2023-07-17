@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from functools import wraps
+from functools import wraps, partial
 from typing import Any, Tuple, Callable
 
 import gymnasium as gym
@@ -104,15 +104,15 @@ class BaseAgent(ABC):
             state: ArrayTree
             key: PRNGKey
 
-        def add_state(state: TfLiteState, args: Any) -> Any:
+        def append_value(value: Any, value_name: str, args: Any) -> Any:
             if args is None:
                 raise UnimplementedSpaceError()
             elif is_dict(args):
-                return {**args, 'state': state}
+                return {**args, value_name: value}
             elif is_array(args):
-                return [state] + list(args)
+                return [value] + list(args)
             else:
-                return [state, args]
+                return [value, args]
 
         def flatten_args(tree_args_fun: Callable, treedef: ArrayTree) -> Callable:
             @wraps(tree_args_fun)
@@ -157,16 +157,29 @@ class BaseAgent(ABC):
             new_state = self.update(state.state, update_key, *args, **kwargs)
             return TfLiteState(state=new_state, key=key)
 
+        def get_key() -> PRNGKey:
+            return init_key
+
+        def sample_without_state(state: AgentState, key: PRNGKey, *args, **kwargs) -> Tuple[Any, PRNGKey]:
+            sample_key, key = jax.random.split(key)
+            action = self.sample(state, sample_key, *args, **kwargs)
+            return action, key
+
         if state is None:
             state = init()
+
+            update_args = append_value(state, 'state', self.update_observation_space.sample())
+            sample_args = append_value(state, 'state', self.sample_observation_space.sample())
+
+            init_tfl = make_converter(init, []).convert()
+            update_tfl = make_converter(update, update_args).convert()
+            sample_tfl = make_converter(sample, sample_args).convert()
+
+            return init_tfl, update_tfl, sample_tfl
         else:
-            state = TfLiteState(state=state, key=init_key)
+            sample_args = append_value(init_key, 'key', self.sample_observation_space.sample())
 
-        update_args = add_state(state, self.update_observation_space.sample())
-        sample_args = add_state(state, self.sample_observation_space.sample())
+            init_tfl = make_converter(get_key, []).convert()
+            sample_tfl = make_converter(partial(sample_without_state, state), sample_args).convert()
 
-        tfl_init = make_converter(init, []).convert()
-        tfl_update = make_converter(update, update_args).convert()
-        tfl_sample = make_converter(sample, sample_args).convert()
-
-        return tfl_init, tfl_update, tfl_sample
+            return init_tfl, None, sample_tfl

@@ -592,6 +592,9 @@ class RLib:
         if len(self._agent_containers) == 0:
             self.init()
 
+        if sample_only and agent_id is None:
+            raise ValueError("Agent ID must be specified when saving sample function only.")
+
         if path is None:
             path = self._save_directory
 
@@ -609,12 +612,12 @@ class RLib:
         base_name += f'-{agent_id}-' if agent_id is not None else '-'
         base_name += timestamp()
 
+        with open(os.path.join(path, f'rlib-{base_name}-init.tflite'), 'wb') as f:
+            f.write(init_tfl)
+
         with open(os.path.join(path, f'rlib-{base_name}-sample.tflite'), 'wb') as f:
             f.write(sample_tfl)
 
         if not sample_only:
-            with open(os.path.join(path, f'rlib-{base_name}-init.tflite'), 'wb') as f:
-                f.write(init_tfl)
-
             with open(os.path.join(path, f'rlib-{base_name}-update.tflite'), 'wb') as f:
                 f.write(update_tfl)
