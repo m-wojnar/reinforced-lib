@@ -1,33 +1,28 @@
 import reinforced_lib as rfl
-from reinforced_lib.agents.wifi import ParticleFilter
-from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
+from reinforced_lib.agents.mab import EGreedy
+
 
 if __name__ == '__main__':
     rl = rfl.RLib(
-        agent_type=ParticleFilter,
-        ext_type=IEEE_802_11_ax_RA
+        agent_type=EGreedy,
+        agent_params={'n_arms': 4, 'e': 0.1},
+        no_ext_mode=True
     )
 
     print(rl.observation_space)
 
     observations = {
-        'time': 0.0,
-        'n_successful': 0,
-        'n_failed': 0,
-        'power': 16.0,
-        'cw': 15
+        'action': 3,
+        'reward': 1.0
     }
 
-    action = rl.sample(**observations)
+    action = rl.sample(update_observations=observations)
     print(action)
 
     observations = {
-        'time': 0.0,
-        'n_successful': 10,
-        'n_failed': 0,
-        'power': 16.0,
-        'cw': 15
+        'action': 3,
+        'reward': 1.0
     }
 
-    action = rl.sample(**observations)
+    action = rl.sample(update_observations=observations)
     print(action)

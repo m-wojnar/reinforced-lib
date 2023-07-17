@@ -268,7 +268,7 @@ class RLib:
             if not self._agent:
                 raise NoAgentError()
             else:
-                return gym.spaces.dict({
+                return gym.spaces.Dict({
                     'update_observation_space': self._agent.update_observation_space,
                     'sample_observation_space': self._agent.sample_observation_space
                 })
@@ -522,15 +522,17 @@ class RLib:
         
         rlib = RLib(
             save_directory=experiment_state["save_directory"],
-            auto_checkpoint=experiment_state["auto_checkpoint"]
+            auto_checkpoint=experiment_state["auto_checkpoint"],
+            no_ext_mode=experiment_state["ext_type"] is None
         )
         
         rlib._agent_containers = []
 
-        if ext_params:
-            rlib.set_ext(experiment_state["ext_type"], ext_params)
-        else:
-            rlib.set_ext(experiment_state["ext_type"], experiment_state["ext_params"])
+        if experiment_state["ext_type"] is not None:
+            if ext_params:
+                rlib.set_ext(experiment_state["ext_type"], ext_params)
+            else:
+                rlib.set_ext(experiment_state["ext_type"], experiment_state["ext_params"])
         
         if agent_params:
             rlib.set_agent(experiment_state["agent_type"], agent_params)

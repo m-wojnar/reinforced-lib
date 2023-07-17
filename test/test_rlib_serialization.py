@@ -4,8 +4,7 @@ import jax
 import jax.numpy as jnp
 import reinforced_lib as rfl
 
-from reinforced_lib.agents.mab import ThompsonSampling
-from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
+from reinforced_lib.agents.mab import EGreedy
 from reinforced_lib.rlib import RLib
 from reinforced_lib.logs import *
 
@@ -21,9 +20,9 @@ class TestRLibSerialization(unittest.TestCase):
 
     def run_experiment(self, reload: bool, new_decay: float = None) -> list[int]:
         rl = rfl.RLib(
-            agent_type=ThompsonSampling,
-            agent_params={"decay": 0.0},
-            ext_type=IEEE_802_11_ax_RA,
+            agent_type=EGreedy,
+            agent_params={'n_arms': len(self.arms_probs), 'e': 0.1},
+            no_ext_mode=True,
             logger_types=CsvLogger,
             logger_sources=['n_failed', 'n_successful', ('action', SourceType.METRIC)],
             logger_params={'csv_path': f'output_reload={reload}_new-decay={new_decay}.csv'}
@@ -36,20 +35,18 @@ class TestRLibSerialization(unittest.TestCase):
         for t in self.time:
             r = int(jax.random.uniform(self.key) < self.arms_probs[a])
             observations = {
-                'time': t,
-                'mcs': a,
-                'n_successful': r,
-                'n_failed': 1 - r,
+                'action': a,
+                'reward': r
             }
 
-            a = rl.sample(**observations)
-            actions.append(int(a))
+            a = rl.sample(update_observations=observations)
+            actions.append(a)
 
             if t > self.t_change and not reloaded:
                 save_path = rl.save()
 
                 if new_decay:
-                    rl = RLib.load(save_path, agent_params={"decay": new_decay}, restore_loggers=False)
+                    rl = RLib.load(save_path, agent_params={'n_arms': len(self.arms_probs), 'e': 0.5}, restore_loggers=False)
                 else:
                     rl = RLib.load(save_path, restore_loggers=False)
                 reloaded = True

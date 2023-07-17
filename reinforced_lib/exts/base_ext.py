@@ -43,7 +43,7 @@ class BaseExt(ABC):
     def get_agent_params(
             self,
             agent_type: type = None,
-            agent_parameter_space: gym.spaces.dict = None,
+            agent_parameter_space: gym.spaces.Dict = None,
             user_parameters: dict[str, any] = None
     ) -> dict[str, any]:
         """
