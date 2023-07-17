@@ -1,6 +1,5 @@
 import json
 from collections import defaultdict
-from typing import Any, Dict
 
 from chex import Array, Scalar
 from tensorboardX import SummaryWriter
@@ -28,7 +27,7 @@ class TensorboardLogger(BaseLogger):
     def __init__(
             self,
             tb_log_dir: str = None,
-            tb_comet_config: Dict[str, Any] = None,
+            tb_comet_config: dict[str, any] = None,
             **kwargs,
     ) -> None:
         super().__init__(**kwargs)
@@ -76,7 +75,7 @@ class TensorboardLogger(BaseLogger):
         self._writer.add_histogram(self.source_to_name(source), value, self._steps[source])
         self._steps[source] += 1
 
-    def log_dict(self, source: Source, value: Dict, *_) -> None:
+    def log_dict(self, source: Source, value: dict, *_) -> None:
         """
         Logs a dictionary as a JSON string.
 
@@ -90,7 +89,7 @@ class TensorboardLogger(BaseLogger):
 
         self.log_other(source, value, None)
 
-    def log_other(self, source: Source, value: Any, *_) -> None:
+    def log_other(self, source: Source, value: any, *_) -> None:
         """
         Logs an object as a JSON string.
 

@@ -1,9 +1,7 @@
-from typing import List
-
 from setuptools import setup, find_packages
 
 
-def read_requirements(filename: str) -> List[str]:
+def read_requirements(filename: str) -> list[str]:
     with open(filename) as file:
         return file.read().splitlines()
 
@@ -28,7 +26,7 @@ setup(
     url='https://github.com/m-wojnar/reinforced-lib',
     download_url='https://github.com/m-wojnar/reinforced-lib/archive/refs/tags/v0.2.0.tar.gz',
     keywords='deep-reinforcement-learning, jax, library, machine-learning, reinforcement-learning',
-    python_requires='>=3.8, <4',
+    python_requires='>=3.9, <4',
     install_requires=read_requirements('requirements/requirements.txt'),
     extras_require={
         'docs': read_requirements('requirements/requirements-docs.txt'),
@@ -42,10 +40,10 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
         'Typing :: Typed'
     ],

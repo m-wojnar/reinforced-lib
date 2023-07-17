@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import partial
-from typing import Callable, Tuple
+from typing import Callable
 
 import gymnasium as gym
 import haiku as hk
@@ -307,11 +307,11 @@ class DDPG(BaseAgent):
             q_params: hk.Params,
             key: PRNGKey,
             ddpg_state: DDPGState,
-            batch: Tuple,
+            batch: tuple,
             q_network: hk.TransformedWithState,
             a_network: hk.TransformedWithState,
             discount: Scalar
-    ) -> Tuple[Scalar, hk.State]:
+    ) -> tuple[Scalar, hk.State]:
         r"""
         Loss is the mean squared Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r
         + \gamma \max Q'(s', \pi'(s')) - Q(s, a) \right)^2 \right]` where :math:`s` is the current state, :math:`a`
@@ -328,7 +328,7 @@ class DDPG(BaseAgent):
             A PRNG key used as the random key.
         ddpg_state : DDPGState
             The state of the deep deterministic policy gradient agent.
-        batch : Tuple
+        batch : tuple
             A batch of transitions from the experience replay buffer.
         q_network : hk.TransformedWithState
             The Q-network.
@@ -339,7 +339,7 @@ class DDPG(BaseAgent):
 
         Returns
         -------
-        Tuple[Scalar, hk.State]
+        tuple[Scalar, hk.State]
             The loss and the new state of the Q-network.
         """
 
@@ -362,10 +362,10 @@ class DDPG(BaseAgent):
             a_params: hk.Params,
             key: PRNGKey,
             ddpg_state: DDPGState,
-            batch: Tuple,
+            batch: tuple,
             q_network: hk.TransformedWithState,
             a_network: hk.TransformedWithState
-    ) -> Tuple[Scalar, hk.State]:
+    ) -> tuple[Scalar, hk.State]:
         r"""
         The policy network is updated using the gradient of the Q-network to maximize the Q-value of the current state
         and action :math:`\max_{\theta} \mathbb{E}_{s, a} \left[ Q(s, \pi_{\theta}(s)) \right]`. Q-network parameters are
@@ -379,7 +379,7 @@ class DDPG(BaseAgent):
             A PRNG key used as the random key.
         ddpg_state : DDPGState
             The state of the deep deterministic policy gradient agent.
-        batch : Tuple
+        batch : tuple
             A batch of transitions from the experience replay buffer.
         q_network : hk.TransformedWithState
             The Q-network.
@@ -388,7 +388,7 @@ class DDPG(BaseAgent):
 
         Returns
         -------
-        Tuple[Scalar, hk.State]
+        tuple[Scalar, hk.State]
             The loss and the new state of the policy network.
         """
 

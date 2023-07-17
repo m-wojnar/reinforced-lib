@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import pickle
-from typing import Any, Dict, List, Tuple, Union
+from typing import Union
 
 import cloudpickle
 import gymnasium as gym
@@ -37,7 +37,7 @@ class AgentContainer:
 
     state: BaseAgent
     key: jax.random.PRNGKey
-    action: Any
+    action: any
     step: int
 
 
@@ -74,12 +74,12 @@ class RLib:
     def __init__(
             self, *,
             agent_type: type = None,
-            agent_params: Dict[str, Any] = None,
+            agent_params: dict[str, any] = None,
             ext_type: type = None,
-            ext_params: Dict[str, Any] = None,
-            logger_types: Union[type, List[type]] = None,
-            logger_sources: Union[Source, List[Source]] = None,
-            logger_params: Dict[str, Any] = None,
+            ext_params: dict[str, any] = None,
+            logger_types: Union[type, list[type]] = None,
+            logger_sources: Union[Source, list[Source]] = None,
+            logger_params: dict[str, any] = None,
             no_ext_mode: bool = False,
             save_directory: str = None,
             auto_checkpoint: int = None
@@ -128,7 +128,7 @@ class RLib:
 
         self._logs_observer.finish_loggers()
 
-    def set_agent(self, agent_type: type, agent_params: Dict = None) -> None:
+    def set_agent(self, agent_type: type, agent_params: dict = None) -> None:
         """
         Initializes an agent of type ``agent_type`` with parameters ``agent_params``. The agent type must inherit from
         the ``BaseAgent class``. The agent type cannot be changed after the first agent instance has been initialized.
@@ -158,7 +158,7 @@ class RLib:
             agent_params = agent_params if agent_params else {}
             self._agent = agent_type(**agent_params)
 
-    def set_ext(self, ext_type: type, ext_params: Dict = None) -> None:
+    def set_ext(self, ext_type: type, ext_params: dict = None) -> None:
         """
         Initializes an extension of type ``ext_type`` with parameters ``ext_params``. The extension type must inherit
         from the ``BaseExt`` class. The extension type cannot be changed after the first agent instance has been
@@ -198,9 +198,9 @@ class RLib:
 
     def set_loggers(
             self,
-            logger_types: Union[type, List[type]],
-            logger_sources: Union[Source, List[Source]],
-            logger_params: Dict[str, Any] = None
+            logger_types: Union[type, list[type]],
+            logger_sources: Union[Source, list[Source]],
+            logger_params: dict[str, any] = None
     ) -> None:
         """
         Initializes loggers that log observations from the environment, agents state, or training metrics.
@@ -237,11 +237,11 @@ class RLib:
             self._logs_observer.add_logger(source, logger_type, logger_params)
 
     @staticmethod
-    def _object_to_list(obj: Union[Any, List[Any]]) -> List[Any]:
+    def _object_to_list(obj: Union[any, list[any]]) -> list[any]:
         return obj if isinstance(obj, list) else [obj]
 
     @staticmethod
-    def _broadcast(list_a: List[Any], list_b: List[Any]) -> Tuple[List[Any], List[Any]]:
+    def _broadcast(list_a: list[any], list_b: list[any]) -> tuple[list[any], list[any]]:
         if len(list_a) == len(list_b):
             return list_a, list_b
 
@@ -268,7 +268,7 @@ class RLib:
             if not self._agent:
                 raise NoAgentError()
             else:
-                return gym.spaces.Dict({
+                return gym.spaces.dict({
                     'update_observation_space': self._agent.update_observation_space,
                     'sample_observation_space': self._agent.sample_observation_space
                 })
@@ -326,10 +326,10 @@ class RLib:
             *args,
             agent_id: int = 0,
             is_training: bool = True,
-            update_observations: Union[Dict, Tuple, Any] = None,
-            sample_observations: Union[Dict, Tuple, Any] = None,
+            update_observations: Union[dict, tuple, any] = None,
+            sample_observations: Union[dict, tuple, any] = None,
             **kwargs
-    ) -> Any:
+    ) -> any:
         """
         Takes the extension state as an input, updates the agent state, and returns the next action selected by
         the agent. If ``no_ext_mode`` is disabled, observations are passed by args and kwargs (the observations must
@@ -386,8 +386,8 @@ class RLib:
 
         all_observations = kwargs
         if isinstance(update_observations, dict) and isinstance(sample_observations, dict):
-            all_observations.update(update_observations)
-            all_observations.update(sample_observations)
+            all_observations |= update_observations
+            all_observations |= sample_observations
             self._logs_observer.update_observations(all_observations)
         else:
             self._logs_observer.update_observations(update_observations)
@@ -439,7 +439,7 @@ class RLib:
 
         return action
 
-    def save(self, agent_ids: Union[int, List[int]] = None, path: str = None) -> str:
+    def save(self, agent_ids: Union[int, list[int]] = None, path: str = None) -> str:
         """
         Saves the state of the experiment to a file in lz4 format. For each agent, both the state and the initialization
         parameters are saved. The extension and loggers settings are saved as well to fully reconstruct the experiment.
@@ -498,8 +498,8 @@ class RLib:
     @staticmethod
     def load(
         path: str,
-        agent_params: Dict[str, Any] = None,
-        ext_params: Dict[str, Any] = None,
+        agent_params: dict[str, any] = None,
+        ext_params: dict[str, any] = None,
         restore_loggers: bool = True
     ) -> RLib:
         """
@@ -509,9 +509,9 @@ class RLib:
         ----------
         path : str
             Path to the checkpoint file.
-        agent_params : Dict[str, Any], optional
+        agent_params : dict[str, any], optional
             Dictionary of altered agent parameters with their new values, by default None.
-        ext_params : Dict[str, Any], optional
+        ext_params : dict[str, any], optional
             Dictionary of altered extension parameters with their new values, by default None.
         restore_loggers : bool, default=True
             Flag indicating if the method should restore logger settings.
@@ -557,7 +557,7 @@ class RLib:
 
         return rlib
 
-    def log(self, name: str, value: Any) -> None:
+    def log(self, name: str, value: any) -> None:
         """
         Logs a custom value to the experiment's loggers.
 
@@ -565,7 +565,7 @@ class RLib:
         ----------
         name : str
             The name of the value to log.
-        value : Any
+        value : any
             The value to log.
         """
 

@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import partial
-from typing import Callable, Tuple
+from typing import Callable
 
 import gymnasium as gym
 import haiku as hk
@@ -244,10 +244,10 @@ class DQN(BaseAgent):
             params: hk.Params,
             key: PRNGKey,
             dqn_state: DQNState,
-            batch: Tuple,
+            batch: tuple,
             q_network: hk.TransformedWithState,
             discount: Scalar
-    ) -> Tuple[Scalar, hk.State]:
+    ) -> tuple[Scalar, hk.State]:
         r"""
         Loss is the mean squared Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r +
         \gamma \max_{a'} Q'(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state, :math:`a` is the
@@ -263,7 +263,7 @@ class DQN(BaseAgent):
             A PRNG key used as the random key.
         dqn_state : DQNState
             The state of the double Q-learning agent.
-        batch : Tuple
+        batch : tuple
             A batch of transitions from the experience replay buffer.
         q_network : hk.TransformedWithState
             The Q-network.
@@ -272,7 +272,7 @@ class DQN(BaseAgent):
 
         Returns
         -------
-        Tuple[Scalar, hk.State]
+        tuple[Scalar, hk.State]
             The loss and the new state of the Q-network.
         """
 

@@ -1,10 +1,9 @@
 from datetime import datetime
-from typing import Any
 
 import numpy as np
 
 
-def is_scalar(x: Any) -> bool:
+def is_scalar(x: any) -> bool:
     """
     Checks whether the input is a scalar.
 
@@ -22,7 +21,7 @@ def is_scalar(x: Any) -> bool:
     return np.isscalar(x) or (hasattr(x, 'ndim') and x.ndim == 0)
 
 
-def is_array(x: Any) -> bool:
+def is_array(x: any) -> bool:
     """
     Checks whether the input is an array.
 
@@ -40,7 +39,7 @@ def is_array(x: Any) -> bool:
     return isinstance(x, (list, tuple)) or (hasattr(x, 'ndim') and x.ndim == 1)
 
 
-def is_tensor(x: Any) -> bool:
+def is_tensor(x: any) -> bool:
     """
     Checks whether the input is a tensor.
 
@@ -58,7 +57,7 @@ def is_tensor(x: Any) -> bool:
     return hasattr(x, 'ndim') and x.ndim > 1
 
 
-def is_dict(x: Any) -> bool:
+def is_dict(x: any) -> bool:
     """
     Checks whether the input is a dictionary.
 

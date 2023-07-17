@@ -1,5 +1,3 @@
-from typing import Any, Tuple
-
 import gymnasium as gym
 import numpy as np
 
@@ -28,7 +26,7 @@ class Gymnasium(BaseExt):
     observation_space = gym.spaces.Dict({})
 
     @observation()
-    def env_state(self, env_state, reward, terminal, truncated, info, *args, **kwargs) -> Any:
+    def env_state(self, env_state, reward, terminal, truncated, info, *args, **kwargs) -> any:
         return env_state
 
     @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
@@ -40,11 +38,11 @@ class Gymnasium(BaseExt):
         return terminal or truncated
 
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
-    def obs_space_shape(self) -> Tuple:
+    def obs_space_shape(self) -> tuple:
         return self.env.observation_space.shape
 
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
-    def act_space_shape(self) -> Tuple:
+    def act_space_shape(self) -> tuple:
         return self.env.action_space.shape
 
     @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
@@ -55,9 +53,9 @@ class Gymnasium(BaseExt):
         raise AttributeError()
 
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
-    def min_action(self) -> Tuple:
+    def min_action(self) -> tuple:
         return self.env.action_space.low
 
     @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
-    def max_action(self) -> Tuple:
+    def max_action(self) -> tuple:
         return self.env.action_space.high

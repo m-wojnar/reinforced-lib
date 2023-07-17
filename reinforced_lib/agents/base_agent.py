@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from functools import wraps, partial
-from typing import Any, Tuple, Callable
+from typing import Callable
 
 import gymnasium as gym
 import jax
@@ -42,7 +42,7 @@ class BaseAgent(ABC):
 
     @staticmethod
     @abstractmethod
-    def sample(state: AgentState, key: PRNGKey, *args, **kwargs) -> Any:
+    def sample(state: AgentState, key: PRNGKey, *args, **kwargs) -> any:
         """
         Selects the next action based on the current agent state.
         """
@@ -85,7 +85,7 @@ class BaseAgent(ABC):
 
         raise NotImplementedError()
 
-    def export(self, init_key: PRNGKey, state: AgentState = None) -> Tuple[Any, Any, Any]:
+    def export(self, init_key: PRNGKey, state: AgentState = None) -> tuple[any, any, any]:
         """
         Exports the agent to TensorFlow Lite format.
 
@@ -104,11 +104,11 @@ class BaseAgent(ABC):
             state: ArrayTree
             key: PRNGKey
 
-        def append_value(value: Any, value_name: str, args: Any) -> Any:
+        def append_value(value: any, value_name: str, args: any) -> any:
             if args is None:
                 raise UnimplementedSpaceError()
             elif is_dict(args):
-                return {**args, value_name: value}
+                return args | {value_name: value}
             elif is_array(args):
                 return [value] + list(args)
             else:
@@ -128,7 +128,7 @@ class BaseAgent(ABC):
 
             return flat_args_fun
 
-        def make_converter(fun: Callable, arguments: Any) -> tf.lite.TFLiteConverter:
+        def make_converter(fun: Callable, arguments: any) -> tf.lite.TFLiteConverter:
             leaves, treedef = jax.tree_util.tree_flatten(arguments)
             flat_fun = flatten_args(fun, treedef)
 
@@ -147,7 +147,7 @@ class BaseAgent(ABC):
                 key=init_key
             )
 
-        def sample(state: TfLiteState, *args, **kwargs) -> Tuple[Any, TfLiteState]:
+        def sample(state: TfLiteState, *args, **kwargs) -> tuple[any, TfLiteState]:
             sample_key, key = jax.random.split(state.key)
             action = self.sample(state.state, sample_key, *args, **kwargs)
             return action, TfLiteState(state=state.state, key=key)
@@ -160,7 +160,7 @@ class BaseAgent(ABC):
         def get_key() -> PRNGKey:
             return init_key
 
-        def sample_without_state(state: AgentState, key: PRNGKey, *args, **kwargs) -> Tuple[Any, PRNGKey]:
+        def sample_without_state(state: AgentState, key: PRNGKey, *args, **kwargs) -> tuple[any, PRNGKey]:
             sample_key, key = jax.random.split(key)
             action = self.sample(state, sample_key, *args, **kwargs)
             return action, key

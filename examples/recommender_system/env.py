@@ -1,4 +1,3 @@
-from typing import Dict, Tuple
 import gymnasium as gym
 import numpy as np
 
@@ -17,7 +16,7 @@ class RecommenderSystemEnv(gym.Env):
     either like or dislike it. The reward is 1 or 0 accordingly.
     """
 
-    def __init__(self, preferences: Dict) -> None:
+    def __init__(self, preferences: dict) -> None:
 
         self.action_space = gym.spaces.Discrete(len(preferences))
         self.observation_space = gym.spaces.Space()
@@ -26,8 +25,8 @@ class RecommenderSystemEnv(gym.Env):
     def reset(
             self,
             seed: int = None,
-            options: Dict = None
-    ) -> Tuple[gym.spaces.Space, Dict]:
+            options: dict = None
+    ) -> tuple[gym.spaces.Space, dict]:
         """
         Resets the environment to the initial state.
 
@@ -51,7 +50,7 @@ class RecommenderSystemEnv(gym.Env):
 
         return None, {}
     
-    def step(self, action: int) -> Tuple[gym.spaces.Dict, int, bool, bool, Dict]:
+    def step(self, action: int) -> tuple[gym.spaces.Dict, int, bool, bool, dict]:
         """
         Reacts to the agent action (presentation of some good) by returning the reward
         from the user, which can be interpreted as either he or she liked or disliked the acion (good).

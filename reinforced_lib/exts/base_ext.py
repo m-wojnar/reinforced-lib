@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from functools import partial
 import inspect
-from typing import Any, Callable, Dict, List, Tuple, Union
+from typing import Union
 
 import gymnasium as gym
 
@@ -17,8 +17,8 @@ class BaseExt(ABC):
     """
 
     def __init__(self) -> None:
-        self._observation_functions: Dict[str, Callable] = {}
-        self._parameter_functions: Dict[str, Callable] = {}
+        self._observation_functions: dict[str, Callable] = {}
+        self._parameter_functions: dict[str, Callable] = {}
 
         self._add_action_to_observations = False
 
@@ -43,9 +43,9 @@ class BaseExt(ABC):
     def get_agent_params(
             self,
             agent_type: type = None,
-            agent_parameter_space: gym.spaces.Dict = None,
-            user_parameters: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
+            agent_parameter_space: gym.spaces.dict = None,
+            user_parameters: dict[str, any] = None
+    ) -> dict[str, any]:
         """
         Composes agent initialization parameters from parameters passed by the user and default values
         defined in the parameter functions. Returns a dictionary with the parameters fitting the agent
@@ -185,7 +185,7 @@ class BaseExt(ABC):
             if not isinstance(in_space, gym.spaces.Dict):
                 raise IncompatibleSpacesError(in_space, out_space)
 
-            observations: Dict[str, Callable] = {}
+            observations: dict[str, Callable] = {}
 
             for name, space in out_space.spaces.items():
                 if name in in_space.spaces:
@@ -215,7 +215,7 @@ class BaseExt(ABC):
             if not isinstance(in_space, gym.spaces.Tuple) or len(in_space.spaces) != len(out_space.spaces):
                 raise IncompatibleSpacesError(in_space, out_space)
 
-            observations: List[Callable] = []
+            observations: list[Callable] = []
 
             for i, (agent_space, ext_space) in enumerate(zip(in_space.spaces, out_space.spaces)):
                 if type(agent_space) not in simple_types:
@@ -230,7 +230,7 @@ class BaseExt(ABC):
         raise IncorrectSpaceError()
 
     @staticmethod
-    def _get_nested_args(accessor: Union[str, int], *args, **kwargs) -> Tuple[Tuple, Dict]:
+    def _get_nested_args(accessor: Union[str, int], *args, **kwargs) -> tuple[tuple, dict]:
         """
         Selects the appropriate nested args or kwargs.
 
@@ -255,14 +255,14 @@ class BaseExt(ABC):
             else:
                 arguments = kwargs[accessor]
 
-            if isinstance(arguments, Dict):
+            if isinstance(arguments, dict):
                 return tuple(), arguments
             else:
                 return arguments, {}
 
         return args, kwargs
 
-    def _simple_transform(self, accessor: Union[str, int], *args, **kwargs) -> Any:
+    def _simple_transform(self, accessor: Union[str, int], *args, **kwargs) -> any:
         """
         Returns the appropriate observation from environment observations.
 
@@ -289,7 +289,7 @@ class BaseExt(ABC):
             first, *_ = kwargs.values()
             return first
 
-    def _function_transform(self, func: Callable, name: str, accessor: Union[str, int], *args, **kwargs) -> Any:
+    def _function_transform(self, func: Callable, name: str, accessor: Union[str, int], *args, **kwargs) -> any:
         """
         Returns the appropriate observation from the observation function or from environment observations
         if present.
@@ -320,7 +320,7 @@ class BaseExt(ABC):
         else:
             return func(*args, **kwargs)
 
-    def _dict_transform(self, observations: Dict[str, Callable], accessor: Union[str, int], *args, **kwargs) -> Dict:
+    def _dict_transform(self, observations: dict[str, Callable], accessor: Union[str, int], *args, **kwargs) -> dict:
         """
         Returns a dictionary filled with appropriate environment observations and values provided by
         the observation functions.
@@ -345,7 +345,7 @@ class BaseExt(ABC):
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
         return {name: func(*args, **kwargs) for name, func in observations.items()}
 
-    def _tuple_transform(self, observations: List[Callable], accessor: Union[str, int], *args, **kwargs) -> Tuple:
+    def _tuple_transform(self, observations: list[Callable], accessor: Union[str, int], *args, **kwargs) -> tuple:
         """
         Returns a tuple filled with appropriate environment observations and values provided by
         the observation functions.
@@ -370,7 +370,7 @@ class BaseExt(ABC):
         args, kwargs = self._get_nested_args(accessor, *args, **kwargs)
         return tuple(func(*args, **kwargs) for func in observations)
 
-    def transform(self, *args, action: Any = None, **kwargs) -> Tuple[Any, Any]:
+    def transform(self, *args, action: any = None, **kwargs) -> tuple[any, any]:
         """
         Transforms environment observations and values provided by the observation functions to
         the agent observation and sample spaces. Supplies action selected by the agent if it is

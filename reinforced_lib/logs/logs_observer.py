@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Callable, Dict, List
+from typing import Callable
 
 from reinforced_lib.agents import BaseAgent
 from reinforced_lib.logs import BaseLogger, Source, SourceType
@@ -22,7 +22,7 @@ class LogsObserver:
         self._metrics_loggers = defaultdict(list)
         self._custom_loggers = defaultdict(list)
 
-    def add_logger(self, source: Source, logger_type: type, logger_params: Dict[str, Any]) -> None:
+    def add_logger(self, source: Source, logger_type: type, logger_params: dict[str, any]) -> None:
         """
         Initializes a singleton instance of the logger and connects a given source with that logger.
 
@@ -80,7 +80,7 @@ class LogsObserver:
         for logger in self._logger_sources.keys():
             logger.finish()
 
-    def update_observations(self, observations: Any) -> None:
+    def update_observations(self, observations: any) -> None:
         """
         Passes new observations to the loggers.
 
@@ -107,7 +107,7 @@ class LogsObserver:
 
         self._update(self._agent_state_loggers, lambda name: getattr(agent_state, name, None))
 
-    def update_metrics(self, metric: Any, metric_name: str) -> None:
+    def update_metrics(self, metric: any, metric_name: str) -> None:
         """
         Passes metrics to loggers.
 
@@ -121,7 +121,7 @@ class LogsObserver:
 
         self._update(self._metrics_loggers, lambda name: metric if name == metric_name else None)
 
-    def update_custom(self, value: Any, name: str) -> None:
+    def update_custom(self, value: any, name: str) -> None:
         """
         Passes custom values to loggers.
 
@@ -136,7 +136,7 @@ class LogsObserver:
         self._update(self._custom_loggers, lambda _: (name, value))
 
     @staticmethod
-    def _update(loggers: Dict[BaseLogger, List[Source]], get_value: Callable) -> None:
+    def _update(loggers: dict[BaseLogger, list[Source]], get_value: Callable) -> None:
         """
         Passes values to the appropriate loggers and method based on the type and the source of the value.
 

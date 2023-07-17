@@ -1,7 +1,6 @@
 import json
 import os.path
 from collections import defaultdict
-from typing import Any, Dict
 
 import jax.numpy as jnp
 import numpy as np
@@ -86,7 +85,7 @@ class CsvLogger(BaseLogger):
 
         self._log(source, f"\"{json.dumps(value)}\"")
 
-    def log_dict(self, source: Source, value: Dict, *_) -> None:
+    def log_dict(self, source: Source, value: dict, *_) -> None:
         """
         Logs a dictionary as a JSON string.
 
@@ -100,7 +99,7 @@ class CsvLogger(BaseLogger):
 
         self._log(source, f"\"{json.dumps(value)}\"")
 
-    def log_other(self, source: Source, value: Any, *_) -> None:
+    def log_other(self, source: Source, value: any, *_) -> None:
         """
         Logs an object as a JSON string.
 
@@ -114,7 +113,7 @@ class CsvLogger(BaseLogger):
 
         self._log(source, f"\"{json.dumps(value)}\"")
 
-    def _log(self, source: Source, value: Any) -> None:
+    def _log(self, source: Source, value: any) -> None:
         """
         Saves the logged value and controls the current step.
 

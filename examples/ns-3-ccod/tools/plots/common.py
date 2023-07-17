@@ -1,5 +1,4 @@
 import os
-from typing import Tuple
 
 import matplotlib.pylab as pl
 import numpy as np
@@ -44,7 +43,7 @@ def get_thr_ci(
         data: pd.DataFrame,
         column: str,
         ci_interval: float = CONFIDENCE_INTERVAL
-) -> Tuple[pd.Series, pd.Series, pd.Series]:
+) -> tuple[pd.Series, pd.Series, pd.Series]:
     data = data.groupby([column])['throughput']
 
     measurements = data.count()

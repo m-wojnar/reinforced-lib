@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import partial
-from typing import Callable, Tuple
+from typing import Callable
 
 import gymnasium as gym
 import haiku as hk
@@ -207,11 +207,11 @@ class ExpectedSarsa(BaseAgent):
             net_state: hk.State,
             params_target: hk.Params,
             net_state_target: hk.State,
-            batch: Tuple,
+            batch: tuple,
             q_network: hk.TransformedWithState,
             discount: Scalar,
             tau: Scalar
-    ) -> Tuple[Scalar, hk.State]:
+    ) -> tuple[Scalar, hk.State]:
         r"""
         Loss is the mean squared Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r +
         \gamma \sum_{a'} \pi(a'|s') Q(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state,
@@ -231,7 +231,7 @@ class ExpectedSarsa(BaseAgent):
             The parameters of the target Q-network.
         net_state_target : hk.State
             The state of the target Q-network.
-        batch : Tuple
+        batch : tuple
             A batch of transitions from the experience replay buffer.
         q_network : hk.TransformedWithState
             The Q-network.

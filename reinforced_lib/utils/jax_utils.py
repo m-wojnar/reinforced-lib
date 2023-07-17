@@ -1,4 +1,4 @@
-from typing import Callable, Tuple, Any
+from typing import Callable
 
 import jax
 import optax
@@ -6,12 +6,12 @@ from chex import Scalar
 
 
 def gradient_step(
-        objective: Any,
-        loss_params: Tuple,
+        objective: any,
+        loss_params: tuple,
         opt_state: optax.OptState,
         optimizer: optax.GradientTransformation,
         loss_fn: Callable
-) -> Tuple[Any, Any, optax.OptState, Scalar]:
+) -> tuple[any, any, optax.OptState, Scalar]:
     """
     Performs a gradient step on the objective with respect to ``grad_loss_fn`` function.
     ``grad_loss_fn`` should return tuple of ``(loss, aux)`` where loss is the value to be minimized
@@ -21,7 +21,7 @@ def gradient_step(
     ----------
     objective : any
         Objective to be optimized.
-    loss_params : Tuple
+    loss_params : tuple
         Parameters to pass to ``loss_fn``.
     opt_state : optax.OptState
         Optimizer state.
@@ -32,7 +32,7 @@ def gradient_step(
 
     Returns
     -------
-    out : tuple[Any, Any, optax.OptState, Scalar]
+    out : tuple[any, any, optax.OptState, Scalar]
         Tuple containing the updated objective and optimizer state, as well as the loss value.
     """
 

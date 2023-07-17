@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from time import perf_counter
-from typing import Any, Dict, Tuple
 
 import gymnasium as gym
 gym.logger.set_level(40)
@@ -13,11 +12,11 @@ from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
 
 def run(
-        ra_sim_args: Dict[str, Any],
+        ra_sim_args: dict[str, any],
         agent_type: type,
-        agent_params: Dict[str, Any],
+        agent_params: dict[str, any],
         seed: int
-) -> Tuple[str, float, float, float]:
+) -> tuple[str, float, float, float]:
     """
     Run a simulation in the ra-sim simulator.
 

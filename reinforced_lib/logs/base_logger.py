@@ -1,6 +1,6 @@
 from abc import ABC
 from enum import Enum
-from typing import Any, Dict, List, Tuple, Union
+from typing import Union
 
 from chex import Array, Scalar
 
@@ -13,7 +13,7 @@ class SourceType(Enum):
     METRIC = 2
 
 
-Source = Union[Tuple[str, SourceType], str, None]
+Source = Union[tuple[str, SourceType], str, None]
 
 
 class BaseLogger(ABC):
@@ -24,7 +24,7 @@ class BaseLogger(ABC):
     def __init__(self, **kwargs):
         pass
 
-    def init(self, sources: List[Source]) -> None:
+    def init(self, sources: list[Source]) -> None:
         """
         Initializes the logger given the list of all sources.
 
@@ -75,7 +75,7 @@ class BaseLogger(ABC):
 
         raise UnsupportedLogTypeError(type(self), type(value))
 
-    def log_dict(self, source: Source, value: Dict, custom: bool) -> None:
+    def log_dict(self, source: Source, value: dict, custom: bool) -> None:
         """
         Method of the logger interface used for logging dictionaries.
 
@@ -91,7 +91,7 @@ class BaseLogger(ABC):
 
         raise UnsupportedLogTypeError(type(self), type(value))
 
-    def log_other(self, source: Source, value: Any, custom: bool) -> None:
+    def log_other(self, source: Source, value: any, custom: bool) -> None:
         """
         Method of the logger interface used for logging other values.
 

@@ -1,6 +1,6 @@
 import random
 import sys
-from typing import Callable, Dict, Tuple
+from typing import Callable
 
 import gymnasium as gym
 import jax
@@ -77,7 +77,7 @@ def ra_sim(
     phy_rates = jnp.array([6.8, 13.6, 20.4, 27.2, 40.8, 54.6, 61.3, 68.1, 81.8, 90.9, 101.8, 112.5])
 
     @jax.jit
-    def init() -> Tuple[RASimState, Dict]:
+    def init() -> tuple[RASimState, dict]:
         distance = jnp.abs(jnp.linspace(0.0, simulation_time * velocity, total_frames) + initial_position)
 
         state = RASimState(
@@ -89,7 +89,7 @@ def ra_sim(
 
         return state, _get_env_state(state, 0, 0, 0)
 
-    def _get_env_state(state: RASimState, action: jnp.int32, n_successful: jnp.int32, n_failed: jnp.int32) -> Dict:
+    def _get_env_state(state: RASimState, action: jnp.int32, n_successful: jnp.int32, n_failed: jnp.int32) -> dict:
         return {
             'time': state.time[state.ptr],
             'n_successful': n_successful,
@@ -100,7 +100,7 @@ def ra_sim(
         }
 
     @jax.jit
-    def step(state: RASimState, action: jnp.int32, key: PRNGKey) -> Tuple[RASimState, Dict, Scalar, jnp.bool_]:
+    def step(state: RASimState, action: jnp.int32, key: PRNGKey) -> tuple[RASimState, dict, Scalar, jnp.bool_]:
         n_all = AMPDU_SIZES[action]
         n_successful = (n_all * success_probability(state.snr[state.ptr], action)).astype(jnp.int32)
         collision = collision_probability(n_wifi) > jax.random.uniform(key)
@@ -161,8 +161,8 @@ class RASimEnv(gym.Env):
     def reset(
             self,
             seed: int = None,
-            options: Dict = None
-    ) -> Tuple[gym.spaces.Dict, Dict]:
+            options: dict = None
+    ) -> tuple[gym.spaces.Dict, dict]:
         """
         Resets the environment to the initial state.
 
@@ -185,7 +185,7 @@ class RASimEnv(gym.Env):
         self.key = jax.random.PRNGKey(seed)
 
         options = options if options else {}
-        self.options.update(options)
+        self.options |= options
 
         self.sim = ra_sim(
             self.options['simulation_time'],
@@ -198,7 +198,7 @@ class RASimEnv(gym.Env):
 
         return env_state, {}
 
-    def step(self, action: int) -> Tuple[gym.spaces.Dict, float, bool, bool, Dict]:
+    def step(self, action: int) -> tuple[gym.spaces.Dict, float, bool, bool, dict]:
         """
         Performs one step of the environment and returns new environment state.
 

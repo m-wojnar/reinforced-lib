@@ -1,5 +1,4 @@
 import json
-from typing import Any, Dict
 
 import jax.numpy as jnp
 import numpy as np
@@ -61,7 +60,7 @@ class StdoutLogger(BaseLogger):
 
         self._log(source, json.dumps(value), custom)
 
-    def log_dict(self, source: Source, value: Dict, custom: bool) -> None:
+    def log_dict(self, source: Source, value: dict, custom: bool) -> None:
         """
         Logs a dictionary as a JSON string.
 
@@ -77,7 +76,7 @@ class StdoutLogger(BaseLogger):
 
         self._log(source, json.dumps(value), custom)
 
-    def log_other(self, source: Source, value: Any, custom: bool) -> None:
+    def log_other(self, source: Source, value: any, custom: bool) -> None:
         """
         Logs an object as a JSON string.
 
@@ -93,7 +92,7 @@ class StdoutLogger(BaseLogger):
 
         self._log(source, json.dumps(value), custom)
 
-    def _log(self, source: Source, value: Any, custom: bool) -> None:
+    def _log(self, source: Source, value: any, custom: bool) -> None:
         """
         Prints a new row to the standard output if there is a new value for a
         standard source or the source is custom.

@@ -1,4 +1,4 @@
-from typing import Callable, Tuple
+from typing import Callable
 
 import jax
 import jax.numpy as jnp
@@ -149,7 +149,7 @@ def experience_replay(
             ptr=(buffer.ptr + 1) % buffer_size
         )
 
-    def sample(buffer: ReplayBuffer, key: PRNGKey) -> Tuple:
+    def sample(buffer: ReplayBuffer, key: PRNGKey) -> tuple:
         """
         Samples a batch from the replay buffer (there may be duplicates!).
 

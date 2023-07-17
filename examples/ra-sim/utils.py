@@ -1,5 +1,3 @@
-from typing import Any, Dict, Tuple
-
 from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
 
 
@@ -15,7 +13,7 @@ class ResultsManager:
         Integer used as the random key.
     """
 
-    def __init__(self, ra_sim_args: Dict[str, Any], seed: int) -> None:
+    def __init__(self, ra_sim_args: dict[str, any], seed: int) -> None:
         self.wifi_ext = IEEE_802_11_ax_RA()
 
         self.csv_results = 'wifiManager,seed,nWifi,channelWidth,minGI,velocity,position,time,meanMcs,meanRate,throughput\n'
@@ -36,7 +34,7 @@ class ResultsManager:
         self.log_every = ra_sim_args['log_every']
         self.last_log_time = 0.0
 
-    def update(self, action: int, state: Dict[str, Any]) -> None:
+    def update(self, action: int, state: dict[str, any]) -> None:
         """
         Updates the simulation statistics.
 
@@ -70,7 +68,7 @@ class ResultsManager:
             self.last_thr_sum = self.thr_sum
             self.last_log_time = state['time']
 
-    def summary(self) -> Tuple[str, float, float, float]:
+    def summary(self) -> tuple[str, float, float, float]:
         """
         Calculates the simulation summaries and returns results.
 

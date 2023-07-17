@@ -1,5 +1,3 @@
-from typing import List
-
 import unittest
 import os
 import jax
@@ -21,7 +19,7 @@ class TestRLibSerialization(unittest.TestCase):
     key = jax.random.PRNGKey(42)
 
 
-    def run_experiment(self, reload: bool, new_decay: float = None) -> List[int]:
+    def run_experiment(self, reload: bool, new_decay: float = None) -> list[int]:
         rl = rfl.RLib(
             agent_type=ThompsonSampling,
             agent_params={"decay": 0.0},

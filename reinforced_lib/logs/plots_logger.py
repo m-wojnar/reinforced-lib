@@ -1,6 +1,5 @@
 import os.path
 from collections import defaultdict
-from typing import List
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -61,7 +60,7 @@ class PlotsLogger(BaseLogger):
         (the names of the files follow the pattern ``"rlib-plot-[source]-[date]-[time].[ext]"``).
         """
 
-        def exponential_moving_average(values: List, weight: Scalar) -> List:
+        def exponential_moving_average(values: list, weight: Scalar) -> list:
             smoothed = [values[0]]
 
             for value in values[1:]:
@@ -69,7 +68,7 @@ class PlotsLogger(BaseLogger):
 
             return smoothed
 
-        def lineplot(values: List, alpha: Scalar = 1.0, label: bool = False) -> None:
+        def lineplot(values: list, alpha: Scalar = 1.0, label: bool = False) -> None:
             values = jnp.array(values)
             values = jnp.squeeze(values)
 
@@ -80,7 +79,7 @@ class PlotsLogger(BaseLogger):
                     plt.plot(val, alpha=alpha, c=f'C{i % 10}', label=i if label else '')
                 plt.legend()
         
-        def scatterplot(values: List, label: bool = False) -> None:
+        def scatterplot(values: list, label: bool = False) -> None:
             values = jnp.array(values)
             values = jnp.squeeze(values)
             xs = range(1, len(values) + 1)

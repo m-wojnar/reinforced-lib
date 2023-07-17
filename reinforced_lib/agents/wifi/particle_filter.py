@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Tuple
 
 import gymnasium as gym
 import jax
@@ -227,7 +226,7 @@ class ParticleFilter(BaseAgent):
     @staticmethod
     def _observation_fn(
             state: ParticleFilterState,
-            observation: Tuple[jnp.int32, jnp.int32, jnp.int32, Scalar, jnp.int32, Array]
+            observation: tuple[jnp.int32, jnp.int32, jnp.int32, Scalar, jnp.int32, Array]
     ) -> ParticleFilterState:
         """
         Updates particles weights based on the observation from the environment.

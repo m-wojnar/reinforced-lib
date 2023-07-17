@@ -7,7 +7,6 @@ Conference (WCNC), 2021. https://doi.org/10.1109/WCNC49053.2021.9417575
 
 from argparse import ArgumentParser
 from ctypes import *
-from typing import Any, Dict
 
 import haiku as hk
 import jax.numpy as jnp
@@ -109,12 +108,12 @@ def ddpg_a_network(s: Array) -> Array:
 
 
 def run(
-        ns3_args: Dict[str, Any],
+        ns3_args: dict[str, any],
         ns3_path: str,
         mempool_key: int,
         agent_type: type,
-        agent_params: Dict[str, Any],
-        rlib_args: Dict[str, Any]
+        agent_params: dict[str, any],
+        rlib_args: dict[str, any]
 ) -> None:
     """
     Run a CCOD simulation in the ns-3 simulator [1]_ with the ns3-ai library [2]_.

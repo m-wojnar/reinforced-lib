@@ -1,5 +1,4 @@
 from functools import partial
-from typing import Tuple
 
 import gymnasium as gym
 import jax
@@ -147,14 +146,14 @@ class EGreedy(BaseAgent):
             Updated agent state.
         """
 
-        def classic_update(operands: Tuple) -> EGreedyState:
+        def classic_update(operands: tuple) -> EGreedyState:
             state, action, reward, alpha = operands
             return EGreedyState(
                 Q=state.Q.at[action].add((reward - state.Q[action]) / state.N[action]),
                 N=state.N.at[action].add(1)
             )
 
-        def erwa_update(operands: Tuple) -> EGreedyState:
+        def erwa_update(operands: tuple) -> EGreedyState:
             state, action, reward, alpha = operands
             return EGreedyState(
                 Q=state.Q.at[action].add(alpha * (reward - state.Q[action])),

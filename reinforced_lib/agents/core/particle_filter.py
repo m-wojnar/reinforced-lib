@@ -1,5 +1,5 @@
 from functools import partial
-from typing import Any, Callable, Tuple
+from typing import Callable
 
 import jax
 import jax.numpy as jnp
@@ -25,7 +25,7 @@ class ParticleFilterState(AgentState):
     logit_weights: Array
 
 
-def simple_resample(operands: Tuple[ParticleFilterState, PRNGKey]) -> ParticleFilterState:
+def simple_resample(operands: tuple[ParticleFilterState, PRNGKey]) -> ParticleFilterState:
     """
     Samples new particle positions from a categorical distribution with particle weights, then sets all weights equal.
 
@@ -209,8 +209,8 @@ class ParticleFilter:
             positions_shape: Shape,
             weights_shape: Shape,
             scale: Numeric,
-            observation_fn: Callable[[ParticleFilterState, Any], ParticleFilterState],
-            resample_fn: Callable[[Tuple[ParticleFilterState, PRNGKey]], ParticleFilterState] = simple_resample,
+            observation_fn: Callable[[ParticleFilterState, any], ParticleFilterState],
+            resample_fn: Callable[[tuple[ParticleFilterState, PRNGKey]], ParticleFilterState] = simple_resample,
             resample_criterion_fn: Callable[[ParticleFilterState], bool] = effective_sample_size,
             transition_fn: Callable[[ParticleFilterState, PRNGKey, Numeric, Scalar], ParticleFilterState] = simple_transition
     ) -> None:
@@ -275,9 +275,9 @@ class ParticleFilter:
     def update(
             state: ParticleFilterState,
             key: PRNGKey,
-            observation_fn: Callable[[ParticleFilterState, Any], ParticleFilterState],
-            observation: Any,
-            resample_fn: Callable[[Tuple[ParticleFilterState, PRNGKey]], ParticleFilterState],
+            observation_fn: Callable[[ParticleFilterState, any], ParticleFilterState],
+            observation: any,
+            resample_fn: Callable[[tuple[ParticleFilterState, PRNGKey]], ParticleFilterState],
             resample_criterion_fn: Callable[[ParticleFilterState], bool],
             transition_fn: Callable[[ParticleFilterState, PRNGKey, Numeric, Scalar], ParticleFilterState],
             delta_time: Scalar,

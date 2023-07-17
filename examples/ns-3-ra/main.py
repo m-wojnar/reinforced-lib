@@ -1,6 +1,5 @@
 from argparse import ArgumentParser
 from ctypes import *
-from typing import Any, Dict
 
 from py_interface import *
 
@@ -38,11 +37,11 @@ simulation = 'ra-sim'
 
 
 def run(
-        ns3_args: Dict[str, Any],
+        ns3_args: dict[str, any],
         ns3_path: str,
         mempool_key: int,
         agent_type: type,
-        agent_params: Dict[str, Any],
+        agent_params: dict[str, any],
         seed: int
 ) -> None:
     """
