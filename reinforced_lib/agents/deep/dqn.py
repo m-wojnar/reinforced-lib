@@ -136,19 +136,19 @@ class DQN(BaseAgent):
             experience_replay=er,
             epsilon=epsilon
         ))
-        self.update = partial(
+        self.update = jax.jit(partial(
             self.update,
-            step_fn=jax.jit(partial(
+            step_fn=partial(
                 gradient_step,
                 optimizer=optimizer,
                 loss_fn=partial(self.loss_fn, q_network=q_network, discount=discount)
-            )),
+            ),
             experience_replay=er,
             experience_replay_steps=experience_replay_steps,
             epsilon_decay=epsilon_decay,
             epsilon_min=epsilon_min,
             tau=tau
-        )
+        ))
         self.sample = jax.jit(partial(
             self.sample,
             q_network=q_network,
@@ -245,6 +245,7 @@ class DQN(BaseAgent):
             key: PRNGKey,
             dqn_state: DQNState,
             batch: tuple,
+            non_zero_loss: jnp.bool_,
             q_network: hk.TransformedWithState,
             discount: Scalar
     ) -> tuple[Scalar, hk.State]:
@@ -265,6 +266,8 @@ class DQN(BaseAgent):
             The state of the double Q-learning agent.
         batch : tuple
             A batch of transitions from the experience replay buffer.
+        non_zero_loss : bool
+            Flag used to avoid updating the Q-network when the experience replay buffer is not full.
         q_network : hk.TransformedWithState
             The Q-network.
         discount : Scalar
@@ -288,7 +291,7 @@ class DQN(BaseAgent):
         target = jax.lax.stop_gradient(target)
         loss = optax.l2_loss(q_values, target).mean()
 
-        return loss, state
+        return loss * non_zero_loss, state
 
     @staticmethod
     def update(
@@ -352,14 +355,15 @@ class DQN(BaseAgent):
         params, net_state, opt_state = state.params, state.state, state.opt_state
         params_target, state_target = state.params_target, state.state_target
 
-        if experience_replay.is_ready(replay_buffer):
-            for _ in range(experience_replay_steps):
-                batch_key, network_key, key = jax.random.split(key, 3)
-                batch = experience_replay.sample(replay_buffer, batch_key)
+        non_zero_loss = experience_replay.is_ready(replay_buffer)
 
-                params, net_state, opt_state, _ = step_fn(params, (network_key, state, batch), opt_state)
-                params_target, state_target = optax.incremental_update(
-                    (params, net_state), (params_target, state_target), tau)
+        for _ in range(experience_replay_steps):
+            batch_key, network_key, key = jax.random.split(key, 3)
+            batch = experience_replay.sample(replay_buffer, batch_key)
+
+            params, net_state, opt_state, _ = step_fn(params, (network_key, state, batch, non_zero_loss), opt_state)
+            params_target, state_target = optax.incremental_update(
+                (params, net_state), (params_target, state_target), tau)
 
         return DQNState(
             params=params,

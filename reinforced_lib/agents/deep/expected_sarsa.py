@@ -107,17 +107,17 @@ class ExpectedSarsa(BaseAgent):
             optimizer=optimizer,
             experience_replay=er
         ))
-        self.update = partial(
+        self.update = jax.jit(partial(
             self.update,
             q_network=q_network,
-            step_fn=jax.jit(partial(
+            step_fn=partial(
                 gradient_step,
                 optimizer=optimizer,
                 loss_fn=partial(self.loss_fn, q_network=q_network, discount=discount, tau=tau)
-            )),
+            ),
             experience_replay=er,
             experience_replay_steps=experience_replay_steps
-        )
+        ))
         self.sample = jax.jit(partial(
             self.sample,
             q_network=q_network,
@@ -208,6 +208,7 @@ class ExpectedSarsa(BaseAgent):
             params_target: hk.Params,
             net_state_target: hk.State,
             batch: tuple,
+            non_zero_loss: jnp.bool_,
             q_network: hk.TransformedWithState,
             discount: Scalar,
             tau: Scalar
@@ -233,6 +234,8 @@ class ExpectedSarsa(BaseAgent):
             The state of the target Q-network.
         batch : tuple
             A batch of transitions from the experience replay buffer.
+        non_zero_loss : bool
+            Flag used to avoid updating the Q-network when the experience replay buffer is not full.
         q_network : hk.TransformedWithState
             The Q-network.
         discount : Scalar
@@ -259,7 +262,7 @@ class ExpectedSarsa(BaseAgent):
         target = jax.lax.stop_gradient(target)
         loss = optax.l2_loss(q_values, target).mean()
 
-        return loss, state
+        return loss * non_zero_loss, state
 
     @staticmethod
     def update(
@@ -314,17 +317,16 @@ class ExpectedSarsa(BaseAgent):
         )
 
         params, net_state, opt_state = state.params, state.state, state.opt_state
+        params_target, net_state_target = deepcopy(params), deepcopy(net_state)
+        
+        non_zero_loss = experience_replay.is_ready(replay_buffer)
 
-        if experience_replay.is_ready(replay_buffer):
-            params_target = deepcopy(params)
-            net_state_target = deepcopy(net_state)
+        for _ in range(experience_replay_steps):
+            batch_key, network_key, key = jax.random.split(key, 3)
+            batch = experience_replay.sample(replay_buffer, batch_key)
 
-            for _ in range(experience_replay_steps):
-                batch_key, network_key, key = jax.random.split(key, 3)
-                batch = experience_replay.sample(replay_buffer, batch_key)
-
-                loss_params = (network_key, net_state, params_target, net_state_target, batch)
-                params, net_state, opt_state, _ = step_fn(params, loss_params, opt_state)
+            loss_params = (network_key, net_state, params_target, net_state_target, batch, non_zero_loss)
+            params, net_state, opt_state, _ = step_fn(params, loss_params, opt_state)
 
         return ExpectedSarsaState(
             params=params,
