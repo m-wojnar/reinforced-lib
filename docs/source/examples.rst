@@ -161,16 +161,6 @@ learn what is the function of each.
         --PrintAttributes=[typeid]:  Print all attributes of typeid.
         --PrintVersion:              Print the ns-3 version.
         --PrintHelp:                 Print this help message.
-  
-..   The most important parameters responsible for the definition of the simulation scenario are:
-  
-..   * simulation seed ``--RngRun``,
-..   * rate adaptation manager ``--wifiManager``, default is ``"ns3::RLibWifiManager"``, meaning that the manager is on the Reinforced-lib side,
-..   * duration of the simulation (excluding the warmup stage) (s) ``--simulationTime``, default is 20 s,
-..   * duration of the warmup stage (s) - time for the simulator to enable all the mechanisms before the traffic generation begins ``--warmupTime``, default is 2 s,
-..   * aggregated traffic generator data rate (Mb/s) ``--dataRate``, default is 125 Mb/s,
-..   * relative path where the simulation output file will be saved in the CSV format ``--csvPath``, default to ``""``, meaning not saving at all,
-..   * name of the Wi-Fi manager in the CSV file ``wifiManagerName``, default to ``"RLib"``,
 
 
 Reinforced-lib (python) end
@@ -179,26 +169,25 @@ Reinforced-lib (python) end
 The provided rate adaptation manager is implemented in the file ``$REINFORCED_LIB/examples/ns-3-ra/main.py``. Here we specify the
 communication with the ns-3 simulator by defining the environment's observation space and the action space, we create the ``RLib``
 agent, we provide the agent-environment interaction loop which reacts to the incoming (aggregated) frames by responding with an appropriate MCS,
-and cleans up the environment when the simulation is done. Below we include and explain the essential code snippets.
+and cleans up the environment when the simulation is done. Below we include and explain the essential fragments from the ``main.py`` script.
 
 .. code-block:: python
     :linenos:
-    :lineno-start: 6
+    :lineno-start: 4
 
-    from py_interface import *  # The ns3-ai import
+    from ext import IEEE_802_11_ax_RA
+    from particle_filter import ParticleFilter
+    from py_interface import *   # Import the ns3-ai structures
 
     from reinforced_lib import RLib
-    from reinforced_lib.agents.mab import ThompsonSampling
-    from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
+    from reinforced_lib.agents.mab import *
 
-In line 6 we include the ns3-ai structures which enables us to use the shared memory communication.
-Next we import the ``RLib`` class which is the main interface of the library that merges the agent and the environment.
-We chose the :ref:`Thompson sampling <Thompson Sampling>` agent to demonstrate the manager performance. The environment
-will be of course IEEE 802.11ax RA, so we import an appropriate extension.
+We import the RA extension, agents and the RLib module. Line 6 is responsible for importing the structures from the ns3-ai
+library.
 
 .. code-block:: python
     :linenos:
-    :lineno-start: 13
+    :lineno-start: 12
 
     class Env(Structure):
     _pack_ = 1
@@ -223,8 +212,8 @@ will be of course IEEE 802.11ax RA, so we import an appropriate extension.
 
 Next we define the ns3-ai structures that describe the environment space and action space accordingly. The structures must
 strictly reflect the ones defined in the 
-`header file <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/ns-3/rlib-wifi-manager/model/rlib-wifi-manager.h>`_
-``rlib-wifi-manager/model/rlib-wifi-manager.h`` because it is the interface of the shared memory data bridge between
+`header file <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/ns-3-ra/contrib/rlib-wifi-manager/model/rlib-wifi-manager.h>`_
+``contrib/rlib-wifi-manager/model/rlib-wifi-manager.h`` because it is the interface of the shared memory data bridge between
 python and C++. You can learn more about the data exchange model
 `here <https://github.com/hust-diangroup/ns3-ai/tree/master/examples/a_plus_b>`_.
 
@@ -234,22 +223,23 @@ python and C++. You can learn more about the data exchange model
     :lineno-start: 73
 
     rl = RLib(
-        agent_type=ThompsonSampling,
+        agent_type=agent_type,
+        agent_params=agent_params,
         ext_type=IEEE_802_11_ax_RA
     )
 
-    exp = Experiment(mempool_key, mem_size, "rlib-sim", ns3_path)
+    exp = Experiment(mempool_key, memory_size, 'ra-sim', ns3_path)
     var = Ns3AIRL(memblock_key, Env, Act)
 
-In line 73, we create an instance of RLib by supplying the Thompson sampling agent and the 802.11ax environment extension.
-We define the ns3-ai experiment in line 78 by setting the memory key, the memory size, the name of the ns-3 scenario, and the path
-to the ns3 root directory. In line 79, we create a handler to the shared memory interface by providing an arbitrary key and
+In line 73, we create an instance of RLib by supplying the appropriate, parametrized agent and the 802.11ax environment extension.
+We define the ns3-ai experiment in line 79 by setting the memory key, the memory size, the name of the ns-3 scenario, and the path
+to the ns3 root directory. In line 80, we create a handler to the shared memory interface by providing an arbitrary key and
 the previously defined environment and action structures.
 
 
 .. code-block:: python
     :linenos:
-    :lineno-start: 81
+    :lineno-start: 82
 
     try:
         ns3_process = exp.run(ns3_args, show_output=True)
@@ -273,55 +263,56 @@ the previously defined environment and action structures.
                     }
 
                     data.act.station_id = data.env.station_id
-                    data.act.mcs = rl.sample(data.env.station_id, **observation)
+                    data.act.mcs = rl.sample(agent_id=data.env.station_id, **observation)
 
         ns3_process.wait()
     finally:
         del exp
 
-The final step to make the example work is to define the agent-environment interaction loop. We loop while the ns3 simulation is running (line 84)
+The final step to make the example work is to define the agent-environment interaction loop. We loop while the ns3 simulation is running (line 85)
 and if there is any data to be read (line 86). We differentiate the environment observation by a type attribute which
-indicates whether it is an initialization frame or not. On initialization (line 89), we have to initialize our RL agent with
-some seed. In the opposite case we translate the observation to a dictionary (lines 93-101) and override the action structure
-with the received station ID (line 103) and the appropriate MCS selected by the RL agent (line 104). The last thing is to
-clean up the shared memory environment when the simulation is finished (lines 106 and 108).
+indicates whether it is an initialization frame or not. On initialization (line 90), we have to initialize our RL agent with
+some seed. In the opposite case we translate the observation to a dictionary (lines 94-102) and override the action structure
+with the received station ID (line 104) and the appropriate MCS selected by the RL agent (line 105). The last thing is to
+clean up the shared memory environment when the simulation is finished (lines 107 and 107).
 
 
 Example experiments
 ===================
 
-We supply the ``$REINFORCED_LIB/examples/ns-3/main.py`` script with the CLI so that you can test the rate adaptation manager in different
-scenarios. We reflect all the command line arguments listed in :ref:`ns3 scenario <rlib-sim>` ``rlib-sim\sim.cc``
-with the ``--under_score`` style. There are only two additional arguments:
+We supply the ``$REINFORCED_LIB/examples/ns-3-ra/main.py`` script with the CLI so that you can test the rate adaptation manager in different
+scenarios. We reflect all the command line arguments listed in :ref:`ns3 scenario <rlib-sim>` ``scratch/ra-sim.cc`` with four additional arguments:
 
-  * path to the ns3 root directory ``--ns3_path``, default is ``$HOME/ns-3-dev/``,
-  * shared memory pool key - arbitrary integer large than 1000 ``--mempool_key``, default is 1234.
+  * ``--agent`` -- the type of RL agent responsible for the RA, a required argument,
+  * ``--mempoolKey`` -- shared memory pool key, which is an arbitrary integer, greater than 1000, default is 1234.
+  * ``--ns3Path`` -- path to the ns3 root directory, a required argument,
 
 You can try running the following commands to test the Reinforced-lib rate adaptation manager in different example scenarios:
 
-  a. Static scenario with 1 AP and 1 STA both positioned in the same place
+  a. Static scenario with 1 AP and 1 STA both positioned in the same place, RA handled by the *UCB* agent
 
     .. code-block:: bash
         
-        python $REINFORCED_LIB/examples/ns-3/main.py --ns3_path="$YOUR_NS3_PATH"
+        python $REINFORCED_LIB/examples/ns-3-ra/main.py --agent="UCB" --ns3Path="$YOUR_NS3_PATH"
 
-  b. Static scenario with 1 AP and 1 STA both positioned in the same place, with a ``ra-results.csv`` output file and ``ra-experiment-0-0.pcap`` file saved in the ``$HOME\`` directory
+  b. Static scenario with 1 AP and 1 STA both positioned in the same place, RA handled by the *UCB* agent. Output
+  saved to the ``$HOME/ra-results.csv`` file and ``.pcap`` saved to the ``$HOME/ra-experiment-0-0.pcap``.
 
     .. code-block:: bash
         
-        python $REINFORCED_LIB/examples/ns-3/main.py --ns3_path="$YOUR_NS3_PATH" --csv_path="$HOME/ra-results.scv" --pcap_path="$HOME/ra-experiment"
+        python $REINFORCED_LIB/examples/ns-3-ra/main.py --agent="UCB" --ns3Path="$YOUR_NS3_PATH" --csvPath="$HOME/ra-results.scv" --pcapPath="$HOME/ra-experiment"
 
-  c. Static scenario with 1 AP and 16 stations at a 10 m distance
-
-    .. code-block:: bash
-
-        python $REINFORCED_LIB/examples/ns-3/main.py --ns3_path="$YOUR_NS3_PATH" --n_wifi=16 --initial_position=10
-
-  d. Dynamic scenario with 1 AP and 1 STA starting at 0 m and moving away from AP with a velocity of 1 m/s
+  c. Static scenario with 1 AP and 16 stations at a 10 m distance, RA handled by the *ThompsonSampling* agent.
 
     .. code-block:: bash
 
-        python $REINFORCED_LIB/examples/ns-3/main.py --ns3_path="$YOUR_NS3_PATH" --velocity=1
+        python $REINFORCED_LIB/examples/ns-3-ra/main.py --agent="ThompsonSampling" --ns3_path="$YOUR_NS3_PATH" --nWifi=16 --initialPosition=10
+
+  d. Dynamic scenario with 1 AP and 1 STA starting at 0 m and moving away from AP with a velocity of 1 m/s, RA handled by the *ParticleFilter* agent.
+
+    .. code-block:: bash
+
+        python $REINFORCED_LIB/examples/ns-3-ra/main.py --agent="ParticleFilter" --ns3Path="$YOUR_NS3_PATH" --velocity=1
 
 
 .. _gym_integration:
