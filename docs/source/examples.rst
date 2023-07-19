@@ -12,8 +12,8 @@ Connection with ns-3
 ********************
 
 We will demonstrate the cooperation of Reinforced-lib with an external WiFi simulation software based on an example of
-an ML-controlled rate adaptation manager. To simulate the WiFi environment, we will use the popular, research oriented
-network simulator - ns-3. To learn more about the simulator, we encourage to visit the
+an ML-controlled rate adaptation (RA) manager. To simulate the WiFi environment, we will use the popular, research oriented
+network simulator -- ns-3. To learn more about the simulator, we encourage to visit the
 `official website <https://www.nsnam.org/>`_ or read the
 `ns-3 tutorial <https://www.nsnam.org/docs/release/3.36/tutorial/html/index.html>`_.
 
@@ -25,8 +25,11 @@ To perform experiments with Python-based Reinforced-lib and C++-based ns-3, you 
 consists of the following:
 
   * favourite C++ compiler (we assume that you already have one in your dev stack),
-  * ns-3 (connection tested on the ns-3.36.1 version),
-  * ns3-ai (https://github.com/hust-diangroup/ns3-ai/).
+  * ns-3 (connection tested on the ns-3.37 version),
+  * ns3-ai (`GitHub repository <https://github.com/hust-diangroup/ns3-ai/>`_).
+
+Since the ns-3 requires the compilation, we will install all the required modules, transfer ns-3 files required for the
+communication with Reinforced-lib, and copile everything once at the very end.
 
 
 Installing ns-3
@@ -39,21 +42,13 @@ but we recommend to install ns-3 by cloning the git dev repository:
 
     git clone https://gitlab.com/nsnam/ns-3-dev.git
 
-Then change directory to the newly created ``ns-3-dev/`` and build ns-3:
+We recommend setting the simulator to the 3.37 version, since we do not guarantee the compatibility with other versions.
+To set the ns-3 to the 3.37:
 
 .. code-block:: bash
 
-    ./ns3 configure --enable-examples --build-profile=optimized
-    ./ns3 build
-
-Once you have built ns-3 (with examples enabled), it should be easy to run the sample programs with the following command:
-
-.. code-block:: bash
-
-    ./ns3 run wifi-simple-adhoc
-
-If the installation process succeeded, you should have two new ``.pcap`` files in the ``ns-3-dev/`` directory, namely
-``wifi-simple-adhoc-0-0.pcap`` and ``wifi-simple-adhoc-1-0.pcap``
+    cd ns-3-dev     # this directory will be referenced as YOUR_NS3_PATH since now on
+    git reset --hard 4407a9528eac81476546a50597cc6e016a428f43
 
 
 Installing ns3-ai
@@ -61,52 +56,55 @@ Installing ns3-ai
 
 The ns3-ai module interconnects ns-3 and Reinforced-lib (or any other python-writen software) by transferring data through
 the shared memory pool. The memory is accessed by both sides thus making the connection. You can read more about the ns3-ai on the
-`ns3-ai official repository <https://github.com/hust-diangroup/ns3-ai>`_. To install the module, clone the ns3-ai repository to the
-``ns-3-dev/contrib/`` directory and install the ``py_interface`` module with pip:
+`ns3-ai official repository <https://github.com/hust-diangroup/ns3-ai>`_. Unfortunately, ns3-ai (as of 18.07.2023) is not compatible with the ns-3.36 or later. We have forked and modified the official ns3-ai repository to make it compatible with the 3.37 version. To install the compatible, forked version run the following commands
 
 .. code-block:: bash
 
     cd $YOUR_NS3_PATH/contrib/
-    git clone https://github.com/hust-diangroup/ns3-ai.git
-    pip install --user "$YOUR_NS3_PATH/contrib/ns3-ai/py_interface"
-
-To have ns3-ai working, you need to rebuild ns-3, but before doing so, we transfer some necessary files to
-enable experiments with the provided rate adaptation manager.
-
-.. warning::
-
-    ns3-ai (as of 18.09.2022) is not compatible with the ns-3.36 or later. We have forked and modified the official
-    ns3-ai repository to make it compatible with the 3.36 version. In order to install our compatible version run the
-    following commands instead:
-
-    .. code-block:: bash
-
-        cd $YOUR_NS3_PATH/contrib/
-        git clone https://github.com/m-wojnar/ns3-ai.git
-        cd "$YOUR_NS3_PATH/contrib/ns3-ai/"
-        git checkout ml4wifi
-        pip install --user "$YOUR_NS3_PATH/contrib/ns3-ai/py_interface"
+    git clone --single-branch --branch ml4wifi https://github.com/m-wojnar/ns3-ai.git
+    pip install "$YOUR_NS3_PATH/contrib/ns3-ai/py_interface"
 
 
-Transferring RA example files
------------------------------
+Transferring ns3 files
+----------------------
 
-In ``$REINFORCED_LIB/examples/ns-3/`` there are two directories. The ``rlib-sim`` contains an
-example scenario, which will be described in the :ref:`next section <rlib-sim>`. The ``rlib-wifi-manager`` directory
-contains an ns-3 contrib module with the specification of a custom rate adaptation manager that communicates with python
+In ``$REINFORCED_LIB/examples/ns-3-ra/`` there are two directories. The ``scratch`` contains an
+example RA scenario, which will be described in the :ref:`next section <rlib-sim>`. The ``contrib`` directory
+contains a ``rlib-wifi-manager`` module with the specification of a custom rate adaptation manager that communicates with python
 with the use of ns3-ai. You need to transfer both of these directories in the appropriate locations by running the
 following commands:
 
 .. code-block:: bash
 
-    cp -r $REINFORCED_LIB/examples/ns-3/rlib-sim $YOUR_NS3_PATH/scratch/
-    cp -r $REINFORCED_LIB/examples/ns-3/rlib-wifi-manager $YOUR_NS3_PATH/contrib/
+    cp $REINFORCED_LIB/examples/ns-3-ra/scratch/* $YOUR_NS3_PATH/scratch/
+    cp -r $REINFORCED_LIB/examples/ns-3-ra/contrib/rlib-wifi-manager $YOUR_NS3_PATH/contrib/
 
 .. note::
 
     To learn more about adding contrib modules to ns-3, visit
     the `ns-3 manual <https://www.nsnam.org/docs/manual/html/new-modules.html>`_.
 
+
+Compiling ns3
+-------------
+
+To have the simulator working and fully integrated with the Reinforced-lib, we need to compile it. We do this from the ``YOUR_NS3_PATH`` in two steps, by first configuring the compilation and than by building ns-3:
+
+.. code-block:: bash
+
+    cd $YOUR_NS3_PATH
+    ./ns3 configure --build-profile=optimized --enable-examples --enable-tests
+    ./ns3 build
+
+Once you have built ns-3, you can test the ns-3 and Reinforced-lib integration by executing the script that runs an example
+rate adaptation scenario controlled by the UCB agent.
+
+.. code-block:: bash
+
+    cd $REINFORCED_LIB
+    ./test/test_ns3_integration.sh
+
+On success, in your home directory, there should be a ``rlib-ns3-integration-test.csv`` file generated filled with some data.
 
 .. _rlib-sim:
 
@@ -117,34 +115,68 @@ Simulation scenario
 ns-3 (C++) part
 ---------------
 
-We supply an example scenario ``rlib-sim/sim.cc`` to test the rate adaptation manager in the 802.11ax environment.
-The scenario is highly customizable but the key points
+In ``rscratch`` directory we supply an example scenario ``rlib-sim.cc`` to test the rate adaptation manager in the 802.11ax
+environment. The scenario is highly customizable but the key points
 are that there is one access point (AP) and a variable number (``--nWifi``) of stations (STA); there is an uplink, saturated
 communication (from stations to AP) and the AP is in line of sight with all the stations; all the stations are at the point of
 :math:`(0, 0)~m` and the AP can either be at :math:`(0, 0)~m` as well or in some distance (``--initialPosition``)
 from the stations. The AP can also be moving with a constant velocity (``--velocity``) to simulate dynamic scenarios.
-Other assumptions from the simulation are the log-distance propagation `loss model <https://www.nsnam.org/docs/models/html/propagation.html>`_,
-A-MPDU frame aggregation, 5 Ghz frequency band, and single spatial stream.
+Other assumptions from the simulation are the A-MPDU frame aggregation, 5 Ghz frequency band, and single spatial stream.
+
+By typing ``$YOUR_NS3_PATH/build/scratch/ns3.37-ra-sim-optimized --help`` you can go over the simulation parameters and
+learn what is the function of each.
+
+.. code-block:: bash
+
+    ./build/scratch/ns3.37-ra-sim-optimized --help
+    [Program Options] [General Arguments]
+
+    Program Options:
+        --area:             Size of the square in which stations are wandering (m) [RWPM mobility type] [40]
+        --channelWidth:     Channel width (MHz) [20]
+        --csvPath:          Save an output file in the CSV format
+        --dataRate:         Aggregate traffic generators data rate (Mb/s) [125]
+        --deltaPower:       Power change (dBm) [0]
+        --initialPosition:  Initial position of the AP on X axis (m) [Distance mobility type] [0]
+        --intervalPower:    Interval between power change (s) [4]
+        --logEvery:         Time interval between successive measurements (s) [1]
+        --lossModel:        Propagation loss model to use [LogDistance, Nakagami] [LogDistance]
+        --minGI:            Shortest guard interval (ns) [3200]
+        --mobilityModel:    Mobility model [Distance, RWPM] [Distance]
+        --nodeSpeed:        Maximum station speed (m/s) [RWPM mobility type] [1.4]
+        --nodePause:        Maximum time station waits in newly selected position (s) [RWPM mobility type] [20]
+        --nWifi:            Number of transmitting stations [1]
+        --pcapPath:         Save a PCAP file from the AP
+        --simulationTime:   Duration of the simulation excluding warmup stage (s) [20]
+        --velocity:         Velocity of the AP on X axis (m/s) [Distance mobility type] [0]
+        --warmupTime:       Duration of the warmup stage (s) [2]
+        --wifiManager:      Rate adaptation manager [ns3::RLibWifiManager]
+        --wifiManagerName:  Name of the Wi-Fi manager in CSV
+
+    General Arguments:
+        --PrintGlobals:              Print the list of globals.
+        --PrintGroups:               Print the list of groups.
+        --PrintGroup=[group]:        Print all TypeIds of group.
+        --PrintTypeIds:              Print all TypeIds.
+        --PrintAttributes=[typeid]:  Print all attributes of typeid.
+        --PrintVersion:              Print the ns-3 version.
+        --PrintHelp:                 Print this help message.
   
-  Changeable simulation parameters:
+..   The most important parameters responsible for the definition of the simulation scenario are:
   
-  * duration of the simulation (excluding the warmup stage) (s) ``--simulationTime``, default is 20 s,
-  * duration of the warmup stage (s) - time for the simulator to enable all the mechanisms before the traffic generation begins ``--warmupTime``, default is 2 s,
-  * time interval between successive measurements (s) ``--logEvery``, default is 1 s,
-  * simulation seed ``--RngRun``,
-  * aggregated traffic generator data rate (Mb/s) ``--dataRate``, default is 125 Mb/s,
-  * channel width (MHz) ``--channelWidth``, default is 20 MHz,
-  * shortest guard interval to use (ns) ``--minGI``, default is 3200 ns,
-  * rate adaptation manager ``--wifiManager``, default is ``"ns3::RLibWifiManager"``, meaning that the manager is on the Reinforced-lib side,
-  * relative path where the simulation output file will be saved in the CSV format ``--csvPath``, default to ``""``, meaning not saving at all,
-  * name of the Wi-Fi manager in the CSV file ``wifiManagerName``, default to ``"RLib"``,
-  * relative path where the PCAP file from the AP will be saved ``--pcapPath``, default is ``""``, meaning no pcap at all.
+..   * simulation seed ``--RngRun``,
+..   * rate adaptation manager ``--wifiManager``, default is ``"ns3::RLibWifiManager"``, meaning that the manager is on the Reinforced-lib side,
+..   * duration of the simulation (excluding the warmup stage) (s) ``--simulationTime``, default is 20 s,
+..   * duration of the warmup stage (s) - time for the simulator to enable all the mechanisms before the traffic generation begins ``--warmupTime``, default is 2 s,
+..   * aggregated traffic generator data rate (Mb/s) ``--dataRate``, default is 125 Mb/s,
+..   * relative path where the simulation output file will be saved in the CSV format ``--csvPath``, default to ``""``, meaning not saving at all,
+..   * name of the Wi-Fi manager in the CSV file ``wifiManagerName``, default to ``"RLib"``,
 
 
 Reinforced-lib (python) end
 ---------------------------
 
-The provided rate adaptation manager is implemented in the file ``$REINFORCED_LIB/examples/ns-3/main.py``. Here we specify the
+The provided rate adaptation manager is implemented in the file ``$REINFORCED_LIB/examples/ns-3-ra/main.py``. Here we specify the
 communication with the ns-3 simulator by defining the environment's observation space and the action space, we create the ``RLib``
 agent, we provide the agent-environment interaction loop which reacts to the incoming (aggregated) frames by responding with an appropriate MCS,
 and cleans up the environment when the simulation is done. Below we include and explain the essential code snippets.
@@ -153,7 +185,7 @@ and cleans up the environment when the simulation is done. Below we include and 
     :linenos:
     :lineno-start: 6
 
-    from py_interface import *
+    from py_interface import *  # The ns3-ai import
 
     from reinforced_lib import RLib
     from reinforced_lib.agents.mab import ThompsonSampling
