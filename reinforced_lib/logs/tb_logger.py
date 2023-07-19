@@ -28,12 +28,17 @@ class TensorboardLogger(BaseLogger):
             self,
             tb_log_dir: str = None,
             tb_comet_config: dict[str, any] = None,
+            tb_sync_steps: bool = False,
             **kwargs,
     ) -> None:
         super().__init__(**kwargs)
 
         if tb_comet_config is None:
             tb_comet_config = {'disabled': True}
+
+        self._sync_steps = tb_sync_steps
+        self._current_values = set()
+        self._step = 0
 
         self._writer = SummaryWriter(log_dir=tb_log_dir, comet_config=tb_comet_config)
         self._steps = defaultdict(int)
@@ -57,8 +62,9 @@ class TensorboardLogger(BaseLogger):
             Scalar to log.
         """
 
-        self._writer.add_scalar(self.source_to_name(source), value, self._steps[source])
-        self._steps[source] += 1
+        name = self.source_to_name(source)
+        step = self._get_step(name)
+        self._writer.add_scalar(name, value, step)
 
     def log_array(self, source: Source, value: Array, *_) -> None:
         """
@@ -72,8 +78,9 @@ class TensorboardLogger(BaseLogger):
             Array to log.
         """
 
-        self._writer.add_histogram(self.source_to_name(source), value, self._steps[source])
-        self._steps[source] += 1
+        name = self.source_to_name(source)
+        step = self._get_step(name)
+        self._writer.add_histogram(name, value, step)
 
     def log_dict(self, source: Source, value: dict, *_) -> None:
         """
@@ -101,5 +108,34 @@ class TensorboardLogger(BaseLogger):
             Dictionary to log.
         """
 
-        self._writer.add_text(self.source_to_name(source), json.dumps(value), self._steps[source])
-        self._steps[source] += 1
+        name = self.source_to_name(source)
+        step = self._get_step(name)
+        self._writer.add_text(name, json.dumps(value), step)
+
+    def _get_step(self, name: str) -> int:
+        """
+        Returns the current step for a given source.
+
+        Parameters
+        ----------
+        name : str
+            Name of the source.
+
+        Returns
+        -------
+        int
+            Current step for the given source.
+        """
+
+        if self._sync_steps:
+            if name in self._current_values:
+                self._step += 1
+                self._current_values.clear()
+
+            self._current_values.add(name)
+            step = self._step
+        else:
+            step = self._steps[name] + 1
+
+        self._steps[name] = step
+        return step

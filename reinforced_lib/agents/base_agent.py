@@ -110,7 +110,7 @@ class BaseAgent(ABC):
             if args is None:
                 raise UnimplementedSpaceError()
             elif is_dict(args):
-                return args | {value_name: value}
+                return {value_name: value} | args
             elif is_array(args):
                 return [value] + list(args)
             else:
