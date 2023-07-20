@@ -25,7 +25,7 @@ class Exp3State(AgentState):
 class Exp3(BaseAgent):
     r"""
     Basic Exp3 agent for stationary multi-armed bandit problems with exploration factor :math:`\gamma`. The higher
-    the value, the more the agent explores. The implementation is inspired by the work of Auer et al. [7]_. There
+    the value, the more the agent explores. The implementation is inspired by the work of Auer et al. [6]_. There
     are many variants of the Exp3 algorithm, you can find more information in the original paper.
 
     Parameters
@@ -41,8 +41,8 @@ class Exp3(BaseAgent):
 
     References
     ----------
-    .. [7] Auer, P., Cesa-Bianchi, N., Freund, Y., & Schapire, R. E. (2002). The Nonstochastic Multiarmed
-       Bandit Problem. SIAM Journal on Computing, 32(1), 48–77. doi:10.1137/S0097539701398375
+    .. [6] Peter Auer, Nicolò Cesa-Bianchi, Yoav Freund, and Robert E. Schapire. 2002. The Nonstochastic Multiarmed
+       Bandit Problem. SIAM Journal on Computing, 32(1), 48–77.
     """
 
     def __init__(

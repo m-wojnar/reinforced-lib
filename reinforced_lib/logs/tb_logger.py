@@ -10,6 +10,9 @@ from reinforced_lib.logs import BaseLogger, Source
 class TensorboardLogger(BaseLogger):
     """
     Logger that saves values in TensorBoard [2]_ format. Offers a possibility to log to Comet [3]_.
+    ``TensorboardLogger`` synchronizes the logged values in time. This means that if the same source
+    is logged less often than other sources, the step will be increased accordingly to maintain the
+    appropriate spacing between the values on the x-axis.
 
     Parameters
     ----------

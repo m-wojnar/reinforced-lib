@@ -18,7 +18,7 @@ Source = Union[tuple[str, SourceType], str, None]
 
 class BaseLogger(ABC):
     """
-    Container for functions of a logger. Provides a simple interface for defining custom loggers.
+    Base interface for loggers.
     """
 
     def __init__(self, **kwargs):
@@ -26,7 +26,7 @@ class BaseLogger(ABC):
 
     def init(self, sources: list[Source]) -> None:
         """
-        Initializes the logger given the list of all sources.
+        Initializes the logger given the list of all sources defined by the user.
 
         Parameters
         ----------
@@ -38,7 +38,7 @@ class BaseLogger(ABC):
 
     def finish(self) -> None:
         """
-        Finalizes the loggers work, for example, saves data or shows plots.
+        Finalizes the loggers work (e.g., closes file or shows plots).
         """
 
         pass
@@ -61,7 +61,7 @@ class BaseLogger(ABC):
 
     def log_array(self, source: Source, value: Array, custom: bool) -> None:
         """
-        Method of the logger interface used for logging arrays.
+        Method of the logger interface used for logging one-dimensional arrays.
 
         Parameters
         ----------
@@ -110,7 +110,7 @@ class BaseLogger(ABC):
     @staticmethod
     def source_to_name(source: Source) -> str:
         """
-        Converts the source to a string. If source is a string itself, it returns that string.
+        Returns a full name of the source. If source is a string itself, returns that string.
         Otherwise, it returns a string in the format "name-sourcetype" (e.g., "action-metric").
 
         Parameters

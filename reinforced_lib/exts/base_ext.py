@@ -12,8 +12,8 @@ from reinforced_lib.utils.exceptions import IncorrectSpaceError, IncompatibleSpa
 class BaseExt(ABC):
     """
     Container for domain-specific knowledge and functions for a given environment. Provides the transformation
-    from the observation functions and the observation space to the agent update and sample spaces. Stores the
-    default argument values for agent initialization.
+    from the raw observations to the agent update and sample spaces. Stores the default argument values for
+    agent initialization.
     """
 
     def __init__(self) -> None:
@@ -47,9 +47,8 @@ class BaseExt(ABC):
             user_parameters: dict[str, any] = None
     ) -> dict[str, any]:
         """
-        Composes agent initialization parameters from parameters passed by the user and default values
-        defined in the parameter functions. Returns a dictionary with the parameters fitting the agent
-        parameters space.
+        Composes agent initialization arguments from values passed by the user and default values stored in the
+        parameter functions. Returns a dictionary with the parameters matching the agent parameters space.
 
         Parameters
         ----------
@@ -104,8 +103,8 @@ class BaseExt(ABC):
             agent_sample_space: gym.spaces.Space = None
     ) -> None:
         """
-        Create functions that transform environment observations and values provided by the observation functions
-        to the agent update and sample space.
+        Creates functions that transform raw observations and values provided by the observation functions
+        to the agent update and sample spaces.
 
         Parameters
         ----------
@@ -372,16 +371,15 @@ class BaseExt(ABC):
 
     def transform(self, *args, action: any = None, **kwargs) -> tuple[any, any]:
         """
-        Transforms environment observations and values provided by the observation functions to
-        the agent observation and sample spaces. Supplies action selected by the agent if it is
-        required by the agent and the extension is not capable of providing this value.
+        Transforms raw observations and values provided by the observation functions to the agent observation
+        and sample spaces. Provides the last action selected by the agent if it is required by the agent.
 
         Parameters
         ----------
         *args : tuple
             Environment observations.
         action : any
-            Action selected by the agent.
+            The last action selected by the agent.
         **kwargs : dict
             Environment observations.
 

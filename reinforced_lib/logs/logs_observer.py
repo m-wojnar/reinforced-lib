@@ -10,7 +10,7 @@ from reinforced_lib.utils import is_scalar, is_array, is_dict
 class LogsObserver:
     """
     Class responsible for managing singleton instances of the loggers, initialization and finalization
-    of the loggers, and passing the logged values to the appropriate loggers and methods.
+    of the loggers, and passing the logged values to the appropriate loggers and their methods.
     """
 
     def __init__(self) -> None:
@@ -123,7 +123,7 @@ class LogsObserver:
 
     def update_custom(self, value: any, name: str) -> None:
         """
-        Passes custom values to loggers.
+        Passes values provided by the user to the loggers.
 
         Parameters
         ----------
