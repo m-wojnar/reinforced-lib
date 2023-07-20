@@ -63,12 +63,9 @@ class RLib:
         Parameters of the selected loggers.
     no_ext_mode : bool, default=False
         Pass observations directly to the agent (do not use the extensions).
-    save_directory : str, optional
-        Path to a user specified directory where the ``save`` method will store the experiment checkpoints.
-        If none specified, uses the home directory.
     auto_checkpoint : int, optional
-        Automatically saves the experiment every ``auto_checkpoint`` steps. If ``None``, the automatic checkpointing is
-        disabled.
+        Automatically save the experiment every ``auto_checkpoint`` steps.
+        If ``None``, the automatic checkpointing is disabled.
     """
 
     def __init__(
@@ -81,11 +78,10 @@ class RLib:
             logger_sources: Union[Source, list[Source]] = None,
             logger_params: dict[str, any] = None,
             no_ext_mode: bool = False,
-            save_directory: str = None,
             auto_checkpoint: int = None
     ) -> None:
         self._lz4_ext = ".pkl.lz4"
-        self._save_directory = save_directory if save_directory else os.path.expanduser("~")
+        self._default_path = os.path.expanduser("~")
         self._auto_checkpoint = auto_checkpoint
 
         self._agent = None
@@ -131,7 +127,7 @@ class RLib:
     def set_agent(self, agent_type: type, agent_params: dict = None) -> None:
         """
         Initializes an agent of type ``agent_type`` with parameters ``agent_params``. The agent type must inherit from
-        the ``BaseAgent class``. The agent type cannot be changed after the first agent instance has been initialized.
+        the ``BaseAgent`` class. The agent type cannot be changed after the first agent instance has been initialized.
 
         Parameters
         ----------
@@ -199,30 +195,30 @@ class RLib:
     def set_loggers(
             self,
             logger_types: Union[type, list[type]],
-            logger_sources: Union[Source, list[Source]],
+            logger_sources: Union[Source, list[Source]] = None,
             logger_params: dict[str, any] = None
     ) -> None:
         """
-        Initializes loggers that log observations from the environment, agents state, or training metrics.
-        ``logger_types`` and ``logger_sources`` arguments can be objects of appropriate types or lists
-        of objects. If the user passes two objects or lists of the same lengths, the function initializes the modules
-        with the corresponding types and names. If the user passes one object (or list with only one object)
-        and a list with multiple objects, the function broadcasts the passed objects. The ``logger_sources`` items
-        can be names of the logger sources (e.g., "action") or tuples containing the name and the ``SourceType``
-        (e.g., ``("action", SourceType.OBSERVATION)``). If the name itself is inconclusive, the behaviour depends
+        Initializes loggers of types ``logger_types`` with parameters ``logger_params``. The logger types must inherit
+        from the ``BaseLogger`` class. The logger types cannot be changed after the first agent instance has been
+        initialized. ``logger_types`` and ``logger_sources`` can be objects or lists of objects, the function broadcasts
+        them to the same length. The ``logger_sources`` parameter specifies the sources to log. A source can be None
+        (then the logger is used to log a custom values passed by the ``log`` method), a name of the sources (e.g.,
+        "action") or tuple containing the name and the ``SourceType`` (e.g., ``("action", SourceType.OBSERVATION)``).
+        If the name itself is inconclusive (e.g., it occurs as a metric and as an observation), the behaviour depends
         on the implementation of the logger.
 
         Parameters
         ----------
         logger_types : type or list[type]
             Types of the selected logging modules.
-        logger_sources : Source or list[Source]
+        logger_sources : Source or list[Source], optional
             Sources to log.
         logger_params : dict, optional
             Parameters of the selected logging modules.
         """
 
-        if len(self._agent_containers) > 0:
+        if not self._init_loggers:
             raise ForbiddenLoggerSetError()
 
         self._logger_types = logger_types
@@ -402,7 +398,7 @@ class RLib:
                 state = self._agent.update(state, update_key, update_observations)
 
             if self._auto_checkpoint is not None and (step + 1) % self._auto_checkpoint == 0:
-                self.save(agent_id, f'rlib-checkpoint-agent-{agent_id}-step-{step + 1}')
+                self.save(f'rlib-checkpoint-agent-{agent_id}-step-{step + 1}', agent_ids=agent_id)
 
         if isinstance(sample_observations, dict):
             action = self._agent.sample(state, sample_key, **sample_observations)
@@ -439,18 +435,18 @@ class RLib:
 
         return action
 
-    def save(self, agent_ids: Union[int, list[int]] = None, path: str = None) -> str:
+    def save(self, path: str = None, *, agent_ids: Union[int, list[int]] = None) -> str:
         """
         Saves the state of the experiment to a file in lz4 format. For each agent, both the state and the initialization
         parameters are saved. The extension and loggers settings are saved as well to fully reconstruct the experiment.
 
         Parameters
         ----------
+        path : str, optional
+            Path to the checkpoint file. If none specified, saves to the default path.
+            If the ``.pkl.lz4`` suffix is not detected, it will be appended automatically.
         agent_ids : int or array_like, optional
             The identifier of the agent instance(s) to save. If none specified, saves the state of all agents.
-        path : str, optional
-            Path to the checkpoint file. If none specified, saves to the path specified by ``save_directory``.
-            If the ``.pkl.lz4`` suffix is not detected, it will be appended automatically.
         
         Returns
         -------
@@ -466,7 +462,7 @@ class RLib:
         agent_containers = [self._agent_containers[agent_id] for agent_id in agent_ids]
 
         if path is None:
-            path = os.path.join(self._save_directory, f"rlib-checkpoint-{timestamp()}.pkl.lz4")
+            path = os.path.join(self._default_path, f"rlib-checkpoint-{timestamp()}.pkl.lz4")
         elif path[-8:] != self._lz4_ext:
             path = path + self._lz4_ext
 
@@ -474,33 +470,35 @@ class RLib:
             "agent_type": self._agent_type,
             "agent_params": self._agent_params,
             "agents": {
-                id: {
+                agent_id: {
                     "state": agent.state,
                     "key": agent.key,
                     "action": agent.action,
                     "step": agent.step
-                } for id, agent in zip(agent_ids, agent_containers)
+                } for agent_id, agent in zip(agent_ids, agent_containers)
             },
             "ext_type": self._ext_type,
             "ext_params": self._ext_params,
             "logger_types": self._logger_types,
             "logger_sources": self._logger_sources,
             "logger_params": self._logger_params,
-            "save_directory": self._save_directory,
             "auto_checkpoint": self._auto_checkpoint
         }
 
         with lz4.frame.open(path, 'wb') as f:
             f.write(cloudpickle.dumps(experiment_state))
-        
+
         return path
-    
+
     @staticmethod
     def load(
-        path: str,
-        agent_params: dict[str, any] = None,
-        ext_params: dict[str, any] = None,
-        restore_loggers: bool = True
+            path: str,
+            *,
+            agent_params: dict[str, any] = None,
+            ext_params: dict[str, any] = None,
+            logger_types: Union[type, list[type]] = None,
+            logger_sources: Union[Source, list[Source]] = None,
+            logger_params: dict[str, any] = None
     ) -> RLib:
         """
         Loads the state of the experiment from a file in lz4 format.
@@ -513,39 +511,45 @@ class RLib:
             Dictionary of altered agent parameters with their new values, by default None.
         ext_params : dict[str, any], optional
             Dictionary of altered extension parameters with their new values, by default None.
-        restore_loggers : bool, default=True
-            Flag indicating if the method should restore logger settings.
+        logger_types : type or list[type], optional
+            Types of the selected logging modules. Must inherit from the ``BaseLogger`` class.
+        logger_sources : Source or list[Source], optional
+            Sources to log.
+        logger_params : dict, optional
+            Parameters of the selected loggers.
         """
-        
+
         with lz4.frame.open(path, 'rb') as f:
             experiment_state = pickle.loads(f.read())
-        
+
         rlib = RLib(
-            save_directory=experiment_state["save_directory"],
             auto_checkpoint=experiment_state["auto_checkpoint"],
             no_ext_mode=experiment_state["ext_type"] is None
         )
-        
+
         rlib._agent_containers = []
 
-        if experiment_state["ext_type"] is not None:
+        if experiment_state["ext_type"]:
             if ext_params:
                 rlib.set_ext(experiment_state["ext_type"], ext_params)
             else:
                 rlib.set_ext(experiment_state["ext_type"], experiment_state["ext_params"])
-        
-        if agent_params:
-            rlib.set_agent(experiment_state["agent_type"], agent_params)
-        else:
-            rlib.set_agent(experiment_state["agent_type"], experiment_state["agent_params"])
 
-        if restore_loggers and experiment_state["logger_types"]:
+        if experiment_state["agent_type"]:
+            if agent_params:
+                rlib.set_agent(experiment_state["agent_type"], agent_params)
+            else:
+                rlib.set_agent(experiment_state["agent_type"], experiment_state["agent_params"])
+
+        if logger_types:
+            rlib.set_loggers(logger_types, logger_sources, logger_params)
+        elif experiment_state["logger_types"]:
             rlib.set_loggers(
                 experiment_state["logger_types"],
                 experiment_state["logger_sources"],
-                experiment_state["logger_params"]
+                logger_params if logger_params else experiment_state["logger_params"]
             )
-        
+
         for agent_id, agent_container in experiment_state["agents"].items():
             while agent_id >= len(rlib._agent_containers):
                 rlib.init()
@@ -561,7 +565,7 @@ class RLib:
 
     def log(self, name: str, value: any) -> None:
         """
-        Logs a custom value to the experiment's loggers.
+        Logs a custom value.
 
         Parameters
         ----------
@@ -573,7 +577,7 @@ class RLib:
 
         self._logs_observer.update_custom(value, name)
 
-    def to_tflite(self, path: str = None, agent_id: int = None, sample_only: bool = False) -> None:
+    def to_tflite(self, path: str = None, *, agent_id: int = None, sample_only: bool = False) -> None:
         """
         Converts the agent to a TensorFlow Lite model and saves it to a file.
 
@@ -598,7 +602,7 @@ class RLib:
             raise ValueError("Agent ID must be specified when saving sample function only.")
 
         if path is None:
-            path = self._save_directory
+            path = self._default_path
 
         if agent_id is None:
             init_tfl, update_tfl, sample_tfl = self._agent.export(
