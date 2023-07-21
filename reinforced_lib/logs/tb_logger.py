@@ -20,6 +20,8 @@ class TensorboardLogger(BaseLogger):
         Path to the output directory. If None, the default directory is used.
     tb_comet_config : dict, optional
         Configuration for the Comet logger. If None, the logger is disabled.
+    tb_sync_steps : bool, default=False
+        Set to ``True`` if you want to synchronize the logged values in time.
 
     References
     ----------

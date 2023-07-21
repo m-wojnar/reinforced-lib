@@ -280,8 +280,8 @@ to create your own agent.
             )
 
 
-Deep reinforcement learning agents
-----------------------------------
+Deep learning agents
+--------------------
 
 Although the above example is a simple one, it is not hard to extend it to deep reinforcement learning (DRL) agents.
 This can be achieved by leveraging the JAX ecosystem, along with the `haiku <https://dm-haiku.readthedocs.io/>`_
@@ -398,5 +398,4 @@ To sum everything up one more time:
 #. Utilizing ``jax.jit`` can significantly increase the agent's performance.
 #. Although not mandatory, it is highly recommended to implement the ``parameter_space``, ``update_observation_space``,
    and ``sample_observation_space`` properties.
-#. Implementing a custom deep reinforcement learning agent is possible using the JAX ecosystem and utility functions
-   provided by the library.
+#. Implementing a custom DRL agent is possible using the JAX ecosystem and utility functions provided by the library.

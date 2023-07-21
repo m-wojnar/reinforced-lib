@@ -27,6 +27,8 @@ class PlotsLogger(BaseLogger):
     plots_scatter : bool, default=False
         Set to ``True`` if you want to generate a scatter plot instead of a line plot.
         ``plots_smoothing`` parameter does not apply to the scatter plots.
+    plots_sync_steps : bool, default=False
+        Set to ``True`` if you want to synchronize the logged values in time.
 
     References
     ----------
@@ -105,7 +107,7 @@ class PlotsLogger(BaseLogger):
             
             plt.title(name)
             plt.xlabel('step')
-            plt.savefig(os.path.join(self._dir, filename), bbox_inches='tight')
+            plt.savefig(os.path.join(self._dir, filename), bbox_inches='tight', dpi=300)
             plt.show()
 
     def log_scalar(self, source: Source, value: Scalar, *_) -> None:
