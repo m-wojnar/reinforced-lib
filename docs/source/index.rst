@@ -9,87 +9,44 @@
 Welcome to Reinforced-lib's documentation!
 ==========================================
 
-**Reinforced-lib** is a Python library designed to support research and prototyping using reinforcement learning
-(RL) algorithms. The library can serve as a simple solution with ready to use RL workflows as well as
-an expandable framework with programmable behaviour. Thanks to the functional implementation of the library's core,
-we can provide full access to JAX's JIT functionality, which boosts the agent's performance significantly.
+.. image:: https://img.shields.io/pypi/v/reinforced-lib
+    :target: https://pypi.org/project/reinforced-lib/
 
-.. code-block:: python
+.. image:: https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg
+    :target: https://opensource.org/licenses/MPL-2.0
 
-   from reinforced_lib import RLib
-   from reinforced_lib.agents.mab import ThompsonSampling
-   from reinforced_lib.exts.wifi import IEEE_802_11_ax_RA
+**Introducing Reinforced-lib:** a lightweight Python library for rapid development of RL solutions. This open-source framework prioritizes ease of use, provides comprehensive documentation, and offers both deep reinforcement learning (DRL) and classic non-neural agents. Built on `JAX <https://jax.readthedocs.io/en/latest/>`_, it facilitates exporting trained models to embedded devices, supporting research, and prototyping with RL algorithms while ensuring high-performance through functional implementation and access to JAX's JIT functionality.
 
-   import gymnasium as gym
+Key components
+--------------
 
+Reinforced-lib facilitates seamless interaction between RL agents and the environment. Here are the key components within of the library, represented in the API as different modules.
 
-   rlib = RLib(
-      agent_type=ThompsonSampling,
-      ext_type=IEEE_802_11_ax_RA
-   )
+* **Agents** -- Choose from a variety of RL agents available in the Agents module. These agents are designed to be versatile and work with any environment. If needed, you can even create your own agents using our documented recipes.
 
-   env = gym.make('WifiSimulator-v1')
-   env_state, _ = env.reset()
+* **Extensions** -- Enhance agent observations with domain-specific knowledge by adding a suitable extension from the Extensions module. This step enables seamless agent switching and parameter tuning without extensive reconfiguration.
 
-   terminal = False
-   while not terminal:
-      action = rlib.sample(**env_state)
-      env_state, reward, terminal, *_ = env.step(action)
+* **RLib** -- The core module, RLib, provides a simple and intuitive interface to manage agents, use extensions, and configure the logging system. Even if you're not an RL expert, RLib makes it easy to implement the agent-environment interaction loop.
 
+* **Logging** -- The Logging module allows you to monitor agent-environment interactions. Customize and adapt logging to your specific needs, capturing training metrics, internal agent state, or environment status. The library includes various loggers for creating plots and output files, simplifying visualization and data processing.
 
-Integrated IEEE 802.11ax support
---------------------------------
+With a modular design and easy data flow between components, Reinforced-lib ensures quick and effortless replacement or parameter adjustments. The figure below provides a visual representation of Reinforced-lib and the data-flow between its modules.
 
-The library's design is highly influenced by the desire to support research in Wi-Fi. It can be a tool for
-researchers to optimize Wi-Fi protocols with built-in RL algorithms and provided the IEEE 802.11ax environment
-extension.
+.. image:: ../resources/data-flow.png
+    :width: 450
+    :align: center
+    :alt: Reinforced-lib architecture and data flow schema
 
-Modular architecture
---------------------
+Edge Device Export
+------------------
 
-**Reinforced-lib** can be well characterized by its modular architecture which makes the library flexible, universal,
-and easy-to-use. Its key parts are placed in separate modules and connected in a standardized way to provide versatility
-and the possibility to extend individual modules in the future. Nevertheless, Reinforced-lib is a single piece of software
-that can be easily used, thanks to the topmost module, which ensures a simple and common interface for all agents.
-
-.. image:: ../resources/architecture.jpg
-    :width: 500
-    :alt: Reinforced-lib architecture schema
-
-The API module
-~~~~~~~~~~~~~~
-
-The API module is the top layer of the library; it exposes a simple and intuitive interface that makes the library easy
-to use. There are several important methods, one of them is responsible for creating a new agent. Another takes the
-observations from the environment as input, updates the state of the agent, and returns the next action proposed by the agent.
-The last two methods are used to persist the state of the agent by storing it in memory.
-
-The extensions module
-~~~~~~~~~~~~~~~~~~~~~
-
-The extensions module consists of containers with domain-specific knowledge and ensures the proper use of universal agents
-implemented in **Reinforced-lib**. If a specific problem is implemented in the form of an extension, the module infers and
-provides the appropriate data to the agent, and at the same time requires adequate, corresponding values from the user.
-
-The agents module
-~~~~~~~~~~~~~~~~~
-
-The agents module is a collection of universal algorithms, which are called "agents" in the RL community. Each agent has
-a similar API to communicate with the Extensions module, which ensures its versatility and expandability. In this release
-of **Reinforced-lib**, we focus on the `multi-armed bandit problem <https://en.wikipedia.org/wiki/Multi-armed_bandit>`_,
-hence the implemented agents are related to this task.
-
-The logging module
-~~~~~~~~~~~~~~~~~~
-
-The logging module is responsible for collecting data from other modules and observing their state in real time.
-It also has great potential in using the library to create new RL agents - it can be used to develop, evaluate,
-and debug new agents by observing decisions they make; record and visualize how environment state changes in time;
-or provide a simple way to obtain a training summary, metrics, and logs.
+Reinforced-lib is designed to work seamlessly on wireless, low-powered devices, where resources are limited. It's the perfect solution for energy-constrained environments that may struggle with other ML frameworks. You can export your trained models to `TensorFlow Lite <https://www.tensorflow.org/lite>`_ with ease, reducing runtime overhead and optimizing performance through quantization and fixed-point arithmetic. This means you can deploy RL agents on resource-limited devices efficiently.
 
 
 Table of Contents
 -----------------
+
+Explore the power of Reinforced-lib with our easy-to-follow guides and practical examples in the documentation. Unleash the potential of Reinforcement Learning for wireless networks and discover exciting possibilities for your projects. Happy reading!
 
 Guides
 ~~~~~~
