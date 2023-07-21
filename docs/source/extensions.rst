@@ -1,9 +1,9 @@
 .. _extensions_page:
 
-Environment extensions
-======================
+Extensions
+==========
 
-This module is a set of environment extensions. You can either choose one of our built-in extensions or implement
+This module is a set of extensions. You can either choose one of our built-in extensions or implement
 your extension with the help of the :ref:`Custom extensions` guide.
 
 

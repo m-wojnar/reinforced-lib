@@ -3,7 +3,7 @@
 Custom extensions
 =================
 
-The environment extension is our functionality that allows an agent to infer latent observations that are
+The extensions is a unique functionality that allows a library to infer missing observations that are
 not originally supported by the environment. You can either choose one of our built-in extensions or
 implement your own with the help of this short guide.
 
@@ -14,100 +14,117 @@ Key concepts
 There are three main benefits of using extensions:
 
 #. Automatic initialization of agents - an extension can provide default arguments that can be used to
-   initialize an agent. For example, if we would like to create the Particle Filter (Wi-Fi)
-   without using any extension, we would probably do it in the
-   following way:
+   initialize an agent. For example, if we would like to train the :ref:`deep Double Q-learning agent
+   <Deep Double Q-Learning (DQN)>` on a `cart-pole` environment without using any extension, we would
+   probably do it in the following way:
 
    .. code-block:: python
 
-       rl = rfl.RLib(
-           agent_type=ParticleFilter,
+       rl = RLib(
+           agent_type=QLearning,
            agent_params={
-               'default_power': 16.0206
-           }
+               'q_network': q_network,
+               'obs_space_shape': (4,),
+               'act_space_size': 2
+           },
+           no_ext_mode=True
        )
 
-   On the other hand, if we decide to use the IEEE 802.11ax RA extension,
-   this parameters can be automatically provided by the extension:
+   On the other hand, if we decide to use the :ref:`Gymnasium extension <Gymnasium>`,
+   some of the parameters can be automatically provided by the extension:
 
    .. code-block:: python
 
-       rl = rfl.RLib(
-           agent_type=ParticleFilter,
-           ext_type=IEEE_802_11_ax_RA
+       rl = RLib(
+           agent_type=QLearning,
+           agent_params={'q_network': q_network}
+           ext_type=Gymnasium,
+           ext_params={'env_id': 'CartPole-v1'},
        )
 
    We can also overwrite all or only part of the default values provided by the extension:
 
    .. code-block:: python
 
-       rl = rfl.RLib(
-           agent_type=ParticleFilter,
+       rl = RLib(
+           agent_type=QLearning,
            agent_params={
-               'default_power': 16.0206
-           }
-           ext_type=IEEE_802_11_ax_RA,
+               'q_network': q_network,
+               'act_space_size': 3
+           },
+           ext_type=Gymnasium,
+           ext_params={'env_id': 'CartPole-v1'},
        )
 
 #. Simplification of parameter passing - extensions allow automatic matching observations returned by the environment
-   to the appropriate methods of the agent. The code snippet below shows the use of the library to select the next
-   action without using any extension:
+   to the appropriate methods of the agent. The code snippet below shows the agent and environment interaction loop
+   without using any extension:
 
    .. code-block:: python
 
-       action = rl.sample(
-           update_observations={
-               'action': action,
-               'n_successful': ns,
-               'n_failed': nf,
-               'time': t,
-               'power': p,
-               'cw': cw
-           },
-           sample_observations={
-               'time': t,
-               'power': p,
-               'rates': rates
-           }
-       )
+    while not terminal:
+        env_state, reward, terminal, truncated, info = env.step(action.item())
+
+        action = rl.sample(
+            update_observations={
+                'env_state': env_state,
+                'action': action,
+                'reward': reward,
+                'terminal': terminal
+            },
+            sample_observations={
+                'env_state': env_state
+            }
+        )
 
    The following code is equivalent to the above but makes use of the properly defined
-   IEEE 802.11ax RA extension:
+   :ref:`Gymnasium extension <Gymnasium>`:
 
    .. code-block:: python
 
-       action = rl.sample(**observations)
+    while not env_state[2]:
+        env_state = env.step(action.item())
+        action = rl.sample(*env_state)
 
 #. Filling missing parameters - some parameters required by the agent can be filled with known values or
-   calculated based on a set of basic observations. For example, a ``sample`` method of the
-   Particle Filter (Wi-Fi) requires transmission data rates for each MCS. These values can be found in
-   the IEEE 802.11ax standard documentation. Below is a sample code that could be used to sample the next action from
-   the agent without using any extension:
+   calculated based on a set of basic observations. For example, a ``sample`` method of the :ref:`Thompson
+   sampling <Thompson sampling>` agent requires a context vector. As it is a domain specific knowledge,
+   these values can be found in the appropriate extension. Below is a sample code that could be used to sample
+   the next action in the IEEE 802.11ax rate adaptation problem without using any extension:
 
    .. code-block:: python
 
+        rl = RLib(
+            agent_type=ThompsonSampling,
+            agent_params={'n_arms': 12},
+            no_ext_mode=True
+        )
+
        observations = {
-           'time': 1.8232,
-           'action': 11,
+           'delta_time': 0.18232,
            'n_successful': 10,
            'n_failed': 0,
-           'power': 16.0206,
-           'cw': 15,
-           'rates': jnp.array([7.3, 14.6, 21.9, 29.3, 43.9, 58.5, 65.8, 73.1, 87.8, 97.5, 109.7, 121.9])
+           'context': np.array(
+               [7.3, 14.6, 21.9, 29.3, 43.9, 58.5,
+               65.8, 73.1, 87.8, 97.5, 109.7, 121.9]
+           )
        }
        action = rl.sample(**observations)
 
-   If we use the IEEE 802.11ax RA extension, part of these parameters can be
-   provided by the extension:
+   If we use the `IEEE 802.11ax RA extension <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/ns-3-ra/ext.py>`_,
+   part of these parameters can be provided by the extension:
 
    .. code-block:: python
 
+        rl = RLib(
+            agent_type=ThompsonSampling,
+            ext_type=IEEE_802_11_ax_RA
+        )
+
        observations = {
-           'time': 1.8232,
+           'delta_time': 0.18232,
            'n_successful': 10,
-           'n_failed': 0,
-           'power': 16.0206,
-           'cw': 15
+           'n_failed': 0
        }
        action = rl.sample(**observations)
 
@@ -116,25 +133,25 @@ There are three main benefits of using extensions:
    .. code-block:: python
 
        observations = {
-           'time': 1.8232,
+           'delta_time': 0.18232,
            'n_successful': 10,
            'n_failed': 0,
-           'power': 16.0206,
-           'cw': 15,
-           'rates': jnp.array([1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12.])
+           'context': jnp.array([1., 2., 3., 4., 5., 6., 7., 8., 9., 10., 11., 12.])
        }
        action = rl.sample(**observations)
 
-Default values or functions that calculate missing parameters can be defined using *observation functions*
-and *parameter functions*. These functions are decorated with the ``@observation`` and ``@parameter`` decorators
-accordingly. A more detailed description of this decorator can be found in :ref:`the section below <Customizing extensions>`.
+You can define default values as initialization arguments for agents through parameter functions. Additionally,
+default values or functions to calculate missing observations can be defined using observation functions. To designate
+these functions correctly, they are decorated with the ``@observation`` and ``@parameter`` decorators respectively.
+A more detailed description of this decorator can be found in :ref:`the section below <Customizing extensions>`.
 
 
 Customizing extensions
 ----------------------
 
 To create your own extension, you should inherit from the :ref:`abstract class <BaseExt>` ``BaseExt``. We
-present adding a custom extension using an example of the IEEE 802.11ax RA extension.
+present adding a custom extension using an example of the extension used in the
+`IEEE 802.11ax rate adaptation <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/ns-3-ra/ext.py>`_, problem.
 
 .. code-block:: python
 
