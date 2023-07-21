@@ -128,9 +128,9 @@ Having defined these static methods, we can implement the class constructor:
 
 Now we specify the initialization arguments of our agent (i.e., the parameters that are required by the
 agent's constructor). This is done by implementing the static method ``parameter_space()`` which returns
-a dictionary in the format of a `Gymnasium <https://gymnasium.farama.org/>`_ space. It is not required
-to implement this method, but it is a good practice to do so. This enables the library to automatically
-provide initialization arguments specified by :ref:`extensions <Environment extensions>`.
+a dictionary in the format of a `Gymnasium <https://gymnasium.farama.org/>`_ (former OpenAI Gym) space.
+It is not required to implement this method, but it is a good practice to do so. This enables the library to automatically
+provide initialization arguments specified by :ref:`extensions <Extensions>`.
 
 .. code-block:: python
 
@@ -157,7 +157,7 @@ the agent's action space through the ``action_space`` method of the ``RLib`` cla
 Finally, we define the observation spaces for our agent by implementing the properties called
 ``update_observation_space`` and ``sample_observation_space``. Although not mandatory, we strongly
 encourage their implementation as it allows the library to deduce absent values from raw observations
-and functions defined in the :ref:`extensions <Environment extensions>`. Moreover, having these properties
+and functions defined in the :ref:`extensions <Extensions>`. Moreover, having these properties
 implemented facilitates a seamless export of the agent to the TensorFlow Lite format, where
 the library can automatically generate an example set of parameters during the export procedure.
 
@@ -392,11 +392,11 @@ Summary
 
 To sum everything up one more time:
 
-1. All agents inherit from the ``BaseAgent`` class.
-2. The agent's state is defined as a dataclass that inherits from the ``AgentState`` class.
-3. The agent's behavior is determined by implementing the static methods ``init``, ``update``, and ``sample``.
-4. Utilizing ``jax.jit`` can significantly increase the agent's performance.
-5. Although not mandatory, it is highly recommended to implement the ``parameter_space``, ``update_observation_space``,
+#. All agents inherit from the ``BaseAgent`` class.
+#. The agent's state is defined as a dataclass that inherits from the ``AgentState`` class.
+#. The agent's behavior is determined by implementing the static methods ``init``, ``update``, and ``sample``.
+#. Utilizing ``jax.jit`` can significantly increase the agent's performance.
+#. Although not mandatory, it is highly recommended to implement the ``parameter_space``, ``update_observation_space``,
    and ``sample_observation_space`` properties.
-6. Implementing a custom deep reinforcement learning agent is possible using the JAX ecosystem and utility functions
+#. Implementing a custom deep reinforcement learning agent is possible using the JAX ecosystem and utility functions
    provided by the library.
