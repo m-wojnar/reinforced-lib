@@ -215,5 +215,5 @@ parameter (responsible for the 'memory' of the Thompson sampling agent).
 
 We can change as many parameters we want. The provided example is constrained only to the agent's
 parameter alteration, but you can modify the extension's parameters in the same way. You can even control the
-the logger's behaviour with the flag ``restore_loggers`` (more on loggers in the :ref:`Logging module <The logging module>`
+the logger's behaviour with the flag ``restore_loggers`` (more on loggers in the :ref:`Logging module <logging_page>`
 section).
