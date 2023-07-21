@@ -46,9 +46,9 @@ class TestRLibSerialization(unittest.TestCase):
                 save_path = rl.save()
 
                 if new_decay:
-                    rl = RLib.load(save_path, agent_params={'n_arms': len(self.arms_probs), 'e': 0.5}, restore_loggers=False)
+                    rl = RLib.load(save_path, agent_params={'n_arms': len(self.arms_probs), 'e': 0.5})
                 else:
-                    rl = RLib.load(save_path, restore_loggers=False)
+                    rl = RLib.load(save_path)
                 reloaded = True
         
         return actions

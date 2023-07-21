@@ -44,7 +44,7 @@ class BaseAgent(ABC):
     @abstractmethod
     def sample(state: AgentState, key: PRNGKey, *args, **kwargs) -> any:
         """
-        Selects the next action based on the current agent state.
+        Selects the next action based on the current environment and agent state.
         """
 
         pass
@@ -52,9 +52,8 @@ class BaseAgent(ABC):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         """
-        Parameter space of the agent constructor in Gymnasium format.
-        Type of returned value is required to be ``gym.spaces.Dict`` or ``None``.
-        If ``None``, the user must provide all parameters manually.
+        Parameters of the agent constructor in Gymnasium format. Type of returned value is required  to
+        be ``gym.spaces.Dict`` or ``None``. If ``None``, the user must provide all parameters manually.
         """
 
         return None
@@ -62,7 +61,8 @@ class BaseAgent(ABC):
     @property
     def update_observation_space(self) -> gym.spaces.Space:
         """
-        Observation space of the ``update`` method in Gymnasium format.
+        Observation space of the ``update`` method in Gymnasium format. Allows to infer missing
+        observations using an extensions and easily export the agent to TensorFlow Lite format.
         If ``None``, the user must provide all parameters manually.
         """
 
@@ -71,7 +71,8 @@ class BaseAgent(ABC):
     @property
     def sample_observation_space(self) -> gym.spaces.Space:
         """
-        Observation space of the ``sample`` method in Gymnasium format.
+        Observation space of the ``sample`` method in Gymnasium format. Allows to infer missing
+        observations using an extensions and easily export the agent to TensorFlow Lite format.
         If ``None``, the user must provide all parameters manually.
         """
 

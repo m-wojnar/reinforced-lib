@@ -51,7 +51,7 @@ def simple_resample(operands: tuple[ParticleFilterState, PRNGKey]) -> ParticleFi
 
 def effective_sample_size(state: ParticleFilterState, threshold: Scalar = 0.5) -> bool:
     r"""
-    Calculates the effective sample size [1]_ (ESS). If ESS is smaller than the number of sample times threshold,
+    Calculates the effective sample size [9]_ (ESS). If ESS is smaller than the number of sample times threshold,
     then a resampling is necessary.
 
     Parameters
@@ -68,7 +68,7 @@ def effective_sample_size(state: ParticleFilterState, threshold: Scalar = 0.5) -
 
     References
     ----------
-    .. [1] https://en.wikipedia.org/wiki/Effective_sample_size#Weighted_samples
+    .. [9] https://en.wikipedia.org/wiki/Effective_sample_size#Weighted_samples
     """
 
     weights = jax.nn.softmax(state.logit_weights)

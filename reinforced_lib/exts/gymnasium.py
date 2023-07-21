@@ -6,7 +6,7 @@ from reinforced_lib.exts import BaseExt, observation, parameter
 
 class Gymnasium(BaseExt):
     """
-    Gymnasium [1]_ extension. Simplifies interaction of deep RL agents with the Gymnasium environments by providing
+    Gymnasium [1]_ extension. Simplifies interaction of RL agents with the Gymnasium environments by providing
     the environment state, reward, terminal flag, and shapes of the observation and action spaces.
 
     Parameters

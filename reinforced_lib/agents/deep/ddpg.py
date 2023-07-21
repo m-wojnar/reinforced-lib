@@ -68,7 +68,7 @@ class DDPGState(AgentState):
 
 class DDPG(BaseAgent):
     r"""
-    Deep deterministic policy gradient [9]_ [10]_ agent with white Gaussian noise exploration and experience replay
+    Deep deterministic policy gradient [3]_ [4]_ agent with white Gaussian noise exploration and experience replay
     buffer. The agent simultaneously learns a Q-function and a policy. The Q-function is updated using the Bellman
     equation. The policy is learned using the gradient of the Q-function with respect to the policy parameters,
     it is trained to maximize the Q-value. The agent uses two Q-networks (critics) and two policy networks (actors)
@@ -113,10 +113,10 @@ class DDPG(BaseAgent):
 
     References
     ----------
-    .. [9] David Silver, Guy Lever, Nicolas Heess, Thomas Degris, Daan Wierstra, and Martin Riedmiller. 2014.
+    .. [3] David Silver, Guy Lever, Nicolas Heess, Thomas Degris, Daan Wierstra, and Martin Riedmiller. 2014.
        Deterministic policy gradient algorithms. In Proceedings of the 31st International Conference on International
        Conference on Machine Learning - Volume 32 (ICML'14). JMLR.org, I–387–I–395.
-    .. [10] Timothy P. Lillicrap, Jonathan J. Hunt, Alexander Pritzel, Nicolas Heess, Tom Erez, Yuval Tassa, David Silver,
+    .. [4] Timothy P. Lillicrap, Jonathan J. Hunt, Alexander Pritzel, Nicolas Heess, Tom Erez, Yuval Tassa, David Silver,
        and Daan Wierstra. 2015. Continuous control with deep reinforcement learning. CoRR abs/1509.02971.
     """
 
@@ -427,8 +427,9 @@ class DDPG(BaseAgent):
         Appends the transition to the experience replay buffer and performs ``experience_replay_steps`` steps.
         Each step consists of sampling a batch of transitions from the experience replay buffer, calculating the
         Q-network loss and the policy network loss using ``q_loss_fn`` and ``a_loss_fn`` respectively, performing
-        a gradient step on both networks, and soft updating the target networks. The noise parameter is decayed by
-        ``noise_decay``.
+        a gradient step on both networks, and soft updating the target networks.  Soft update of the parameters
+        is defined as :math:`\theta_{target} = \tau \theta + (1 - \tau) \theta_{target}`.The noise parameter is
+        decayed by ``noise_decay``.
 
         Parameters
         ----------
@@ -519,7 +520,7 @@ class DDPG(BaseAgent):
     ) -> Numeric:
         r"""
         Calculates deterministic action using the policy network. Then adds white Gaussian noise with standard
-        deviation ``state.noise`` to the action and clips it to the range ``[min_action, max_action]``.
+        deviation ``state.noise`` to the action and clips it to the range :math:`[min\_action, max\_action]`.
 
         Parameters
         ----------

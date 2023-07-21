@@ -46,9 +46,9 @@ class QLearningState(AgentState):
 
 class QLearning(BaseAgent):
     r"""
-    Deep Q-learning agent [6]_ with :math:`\epsilon`-greedy exploration and experience replay buffer. The agent uses
+    Deep Q-learning agent [1]_ with :math:`\epsilon`-greedy exploration and experience replay buffer. The agent uses
     a deep neural network to approximate the Q-value function. The Q-network is trained to minimize the Bellman
-    error. This agent follows the on-policy learning paradigm and is suitable for environments with discrete action
+    error. This agent follows the off-policy learning paradigm and is suitable for environments with discrete action
     spaces.
 
     Parameters
@@ -78,7 +78,7 @@ class QLearning(BaseAgent):
 
     References
     ----------
-    .. [6] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D. & Riedmiller, M. (2013).
+    .. [1] Mnih, V., Kavukcuoglu, K., Silver, D., Graves, A., Antonoglou, I., Wierstra, D. & Riedmiller, M. (2013).
        Playing Atari with Deep Reinforcement Learning.
     """
 

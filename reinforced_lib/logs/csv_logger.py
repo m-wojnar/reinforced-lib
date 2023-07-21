@@ -12,7 +12,9 @@ from reinforced_lib.utils import timestamp
 
 class CsvLogger(BaseLogger):
     """
-    Logger that saves values in CSV format.
+    Logger that saves values in CSV format. It saves the logged values to the CSV file when the experiment is finished.
+    ``CsvLogger`` synchronizes the logged values in time. It means that if the same source is logged twice in a row,
+    the step number will be incremented for all columns and the logger will move to the next row.
 
     Parameters
     ----------

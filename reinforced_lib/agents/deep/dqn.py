@@ -54,7 +54,7 @@ class DQNState(AgentState):
 
 class DQN(BaseAgent):
     r"""
-    Double Q-learning agent [8]_ with :math:`\epsilon`-greedy exploration and experience replay buffer. The agent
+    Double Q-learning agent [2]_ with :math:`\epsilon`-greedy exploration and experience replay buffer. The agent
     uses two Q-networks to stabilize the learning process and avoid overestimation of the Q-values. The main Q-network
     is trained to minimize the Bellman error. The target Q-network is updated with a soft update. This agent follows
     the off-policy learning paradigm and is suitable for environments with discrete action spaces.
@@ -88,7 +88,7 @@ class DQN(BaseAgent):
 
     References
     ----------
-    .. [8] van Hasselt, H., Guez, A., & Silver, D. (2016). Deep Reinforcement Learning with Double Q-Learning.
+    .. [2] van Hasselt, H., Guez, A., & Silver, D. (2016). Deep Reinforcement Learning with Double Q-Learning.
        Proceedings of the Thirtieth AAAI Conference on Artificial Intelligence, 2094–2100. Phoenix, Arizona: AAAI Press.
     """
 
@@ -312,7 +312,8 @@ class DQN(BaseAgent):
         Appends the transition to the experience replay buffer and performs ``experience_replay_steps`` steps.
         Each step consists of sampling a batch of transitions from the experience replay buffer, calculating the loss
         using the ``loss_fn`` function, performing a gradient step on the main Q-network, and soft updating the target
-        Q-network. The :math:`\epsilon`-greedy parameter is decayed by ``epsilon_decay``.
+        Q-network. Soft update of the parameters is defined as :math:`\theta_{target} = \tau \theta + (1 - \tau) \theta_{target}`.
+        The :math:`\epsilon`-greedy parameter is decayed by ``epsilon_decay``.
 
         Parameters
         ----------
