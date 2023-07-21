@@ -1,16 +1,18 @@
 # Reinforced-lib: Reinforcement learning library
 
+[![PyPI version][pypi-badge]][pypi]
+[![License: MPL 2.0][license-badge]][license]
 [![build and test][tests-badge]][github-actions]
 [![Documentation Status][rtd-badge]][documentation]
-[![PyPI version][pypi-badge]][pypi]
-[![License: MPL 2.0](https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg)](https://opensource.org/licenses/MPL-2.0)
 
+[pypi-badge]: https://img.shields.io/pypi/v/reinforced-lib
+[pypi]: https://pypi.org/project/reinforced-lib/
+[license-badge]: https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg
+[license]: https://opensource.org/licenses/MPL-2.0
 [tests-badge]: https://github.com/m-wojnar/reinforced-lib/actions/workflows/python-package.yml/badge.svg
 [github-actions]: https://github.com/m-wojnar/reinforced-lib/actions
 [rtd-badge]: https://readthedocs.org/projects/reinforced-lib/badge/?version=latest
 [documentation]: https://reinforced-lib.readthedocs.io/en/latest/
-[pypi-badge]: https://img.shields.io/pypi/v/reinforced-lib
-[pypi]: https://pypi.org/project/reinforced-lib/
 
 **Introducing Reinforced-lib:** a lightweight Python library for rapid development of RL solutions. It is open-source, 
 prioritizes ease of use, provides comprehensive documentation, and offers both deep reinforcement learning 
