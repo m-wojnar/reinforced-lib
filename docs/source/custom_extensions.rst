@@ -8,8 +8,8 @@ not originally supported by the environment. You can either choose one of our bu
 implement your own with the help of this short guide.
 
 
-Key concepts
-------------
+Key concepts of extensions
+--------------------------
 
 There are three main benefits of using extensions:
 
@@ -143,11 +143,11 @@ There are three main benefits of using extensions:
 You can define default values as initialization arguments for agents through parameter functions. Additionally,
 default values or functions to calculate missing observations can be defined using observation functions. To designate
 these functions correctly, they are decorated with the ``@observation`` and ``@parameter`` decorators respectively.
-A more detailed description of this decorator can be found in :ref:`the section below <Customizing extensions>`.
+A more detailed description of this decorator can be found in :ref:`the section below <Implementing new extensions>`.
 
 
-Customizing extensions
-----------------------
+Implementing new extensions
+---------------------------
 
 To create your own extension, you should inherit from the :ref:`abstract class <BaseExt>` ``BaseExt``. We
 present adding a custom extension using an example of the extension used in the
@@ -234,7 +234,111 @@ type in the decorator:
         else:
             return 0.0
 
-The full source code of the IEEE 802.11ax extension can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/ns-3-ra/ext.py>`_.
+
+Template extension
+------------------
+
+To simplify the process of creating new extensions, we provide an example extension that can be used as a
+starting point for creating your own extensions. The IEEE 802.11ax rate adaptation extension can be found `here <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/ns-3-ra/ext.py>`_:
+
+.. code-block:: python
+
+    import gymnasium as gym
+    import numpy as np
+
+    from reinforced_lib.exts import BaseExt, observation, parameter
+
+
+    class IEEE_802_11_ax_RA(BaseExt):
+        def __init__(self) -> None:
+            super().__init__()
+            self.last_time = 0.0
+
+        observation_space = gym.spaces.Dict({
+            'time': gym.spaces.Box(0.0, np.inf, (1,)),
+            'n_successful': gym.spaces.Box(0, np.inf, (1,), np.int32),
+            'n_failed': gym.spaces.Box(0, np.inf, (1,), np.int32),
+            'n_wifi': gym.spaces.Box(1, np.inf, (1,), np.int32),
+            'power': gym.spaces.Box(-np.inf, np.inf, (1,)),
+            'cw': gym.spaces.Discrete(32767)
+        })
+
+        _wifi_modes_rates = np.array([
+            7.3, 14.6, 21.9, 29.3, 43.9, 58.5,
+            65.8, 73.1, 87.8, 97.5, 109.7, 121.9
+        ], dtype=np.float32)
+
+        @observation(observation_type=gym.spaces.Box(0.0, np.inf, (len(_wifi_modes_rates),)))
+        def rates(self, *args, **kwargs) -> np.ndarray:
+            return self._wifi_modes_rates
+
+        @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (len(_wifi_modes_rates),)))
+        def context(self, *args, **kwargs) -> np.ndarray:
+            return self.rates()
+
+        @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+        def reward(self, action: int, n_successful: int, n_failed: int, *args, **kwargs) -> float:
+            if n_successful + n_failed > 0:
+                return self._wifi_modes_rates[action] * n_successful / (n_successful + n_failed)
+            else:
+                return 0.0
+
+        @observation(observation_type=gym.spaces.Box(0.0, np.inf, (1,)))
+        def delta_time(self, time: float, *args, **kwargs) -> float:
+            delta_time = time - self.last_time
+            self.last_time = time
+            return delta_time
+
+        @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (6,)))
+        def env_state(
+                self, time: float, n_successful: int, n_failed: int,
+                n_wifi: int, power: float, cw: int, *args, **kwargs
+        ) -> np.ndarray:
+            return np.array([self.delta_time(time), n_successful, n_failed, n_wifi, power, cw], dtype=np.float32)
+
+        @observation(observation_type=gym.spaces.MultiBinary(1))
+        def terminal(self, *args, **kwargs) -> bool:
+            return False
+
+        @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
+        def n_mcs(self) -> int:
+            return len(self._wifi_modes_rates)
+
+        @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
+        def n_arms(self) -> int:
+            return self.n_mcs()
+
+        @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+        def default_power(self) -> float:
+            return 16.0206
+
+        @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+        def min_reward(self) -> float:
+            return 0
+
+        @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+        def max_reward(self) -> int:
+            return self._wifi_modes_rates.max()
+
+        @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
+        def obs_space_shape(self) -> tuple:
+            return tuple((6,))
+
+        @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
+        def act_space_shape(self) -> tuple:
+            return tuple((1,))
+
+        @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
+        def act_space_size(self) -> int:
+            return 12
+
+        @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
+        def min_action(self) -> tuple:
+            return 0
+
+        @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
+        def max_action(self) -> tuple:
+            return 11
 
 
 Rules and limitations

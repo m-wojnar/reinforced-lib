@@ -18,7 +18,7 @@ You can install the latest version of Reinforced-lib from PyPI via:
 From source 
 ~~~~~~~~~~~
 
-To have an easy access to the example files and benefit from the integration with ns-3 (more in the :ref:`examples <ns3_connection>` section),
+To have an easy access to the `example files <https://github.com/m-wojnar/reinforced-lib/tree/main/examples>`_,
 you can clone the source code from our repository, and than install it locally with pip:
 
 .. code-block:: bash
@@ -27,7 +27,7 @@ you can clone the source code from our repository, and than install it locally w
     cd reinforced-lib
     pip install .
 
-In the spirit of making Reinforced-lib a lightweight solution, we included only the necessary dependencies in the base requirements. To fully benefit from Reinforced-lib conveniences, like TFLite export, install with the "full" suffix:
+In the spirit of making Reinforced-lib a lightweight solution, we included only the necessary dependencies in the base requirements. To fully benefit from Reinforced-lib conveniences, like TF Lite export, install with the "full" suffix:
 
 .. code-block:: bash
 

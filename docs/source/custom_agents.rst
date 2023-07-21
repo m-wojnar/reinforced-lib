@@ -10,7 +10,7 @@ add a personalised one to the collection. This guide is to help you with this ta
 Implementing new agents
 -----------------------
 
-To fully benefit from Reinforced-lib features, including JAX jit optimization, your agent
+To fully benefit from Reinforced-lib features, including JAX JIT optimization, your agent
 should inherit from the :ref:`abstract class <BaseAgent>` ``BaseAgent``. We present adding a
 custom agent on an example of a simple epsilon-greedy agent:
 
