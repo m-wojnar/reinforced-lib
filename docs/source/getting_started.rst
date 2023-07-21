@@ -18,25 +18,25 @@ You can install the latest version of Reinforced-lib from PyPI via:
 From source 
 ~~~~~~~~~~~
 
-You can clone the source code from our repository
+To have an easy access to the example files and benefit from the integration with ns-3 (more in the :ref:`examples <ns3_connection>` section),
+you can clone the source code from our repository, and than install it locally with pip:
 
 .. code-block:: bash
 
     git clone git@github.com:m-wojnar/reinforced-lib.git
-
-and install it with the pip:
-
-.. code-block:: bash
-
     cd reinforced-lib
     pip install .
 
-You can also install the development dependencies if you want to build the documentation locally:
+In the spirit of making Reinforced-lib a lightweight solution, we included only the necessary dependencies in the base requirements. To fully benefit from Reinforced-lib conveniences, like TFLite export, install with the "full" suffix:
 
 .. code-block:: bash
 
-    cd reinforced-lib
-    pip install ".[dev]"
+    pip install ".[full]"
+
+
+.. note::
+
+    Since we tested the Reinforced-lib on python 3.9, we recommend using python 3.9+.
 
 
 Basic usage
@@ -58,9 +58,7 @@ all the simplifications provided by :ref:`Reinforced-lib <reinforced-lib>`.
         ext_type=IEEE_802_11_ax_RA
     )
 
-After the necessary imports, we create an instance of :ref:`class <RLib Class>` ``Rlib``. We provide the chosen agent type and
-the appropriate extension for the problem. This extension will help the agent to infer necessary information from the
-environment. To learn more about extensions check out the :ref:`Custom extensions <custom_extensions>` section.
+After the necessary imports, we create an instance of :ref:`class <RLib Class>` ``Rlib``. We provide the chosen agent type and the appropriate extension for the problem. This extension will help the agent to infer necessary information from the environment. To learn more about extensions check out the :ref:`Custom extensions <custom_extensions>` section.
 
 .. code-block:: python
 
@@ -78,10 +76,7 @@ Next, we import Gymnasium, make an environment, and reset it to an initial state
         action = rlib.sample(**env_state)
         env_state, reward, terminal, truncated, info = env.step(action)
 
-We can now define the training loop. The boolean ``terminal`` and ``truncated`` flags control when to stop training the agent.
-Inside the loop, we call the ``rlib.sample()`` method which passes the environment observations to the agent, updates
-the agent's internal state and returns an action proposed by the agent's policy. We apply the returned action in the
-environment to get its altered state, reward, information whether this state is terminal, and some additional info.
+We can now define the training loop. The boolean ``terminal`` and ``truncated`` flags control when to stop training the agent. Inside the loop, we call the ``rlib.sample()`` method which passes the environment observations to the agent, updates the agent's internal state and returns an action proposed by the agent's policy. We apply the returned action in the environment to get its altered state, reward, information whether this state is terminal, and some additional info.
 
 Logging
 -------

@@ -1,12 +1,12 @@
-import gymnasium as gym
-gym.logger.set_level(40)
-
-import env
+from env import RecommenderSystemEnv
 from ext import RecommenderSystemExt
 
 from reinforced_lib import RLib
 from reinforced_lib.agents.mab import EGreedy
 from reinforced_lib.logs import PlotsLogger, SourceType
+
+import gymnasium as gym
+gym.logger.set_level(40)
 
 
 def run(episodes: int, seed: int) -> None:
@@ -15,7 +15,7 @@ def run(episodes: int, seed: int) -> None:
     ext = RecommenderSystemExt()
 
     # Create and reset the environment which will simulate users behavior
-    env = gym.make("RecommenderSystemEnv-v1", preferences=ext.preferences)
+    env = RecommenderSystemEnv(ext.preferences)
     _ = env.reset(seed=seed)
 
     # Wrap everything under RLib object with designated agent

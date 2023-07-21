@@ -339,24 +339,11 @@ and we can use our agents (for example the :ref:`epsilon-greedy <Epsilon-greedy>
 Environment definition
 ----------------------
 
-We recommend to define the environment class in a separate python file. After the imports section, you should register your
-new environment by assigning some id and a path of the class relative to the project root like this:
+With the convention of RL design, we recommend to define the environment class in a separate python file. After the imports section, you define the environment class with an appropriate constructor, which provides the dictionary of user preferences, the observation and action spaces.
 
 .. code-block:: python
     :linenos:
-    :lineno-start: 7
-
-    gym.envs.registration.register(
-        id='RecommenderSystemEnv-v1',
-        entry_point='examples.recommender_system.env:RecommenderSystemEnv'
-    )
-
-Then you define the environment class with an appropriate constructor, which provides the dictionary of user preferences, the observation
-and action space.
-
-.. code-block:: python
-    :linenos:
-    :lineno-start: 13
+    :lineno-start: 5
 
     class RecommenderSystemEnv(gym.Env):
 
@@ -366,13 +353,11 @@ and action space.
             self.observation_space = gym.spaces.Space()
             self._preferences = list(preferences.values())
 
-Because we inherit from the `gym.Env` class, we must provide the `reset()` and the `step()` methods at least, which are also necessary
-to make our recommender system environment work. The reset method is responsible only for seed setting. The step method
-pulls the bandit's arm and returns the reward.
+Because we inherit from the `gym.Env` class, we must provide the `reset()` and the `step()` methods at least, which are also necessary to make our recommender system environment work. The reset method is responsible only for seed setting. The step method pulls the bandit's arm and returns the reward.
 
 .. code-block:: python
     :linenos:
-    :lineno-start: 27
+    :lineno-start: 19
 
     def reset(
             self,
@@ -412,29 +397,30 @@ usual, we begin with necessary imports:
     :linenos:
     :lineno-start: 1
 
+    from env import RecommenderSystemEnv
+    from ext import RecommenderSystemExt
+
     from reinforced_lib import RLib
     from reinforced_lib.agents.mab import EGreedy
     from reinforced_lib.logs import PlotsLogger, SourceType
-    from ext import RecommenderSystemExt
 
     import gymnasium as gym
-    import env
+    gym.logger.set_level(40)
 
 We define a `run()` function that constructs the recommender system extension, creates, and resets the appropriate
-environment with user preferences derived from the extension. We also create and initialize the `RLib` instance with the selected
-agent, previously constructed extension and optionally some loggers to visualise the decision making process.
+environment with user preferences derived from the extension. We also create and initialize the `RLib` instance with the selected agent, previously constructed extension and optionally some loggers to visualise the decision making process.
 
 .. code-block:: python
     :linenos:
-    :lineno-start: 10
+    :lineno-start: 12
 
     def run(episodes: int, seed: int) -> None:
 
         # Construct the extension
         ext = RecommenderSystemExt()
 
-        # Create and reset the environment which will simulate user behavior
-        env = gym.make("RecommenderSystemEnv-v1", preferences=ext.preferences)
+        # Create and reset the environment which will simulate users behavior
+        env = RecommenderSystemEnv(ext.preferences)
         _ = env.reset(seed=seed)
 
         # Wrap everything under RLib object with designated agent
@@ -444,12 +430,11 @@ agent, previously constructed extension and optionally some loggers to visualise
             ext_type=RecommenderSystemExt,
             logger_types=PlotsLogger,
             logger_sources=[('action', SourceType.METRIC), ('cumulative', SourceType.METRIC)],
-            logger_params={'scatter': True}
+            logger_params={'plots_scatter': True}
         )
         rl.init(seed)
 
-Finally we finish the `run()` function with a training loop that asks the agent to select an action, acts on the environment
-and receives some reward. Beforehand, we select an arbitrary action from the action space and perform the first rewarded step.
+Finally we finish the `run()` function with a training loop that asks the agent to select an action, acts on the environment and receives some reward. Beforehand, we select an arbitrary action from the action space and perform the first rewarded step.
 
 .. code-block:: python
     :linenos:
@@ -460,7 +445,7 @@ and receives some reward. Beforehand, we select an arbitrary action from the act
         _, reward, *_ = env.step(act)
 
         for i in range(1, episodes):
-            act = rl.sample(action=act, reward=reward, time=i)
+            act = rl.sample(reward=reward, time=i)
             _, reward, *_ = env.step(act)
 
 Evaluating the `run()` function, with some finite number of episodes and a seed, should result in two plots,

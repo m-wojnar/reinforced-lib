@@ -2,12 +2,6 @@ import gymnasium as gym
 import numpy as np
 
 
-gym.envs.registration.register(
-    id='RecommenderSystemEnv-v1',
-    entry_point='examples.recommender_system.env:RecommenderSystemEnv'
-)
-
-
 class RecommenderSystemEnv(gym.Env):
     """
     Simple Multi Armed Bandit environment to test solutions of recommending some specific goods 
