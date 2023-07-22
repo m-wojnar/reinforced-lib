@@ -396,5 +396,9 @@ methods. To learn more about the agent's methods, check out the :ref:`Custom age
 Real-world examples
 -------------------
 
-We provide a set of examples that show how to use Reinforced-lib in real-world problems. We highly encourage you to
-check them out. You can find them in the `examples directory <https://github.com/m-wojnar/reinforced-lib/tree/main/examples>`_.
+To help you get started and learn how to utilize Reinforced-lib in real-world scenarios, we have prepared a
+comprehensive set of examples. We strongly encourage you to explore them in the dedicated
+:ref:`Examples <examples_page>` section.
+
+To access the source code of these examples, simply navigate to the `examples directory
+<https://github.com/m-wojnar/reinforced-lib/tree/main/examples>`_ on our GitHub repository.
