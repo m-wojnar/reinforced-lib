@@ -66,6 +66,8 @@ class RLib:
     auto_checkpoint : int, optional
         Automatically save the experiment every ``auto_checkpoint`` steps.
         If ``None``, the automatic checkpointing is disabled.
+    auto_checkpoint_path : str, optional, default=~
+        Path to the directory where the automatic checkpoints will be saved.
     """
 
     def __init__(
@@ -78,11 +80,13 @@ class RLib:
             logger_sources: Union[Source, list[Source]] = None,
             logger_params: dict[str, any] = None,
             no_ext_mode: bool = False,
-            auto_checkpoint: int = None
+            auto_checkpoint: int = None,
+            auto_checkpoint_path: str = None
     ) -> None:
         self._lz4_ext = ".pkl.lz4"
         self._default_path = os.path.expanduser("~")
         self._auto_checkpoint = auto_checkpoint
+        self._auto_checkpoint_path = auto_checkpoint_path if auto_checkpoint_path else self._default_path
 
         self._agent = None
         self._agent_type = agent_type
@@ -398,7 +402,8 @@ class RLib:
                 state = self._agent.update(state, update_key, update_observations)
 
             if self._auto_checkpoint is not None and (step + 1) % self._auto_checkpoint == 0:
-                self.save(f'rlib-checkpoint-agent-{agent_id}-step-{step + 1}', agent_ids=agent_id)
+                checkpoint_path = os.path.join(self._auto_checkpoint_path, f'rlib-checkpoint-agent-{agent_id}-step-{step + 1}')
+                self.save(checkpoint_path, agent_ids=agent_id)
 
         if isinstance(sample_observations, dict):
             action = self._agent.sample(state, sample_key, **sample_observations)

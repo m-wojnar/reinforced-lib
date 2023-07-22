@@ -1,9 +1,9 @@
-import reinforced_lib as rfl
+from reinforced_lib import RLib
 from reinforced_lib.agents.mab import EGreedy
 
 
 if __name__ == '__main__':
-    rl = rfl.RLib(
+    rl = RLib(
         agent_type=EGreedy,
         agent_params={'n_arms': 4, 'e': 0.1},
         no_ext_mode=True

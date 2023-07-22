@@ -100,7 +100,10 @@ class BaseAgent(ABC):
             If ``True``, the exported agent will only be able to sample actions, but not update its state.
         """
 
-        import tensorflow as tf
+        try:
+            import tensorflow as tf
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError('TensorFlow installation is required to export agents to TensorFlow Lite.')
 
         @dataclass
         class TfLiteState:

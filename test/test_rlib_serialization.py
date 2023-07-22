@@ -2,7 +2,6 @@ import unittest
 import os
 import jax
 import jax.numpy as jnp
-import reinforced_lib as rfl
 
 from reinforced_lib.agents.mab import EGreedy
 from reinforced_lib.rlib import RLib
@@ -19,7 +18,7 @@ class TestRLibSerialization(unittest.TestCase):
 
 
     def run_experiment(self, reload: bool, new_decay: float = None) -> list[int]:
-        rl = rfl.RLib(
+        rl = RLib(
             agent_type=EGreedy,
             agent_params={'n_arms': len(self.arms_probs), 'e': 0.1},
             no_ext_mode=True,
