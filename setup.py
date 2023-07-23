@@ -1,19 +1,18 @@
 from setuptools import setup, find_packages
 
 
-def read_requirements(filename: str) -> list[str]:
-    with open(filename) as file:
-        return file.read().splitlines()
-
-
 def read_file(filename: str) -> str:
-    with open(filename) as file:
+    with open(filename, 'r') as file:
         return file.read()
+
+
+def read_requirements(filename: str) -> list[str]:
+    return read_file(filename).splitlines()
 
 
 setup(
     name='reinforced-lib',
-    version='0.2.0',
+    version='1.0.0',
     packages=find_packages(include=[
         'reinforced_lib', 
         'reinforced_lib.*'
@@ -24,7 +23,7 @@ setup(
     long_description_content_type='text/markdown',
     author='Maksymilian Wojnar and Wojciech Ciężobka',
     url='https://github.com/m-wojnar/reinforced-lib',
-    download_url='https://github.com/m-wojnar/reinforced-lib/archive/refs/tags/v0.2.0.tar.gz',
+    download_url='https://github.com/m-wojnar/reinforced-lib/archive/refs/tags/v1.0.0.tar.gz',
     keywords='deep-reinforcement-learning, jax, library, machine-learning, reinforcement-learning',
     python_requires='>=3.9, <4',
     install_requires=read_requirements('requirements/requirements.txt'),
