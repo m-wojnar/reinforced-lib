@@ -14,21 +14,21 @@
 [rtd-badge]: https://readthedocs.org/projects/reinforced-lib/badge/?version=latest
 [documentation]: https://reinforced-lib.readthedocs.io/en/latest/
 
-**Introducing Reinforced-lib:** a lightweight Python library for rapid development of RL solutions. It is open-source, 
+**Introducing Reinforced-lib:** a lightweight Python library for the rapid development of RL solutions. It is open-source, 
 prioritizes ease of use, provides comprehensive documentation, and offers both deep reinforcement learning 
 (DRL) and classic non-neural agents. Built on [JAX](https://jax.readthedocs.io/en/latest/), it facilitates exporting 
 trained models to embedded devices, and makes it great for research and prototyping with RL algorithms. Access to JAX's 
-JIT functionality ensure high-performance results.
+just-in-time (JIT) compilation ensures high-performance results.
 
 ## Installation
 
-You can install the latest released version of Reinforced-lib from PyPI via:
+You can install the latest version of Reinforced-lib from PyPI:
 
 ```bash
 pip install reinforced-lib
 ```
 
-To have an easy access to the [example files](https://github.com/m-wojnar/reinforced-lib/tree/main/examples)
+To have easy access to the [example files](https://github.com/m-wojnar/reinforced-lib/tree/main/examples)
 you can clone the source code from our repository, and than install it locally with pip:
 
 ```bash
@@ -37,8 +37,8 @@ cd reinforced-lib
 pip install .
 ```
 
-In the spirit of making Reinforced-lib a lightweight solution, we included only the necessary dependencies in the base 
-requirements. To fully benefit from Reinforced-lib conveniences, like TF Lite export, install with the "full" suffix:
+In the spirit of making Reinforced-lib a lightweight solution, we include only the necessary dependencies in the base 
+requirements. To fully benefit from Reinforced-lib's conveniences, such as TF Lite export, install with the "full" suffix:
 
 ```bash
 pip3 install ".[full]"
