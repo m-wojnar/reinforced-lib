@@ -1,5 +1,6 @@
 import os.path
 from collections import defaultdict
+from copy import deepcopy
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -162,5 +163,5 @@ class PlotsLogger(BaseLogger):
         else:
             step = self._steps[name][-1] + 1 if self._steps[name] else 0
 
-        self._values[name].append(value)
+        self._values[name].append(deepcopy(value))
         self._steps[name].append(step)

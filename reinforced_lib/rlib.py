@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import pickle
+from copy import deepcopy
 from typing import Union
 
 import cloudpickle
@@ -90,29 +91,29 @@ class RLib:
 
         self._agent = None
         self._agent_type = agent_type
-        self._agent_params = agent_params
+        self._agent_params = deepcopy(agent_params)
         self._agent_containers = []
 
         self._ext = None
         self._no_ext_mode = no_ext_mode
         self._ext_type = ext_type
-        self._ext_params = ext_params
+        self._ext_params = deepcopy(ext_params)
 
-        self._logger_types = logger_types
-        self._logger_sources = logger_sources
-        self._logger_params = logger_params
+        self._logger_types = deepcopy(logger_types)
+        self._logger_sources = deepcopy(logger_sources)
+        self._logger_params = deepcopy(logger_params)
         self._logs_observer = LogsObserver()
         self._init_loggers = True
         self._cumulative_reward = 0.0
 
         if ext_type:
-            self.set_ext(ext_type, ext_params)
+            self.set_ext(self._ext_type, self._ext_params)
 
         if agent_type:
-            self.set_agent(agent_type, agent_params)
+            self.set_agent(self._agent_type, self._agent_params)
 
         if logger_types:
-            self.set_loggers(logger_types, logger_sources, logger_params)
+            self.set_loggers(self._logger_types, self._logger_sources, self._logger_params)
 
     def __del__(self) -> None:
         """
@@ -148,14 +149,14 @@ class RLib:
             raise IncorrectAgentTypeError(agent_type)
 
         self._agent_type = agent_type
-        self._agent_params = agent_params
+        self._agent_params = deepcopy(agent_params)
 
         if not self._no_ext_mode and self._ext:
-            agent_params = self._ext.get_agent_params(agent_type, agent_type.parameter_space(), agent_params)
+            agent_params = self._ext.get_agent_params(agent_type, agent_type.parameter_space(), self._agent_params)
             self._agent = agent_type(**agent_params)
             self._ext.setup_transformations(self._agent.update_observation_space, self._agent.sample_observation_space)
         else:
-            agent_params = agent_params if agent_params else {}
+            agent_params = self._agent_params if self._agent_params else {}
             self._agent = agent_type(**agent_params)
 
     def set_ext(self, ext_type: type, ext_params: dict = None) -> None:
@@ -182,9 +183,9 @@ class RLib:
             raise IncorrectExtensionTypeError(ext_type)
 
         self._ext_type = ext_type
-        self._ext_params = ext_params
+        self._ext_params = deepcopy(ext_params)
 
-        ext_params = ext_params if ext_params else {}
+        ext_params = self._ext_params if self._ext_params else {}
         self._ext = ext_type(**ext_params)
 
         if self._agent:
@@ -225,12 +226,12 @@ class RLib:
         if not self._init_loggers:
             raise ForbiddenLoggerSetError()
 
-        self._logger_types = logger_types
-        self._logger_sources = logger_sources
-        self._logger_params = logger_params
+        self._logger_types = deepcopy(logger_types)
+        self._logger_sources = deepcopy(logger_sources)
+        self._logger_params = deepcopy(logger_params)
 
-        logger_params = logger_params if logger_params else {}
-        logger_types, logger_sources = self._object_to_list(logger_types), self._object_to_list(logger_sources)
+        logger_params =  self._logger_params if  self._logger_params else {}
+        logger_types, logger_sources = self._object_to_list(self._logger_types), self._object_to_list(self._logger_sources)
         logger_types, logger_sources = self._broadcast(logger_types, logger_sources)
 
         for logger_type, source in zip(logger_types, logger_sources):

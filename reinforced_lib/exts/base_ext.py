@@ -65,7 +65,7 @@ class BaseExt(ABC):
             Dictionary with the initialization parameters for the agent.
         """
 
-        parameters = user_parameters if user_parameters else {}
+        parameters = user_parameters.copy() if user_parameters else {}
 
         if agent_parameter_space is None:
             return parameters

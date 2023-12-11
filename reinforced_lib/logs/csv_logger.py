@@ -1,6 +1,7 @@
 import json
 import os.path
 from collections import defaultdict
+from copy import deepcopy
 
 import jax.numpy as jnp
 import numpy as np
@@ -134,5 +135,5 @@ class CsvLogger(BaseLogger):
             self._current_values.clear()
 
         self._current_values.add(name)
-        self._values[name].append(value)
+        self._values[name].append(deepcopy(value))
         self._steps[name].append(self._step)
