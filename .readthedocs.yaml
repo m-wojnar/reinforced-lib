@@ -10,6 +10,9 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.9"
+  jobs:
+    post_create_environment:
+      - python -m pip install sphinx_rtd_theme
 
 python:
   # Install our python package before building the docs
