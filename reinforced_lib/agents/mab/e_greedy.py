@@ -113,7 +113,7 @@ class EGreedy(BaseAgent):
         """
 
         return EGreedyState(
-            Q=(optimistic_start * jnp.ones((n_arms, 1))),
+            Q=jnp.full((n_arms, 1), optimistic_start),
             N=jnp.ones((n_arms, 1), dtype=jnp.int32)
         )
 
@@ -197,10 +197,6 @@ class EGreedy(BaseAgent):
             Selected action.
         """
 
-        epsilon_key, choice_key = jax.random.split(key)
-
-        return jax.lax.cond(
-            jax.random.uniform(epsilon_key) < e,
-            lambda: jax.random.choice(choice_key, state.Q.size),
-            lambda: jnp.argmax(state.Q)
-        )
+        max_q = (state.Q == state.Q.max()).astype(jnp.float32)
+        probs = (1 - e) * max_q / jnp.sum(max_q) + e / state.Q.shape[0]
+        return jax.random.choice(key, state.Q.shape[0], p=probs.squeeze())

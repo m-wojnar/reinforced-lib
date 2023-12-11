@@ -108,7 +108,7 @@ class UCB(BaseAgent):
 
         return UCBState(
             R=jnp.zeros((n_arms, 1)),
-            N=jnp.ones((n_arms, 1))
+            N=jnp.zeros((n_arms, 1))
         )
 
     @staticmethod
@@ -186,7 +186,11 @@ class UCB(BaseAgent):
             Selected action.
         """
 
-        Q = state.R / state.N
+        Q = jnp.where(state.N == 0., jnp.inf, state.R / state.N)
         t = jnp.sum(state.N)
 
-        return jnp.argmax(Q + c * jnp.sqrt(jnp.log(t) / state.N))
+        ucb = Q + c * jnp.sqrt(jnp.log(t) / jnp.maximum(state.N, 1))
+        max_ucb = (ucb == jnp.max(ucb)).astype(jnp.float32)
+        probs = max_ucb / jnp.sum(max_ucb)
+
+        return jax.random.choice(key, probs.shape[0], p=probs.squeeze())

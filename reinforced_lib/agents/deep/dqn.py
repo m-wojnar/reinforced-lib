@@ -408,10 +408,9 @@ class DQN(BaseAgent):
             Selected action.
         """
 
-        network_key, epsilon_key, action_key = jax.random.split(key, 3)
+        network_key, action_key = jax.random.split(key)
 
-        return jax.lax.cond(
-            jax.random.uniform(epsilon_key) < state.epsilon,
-            lambda: jax.random.choice(action_key, act_space_size),
-            lambda: jnp.argmax(q_network.apply(state.params, state.state, network_key, env_state)[0])
-        )
+        q, _ = q_network.apply(state.params, state.state, network_key, env_state)
+        max_q = (q == q.max()).astype(jnp.float32)
+        probs = (1 - state.epsilon) * max_q / jnp.sum(max_q) + state.epsilon / q.shape[0]
+        return jax.random.choice(action_key, act_space_size, p=probs.squeeze())
