@@ -169,7 +169,7 @@ class UCB(BaseAgent):
         where :math:`\mathscr{A}` is a set of all actions and :math:`Q` is calculated as :math:`Q(a) = \frac{R(a)}{N(a)}`.
         The second component of the sum represents a sort of upper bound on the value of :math:`Q`, where :math:`c`
         behaves like a confidence interval and the square root - like an approximation of the :math:`Q` function
-        estimation uncertainty. Note that the UCB policy is deterministic.
+        estimation uncertainty. Note that the UCB policy is deterministic (apart from choosing between several optimal actions).
 
         Parameters
         ----------

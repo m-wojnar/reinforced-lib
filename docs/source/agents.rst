@@ -131,6 +131,30 @@ Thompson sampling
     :members:
 
 
+Normal-gamma Thompson sampling
+------------------------------
+
+.. currentmodule:: reinforced_lib.agents.mab.normal_thompson_sampling
+
+.. autoclass:: NormalThompsonSamplingState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: NormalThompsonSampling
+    :show-inheritance:
+    :members:
+
+
+Log-normal Thompson sampling
+---------------------------------
+
+.. currentmodule:: reinforced_lib.agents.mab.lognormal_thompson_sampling
+
+.. autoclass:: LogNormalThompsonSampling
+    :show-inheritance:
+    :members:
+
+
 Upper confidence bound (UCB)
 ----------------------------
 
