@@ -104,7 +104,7 @@ Exp3
 
 
 Softmax
----------------
+-------
 
 .. currentmodule:: reinforced_lib.agents.mab.softmax
 
@@ -131,8 +131,8 @@ Thompson sampling
     :members:
 
 
-Normal-gamma Thompson sampling
-------------------------------
+Normal Thompson sampling
+------------------------
 
 .. currentmodule:: reinforced_lib.agents.mab.normal_thompson_sampling
 
@@ -146,7 +146,7 @@ Normal-gamma Thompson sampling
 
 
 Log-normal Thompson sampling
----------------------------------
+----------------------------
 
 .. currentmodule:: reinforced_lib.agents.mab.lognormal_thompson_sampling
 
