@@ -15,7 +15,7 @@ class LogNormalThompsonSampling(NormalThompsonSampling):
     def update(
             state: NormalThompsonSamplingState,
             key: PRNGKey,
-            action: jnp.int32,
+            action: int,
             reward: Scalar
     ) -> NormalThompsonSamplingState:
         r"""
@@ -42,10 +42,10 @@ class LogNormalThompsonSampling(NormalThompsonSampling):
         return NormalThompsonSampling.update(state, key, action, jnp.log(reward))
 
     @staticmethod
-    def sample(state: NormalThompsonSamplingState, key: PRNGKey) -> jnp.int32:
+    def sample(state: NormalThompsonSamplingState, key: PRNGKey) -> int:
         r"""
-        Sampling actions is analogous to the one in ``NormalThompsonSampling`` except that the mean of the log-normal
-        distribution is computed instead of the mean of the normal distribution.
+        Sampling actions is analogous to the one in ``NormalThompsonSampling`` except that the expected value of
+        the log-normal distribution is computed instead of the expected value of the normal distribution.
 
         Parameters
         ----------

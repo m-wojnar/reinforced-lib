@@ -50,7 +50,7 @@ class StdoutLogger(BaseLogger):
         ----------
         source : Source
             Source of the logged value.
-        value : array_like
+        value : Array
             Array to log.
         custom : bool
             Whether the source is a custom source.

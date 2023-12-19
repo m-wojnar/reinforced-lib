@@ -15,9 +15,9 @@ class ParticleFilterState(AgentState):
 
     Attributes
     ----------
-    positions : array_like
+    positions : Array
         Positions of the particles.
-    logit_weights : array_like
+    logit_weights : Array
         Unnormalized log weights of the particles.
     """
 
@@ -140,7 +140,7 @@ def affine_transition(state: ParticleFilterState, key: PRNGKey, scale: Array, de
         Current state of the filter.
     key : PRNGKey
         A PRNG key used as the random key.
-    scale : array_like
+    scale : Array
         Scale of the random movement of particles. :math:`scale_0, scale_1 > 0`.
     delta_time : float
         Time elapsed since the last update.
@@ -168,11 +168,11 @@ class ParticleFilter:
 
         Returns the initial particle positions (`Array`).
 
-    positions_shape : array_like
+    positions_shape : Array
         Shape of the particle positions array.
-    weights_shape : array_like
+    weights_shape : Array
         Shape of the particle weights array.
-    scale : array_like
+    scale : Array
         Scale of the random movement of the particles.
     observation_fn : callable
         Function that updates particles based on an observation from the environment; takes two positional arguments:
@@ -197,7 +197,7 @@ class ParticleFilter:
         Function that updates the particle positions; takes four positional arguments:
             - ``state``: the state of the filter (`ParticleFilterState`).
             - ``key``: a PRNG key used as a random key (`PRNGKey`).
-            - ``scale``: scale of the random movement of the particles (`array_like`).
+            - ``scale``: scale of the random movement of the particles (`Array`).
             - ``time``: the current time (`float`).
         
         Returns the updated state of the filter (`ParticleFilterState`).
@@ -255,9 +255,9 @@ class ParticleFilter:
 
             Returns the initial particle positions (`Array`).
 
-        positions_shape : array_like
+        positions_shape : Array
             Shape of the particle positions array.
-        weights_shape : array_like
+        weights_shape : Array
             Shape of the particle weights array.
 
         Returns
@@ -318,12 +318,12 @@ class ParticleFilter:
             Function that updates the particle positions; takes four positional arguments:
                 - ``state``: the state of the filter (`ParticleFilterState`).
                 - ``key``: a PRNG key used as a random key (`PRNGKey`).
-                - ``scale``: scale of the random movement of the particles (`array_like`).
+                - ``scale``: scale of the random movement of the particles (`Array`).
                 - ``time``: the current time (`float`).
 
         delta_time : float
             Time difference between the current and the previous observation.
-        scale : array_like
+        scale : Array
             Scale of the random movement of the particles.
 
         Returns
@@ -360,7 +360,7 @@ class ParticleFilter:
 
         Returns
         -------
-        array_like
+        Array
             Estimated environment state.
         """
 

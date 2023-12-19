@@ -3,7 +3,7 @@ import unittest
 from glob import glob
 
 import haiku as hk
-import numpy as np
+import jax.numpy as jnp
 import optax
 
 from reinforced_lib.agents.deep import DDPG
@@ -36,7 +36,7 @@ class TestRLibToTflite(unittest.TestCase):
             interpreter = tf.lite.Interpreter(model_content=f.read())
             interpreter.allocate_tensors()
             input_details = interpreter.get_input_details()
-            ins = key + [np.arange(4).astype(np.float32)]
+            ins = key + [jnp.arange(4).astype(float)]
 
             for d, a in zip(input_details, ins):
                 interpreter.set_tensor(d['index'], a)
@@ -44,8 +44,8 @@ class TestRLibToTflite(unittest.TestCase):
             interpreter.invoke()
             action, key = [interpreter.get_tensor(od['index']) for od in interpreter.get_output_details()]
 
-        assert isinstance(action, (int, np.int32))
-        assert isinstance(key, np.ndarray)
+        assert isinstance(action, (int, int))
+        assert isinstance(key, jnp.ndarray)
         assert key.shape == (2,)
 
     def test_full_export(self):
@@ -72,10 +72,10 @@ class TestRLibToTflite(unittest.TestCase):
             interpreter.allocate_tensors()
             input_details = interpreter.get_input_details()
             ins = state + [
-                np.asarray(2, dtype=np.int32),
-                np.asarray([1.], dtype=np.float32),
-                np.asarray([1], dtype=np.int32),
-                np.asarray([0], dtype=np.int32)
+                jnp.asarray(2, dtype=int),
+                jnp.asarray([1.], dtype=float),
+                jnp.asarray([1], dtype=int),
+                jnp.asarray([0], dtype=int)
             ]
 
             for d, a in zip(input_details, ins):
@@ -88,7 +88,7 @@ class TestRLibToTflite(unittest.TestCase):
             interpreter = tf.lite.Interpreter(model_content=f.read())
             interpreter.allocate_tensors()
             input_details = interpreter.get_input_details()
-            ins = state + [np.arange(4).astype(np.float32)]
+            ins = state + [jnp.arange(4).astype(float)]
 
             for d, a in zip(input_details, ins):
                 interpreter.set_tensor(d['index'], a)
@@ -96,12 +96,12 @@ class TestRLibToTflite(unittest.TestCase):
             interpreter.invoke()
             action, key, state_alpha, state_beta = [interpreter.get_tensor(od['index']) for od in interpreter.get_output_details()]
 
-        assert isinstance(action, (int, np.int32))
-        assert isinstance(key, np.ndarray)
+        assert isinstance(action, (int, int))
+        assert isinstance(key, jnp.ndarray)
         assert key.shape == (2,)
-        assert isinstance(state_alpha, np.ndarray)
+        assert isinstance(state_alpha, jnp.ndarray)
         assert state_alpha.shape == (4, 1)
-        assert isinstance(state_beta, np.ndarray)
+        assert isinstance(state_beta, jnp.ndarray)
         assert state_beta.shape == (4, 1)
 
     def test_drl_sample_only_export(self):

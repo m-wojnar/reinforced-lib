@@ -69,7 +69,7 @@ memory_size = 4096
 simulation = 'ccod-sim'
 
 
-def add_batch_dim(x: Array, base_ndims: jnp.int32) -> Array:
+def add_batch_dim(x: Array, base_ndims: int) -> Array:
     if x.ndim == base_ndims and base_ndims > 1:
         return x[None, ...]
     elif x.ndim == base_ndims and base_ndims == 1:
@@ -78,7 +78,7 @@ def add_batch_dim(x: Array, base_ndims: jnp.int32) -> Array:
         return x
 
 
-def apply_lstm(x: Array, hidden_size: jnp.int32) -> Array:
+def apply_lstm(x: Array, hidden_size: int) -> Array:
     core = hk.LSTM(hidden_size)
     initial_state = core.initial_state(x.shape[0])
     _, lstm_state = hk.dynamic_unroll(core, x, initial_state, time_major=False)

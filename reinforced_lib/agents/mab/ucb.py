@@ -15,9 +15,9 @@ class UCBState(AgentState):
 
     Attributes
     ----------
-    R : array_like
+    R : Array
         Sum of the rewards obtained for each arm.
-    N : array_like
+    N : Array
         Number of tries for each arm.
     """
 
@@ -48,7 +48,7 @@ class UCB(BaseAgent):
 
     def __init__(
             self,
-            n_arms: jnp.int32,
+            n_arms: int,
             c: Scalar,
             gamma: Scalar = 1.0
     ) -> None:
@@ -64,16 +64,16 @@ class UCB(BaseAgent):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'c': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32),
-            'gamma': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
+            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'c': gym.spaces.Box(0.0, jnp.inf, (1,), float),
+            'gamma': gym.spaces.Box(0.0, 1.0, (1,), float)
         })
 
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'action': gym.spaces.Discrete(self.n_arms),
-            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
+            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)
         })
 
     @property
@@ -87,7 +87,7 @@ class UCB(BaseAgent):
     @staticmethod
     def init(
             key: PRNGKey,
-            n_arms: jnp.int32
+            n_arms: int
     ) -> UCBState:
         """
         Creates and initializes instance of the UCB agent for ``n_arms`` arms.  The sum of the rewards is set to zero
@@ -115,7 +115,7 @@ class UCB(BaseAgent):
     def update(
         state: UCBState,
         key: PRNGKey,
-        action: jnp.int32,
+        action: int,
         reward: Scalar,
         gamma: Scalar
     ) -> UCBState:
@@ -159,7 +159,7 @@ class UCB(BaseAgent):
         state: UCBState,
         key: PRNGKey,
         c: Scalar
-    ) -> jnp.int32:
+    ) -> int:
         r"""
         UCB agent follows the policy
 
@@ -190,7 +190,7 @@ class UCB(BaseAgent):
         t = jnp.sum(state.N)
 
         ucb = Q + c * jnp.sqrt(jnp.log(t) / jnp.maximum(state.N, 1))
-        max_ucb = (ucb == jnp.max(ucb)).astype(jnp.float32)
+        max_ucb = (ucb == jnp.max(ucb)).astype(float)
         probs = max_ucb / jnp.sum(max_ucb)
 
         return jax.random.choice(key, probs.shape[0], p=probs.squeeze())

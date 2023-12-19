@@ -43,7 +43,7 @@ class DDPGState(AgentState):
         Optimizer state of the policy network.
     replay_buffer : ReplayBuffer
         Experience replay buffer.
-    prev_env_state : array_like
+    prev_env_state : Array
         Previous environment state.
     noise : Scalar
         Current noise level.
@@ -94,11 +94,11 @@ class DDPG(BaseAgent):
         Optimizer of the Q-networks. If None, the Adam optimizer with learning rate 1e-3 is used.
     a_optimizer : optax.GradientTransformation, optional
         Optimizer of the policy networks. If None, the Adam optimizer with learning rate 1e-3 is used.
-    experience_replay_buffer_size : jnp.int32, default=10000
+    experience_replay_buffer_size : int, default=10000
         Size of the experience replay buffer.
-    experience_replay_batch_size : jnp.int32, default=64
+    experience_replay_batch_size : int, default=64
         Batch size of the samples from the experience replay buffer.
-    experience_replay_steps : jnp.int32, default=5
+    experience_replay_steps : int, default=5
         Number of experience replay steps per update.
     discount : Scalar, default=0.99
         Discount factor. :math:`\gamma = 0.0` means no discount, :math:`\gamma = 1.0` means infinite discount. :math:`0 \leq \gamma \leq 1`
@@ -130,9 +130,9 @@ class DDPG(BaseAgent):
             max_action: Numeric,
             q_optimizer: optax.GradientTransformation = None,
             a_optimizer: optax.GradientTransformation = None,
-            experience_replay_buffer_size: jnp.int32 = 10000,
-            experience_replay_batch_size: jnp.int32 = 64,
-            experience_replay_steps: jnp.int32 = 5,
+            experience_replay_buffer_size: int = 10000,
+            experience_replay_batch_size: int = 64,
+            experience_replay_steps: int = 5,
             discount: Scalar = 0.99,
             noise: Scalar = None,
             noise_decay: Scalar = 0.99,
@@ -199,37 +199,37 @@ class DDPG(BaseAgent):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'obs_space_shape': gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), jnp.int32)),
-            'act_space_shape': gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), jnp.int32)),
-            'min_action': gym.spaces.Sequence(gym.spaces.Box(-jnp.inf, jnp.inf)),
-            'max_action': gym.spaces.Sequence(gym.spaces.Box(-jnp.inf, jnp.inf)),
-            'experience_replay_buffer_size': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'experience_replay_batch_size': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'discount': gym.spaces.Box(0.0, 1.0, (1,)),
-            'noise': gym.spaces.Box(0.0, jnp.inf, (1,)),
-            'noise_decay': gym.spaces.Box(0.0, 1.0, (1,)),
-            'noise_min': gym.spaces.Box(0.0, jnp.inf, (1,)),
-            'tau': gym.spaces.Box(0.0, 1.0, (1,))
+            'obs_space_shape': gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), int)),
+            'act_space_shape': gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), int)),
+            'min_action': gym.spaces.Sequence(gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)),
+            'max_action': gym.spaces.Sequence(gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)),
+            'experience_replay_buffer_size': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'experience_replay_batch_size': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'discount': gym.spaces.Box(0.0, 1.0, (1,), float),
+            'noise': gym.spaces.Box(0.0, jnp.inf, (1,), float),
+            'noise_decay': gym.spaces.Box(0.0, 1.0, (1,), float),
+            'noise_min': gym.spaces.Box(0.0, jnp.inf, (1,), float),
+            'tau': gym.spaces.Box(0.0, 1.0, (1,), float)
         })
 
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape),
-            'action': gym.spaces.Box(-jnp.inf, jnp.inf, self.act_space_shape),
-            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
+            'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape, float),
+            'action': gym.spaces.Box(-jnp.inf, jnp.inf, self.act_space_shape, float),
+            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
             'terminal': gym.spaces.MultiBinary(1)
         })
 
     @property
     def sample_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape)
+            'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape, float)
         })
 
     @property
     def action_space(self) -> gym.spaces.Box:
-        return gym.spaces.Box(-jnp.inf, jnp.inf, self.act_space_shape)
+        return gym.spaces.Box(-jnp.inf, jnp.inf, self.act_space_shape, float)
 
     @staticmethod
     def init(
@@ -308,7 +308,7 @@ class DDPG(BaseAgent):
             key: PRNGKey,
             ddpg_state: DDPGState,
             batch: tuple,
-            non_zero_loss: jnp.bool_,
+            non_zero_loss: bool,
             q_network: hk.TransformedWithState,
             a_network: hk.TransformedWithState,
             discount: Scalar
@@ -366,7 +366,7 @@ class DDPG(BaseAgent):
             key: PRNGKey,
             ddpg_state: DDPGState,
             batch: tuple,
-            non_zero_loss: jnp.bool_,
+            non_zero_loss: bool,
             q_network: hk.TransformedWithState,
             a_network: hk.TransformedWithState
     ) -> tuple[Scalar, hk.State]:
@@ -414,11 +414,11 @@ class DDPG(BaseAgent):
             env_state: Array,
             action: Array,
             reward: Scalar,
-            terminal: jnp.bool_,
+            terminal: bool,
             q_step_fn: Callable,
             a_step_fn: Callable,
             experience_replay: ExperienceReplay,
-            experience_replay_steps: jnp.int32,
+            experience_replay_steps: int,
             noise_decay: Scalar,
             noise_min: Scalar,
             tau: Scalar

@@ -1,5 +1,5 @@
 import gymnasium as gym
-import numpy as np
+import jax.numpy as jnp
 
 from reinforced_lib.exts import BaseExt, observation, parameter
 
@@ -29,7 +29,7 @@ class Gymnasium(BaseExt):
     def env_state(self, env_state, reward, terminal, truncated, info, *args, **kwargs) -> any:
         return env_state
 
-    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    @observation(observation_type=gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float))
     def reward(self, env_state, reward, terminal, truncated, info, *args, **kwargs) -> float:
         return reward
 
@@ -37,25 +37,25 @@ class Gymnasium(BaseExt):
     def terminal(self, env_state, reward, terminal, truncated, info, *args, **kwargs) -> bool:
         return terminal or truncated
 
-    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), int)))
     def obs_space_shape(self) -> tuple:
         return self.env.observation_space.shape
 
-    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), int)))
     def act_space_shape(self) -> tuple:
         return self.env.action_space.shape
 
-    @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
+    @parameter(parameter_type=gym.spaces.Box(1, jnp.inf, (1,), int))
     def act_space_size(self) -> int:
         if isinstance(self.env.action_space, gym.spaces.Discrete):
             return self.env.action_space.n
 
         raise AttributeError()
 
-    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)))
     def min_action(self) -> tuple:
         return self.env.action_space.low
 
-    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)))
     def max_action(self) -> tuple:
         return self.env.action_space.high

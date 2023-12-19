@@ -15,9 +15,9 @@ class ThompsonSamplingState(AgentState):
 
     Attributes
     ----------
-    alpha : array_like
+    alpha : Array
         Number of successful tries for each arm.
-    beta : array_like
+    beta : Array
         Number of failed tries for each arm.
     """
 
@@ -45,7 +45,7 @@ class ThompsonSampling(BaseAgent):
        for Wi-Fi 6 Dense Deployments. IEEE Access. 8. 168898-168909.
     """
 
-    def __init__(self, n_arms: jnp.int32, decay: Scalar = 1.0) -> None:
+    def __init__(self, n_arms: int, decay: Scalar = 1.0) -> None:
         assert decay >= 0
 
         self.n_arms = n_arms
@@ -57,23 +57,23 @@ class ThompsonSampling(BaseAgent):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'decay': gym.spaces.Box(0.0, jnp.inf, (1,))
+            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'decay': gym.spaces.Box(0.0, jnp.inf, (1,), float)
         })
 
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'action': gym.spaces.Discrete(self.n_arms),
-            'n_successful': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
-            'n_failed': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
-            'delta_time': gym.spaces.Box(0.0, jnp.inf, (1,))
+            'n_successful': gym.spaces.Box(0, jnp.inf, (1,), int),
+            'n_failed': gym.spaces.Box(0, jnp.inf, (1,), int),
+            'delta_time': gym.spaces.Box(0.0, jnp.inf, (1,), float)
         })
 
     @property
     def sample_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'context': gym.spaces.Box(-jnp.inf, jnp.inf, (self.n_arms,))
+            'context': gym.spaces.Box(-jnp.inf, jnp.inf, (self.n_arms,), float)
         })
 
     @property
@@ -81,7 +81,7 @@ class ThompsonSampling(BaseAgent):
         return gym.spaces.Discrete(self.n_arms)
 
     @staticmethod
-    def init(key: PRNGKey, n_arms: jnp.int32) -> ThompsonSamplingState:
+    def init(key: PRNGKey, n_arms: int) -> ThompsonSamplingState:
         r"""
         Creates and initializes an instance of the Thompson sampling agent for ``n_arms`` arms. The :math:`\mathbf{\alpha}`
         and :math:`\mathbf{\beta}` vectors are set to zero to create a non-informative prior distribution.
@@ -109,9 +109,9 @@ class ThompsonSampling(BaseAgent):
     def update(
             state: ThompsonSamplingState,
             key: PRNGKey,
-            action: jnp.int32,
-            n_successful: jnp.int32,
-            n_failed: jnp.int32,
+            action: int,
+            n_successful: int,
+            n_failed: int,
             delta_time: Scalar,
             decay: Scalar
     ) -> ThompsonSamplingState:
@@ -163,7 +163,7 @@ class ThompsonSampling(BaseAgent):
             state: ThompsonSamplingState,
             key: PRNGKey,
             context: Array
-    ) -> jnp.int32:
+    ) -> int:
         r"""
         The Thompson sampling policy is stochastic. The algorithm draws :math:`q_a` from the distribution
         :math:`\operatorname{Beta}(1 + \mathbf{\alpha}(a), 1 + \mathbf{\beta}(a))` for each arm :math:`a`.
@@ -181,7 +181,7 @@ class ThompsonSampling(BaseAgent):
             Current state of the agent.
         key : PRNGKey
             A PRNG key used as the random key.
-        context : array_like
+        context : Array
             One-dimensional array of features for each arm.
 
         Returns

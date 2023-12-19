@@ -15,9 +15,9 @@ class EGreedyState(AgentState):
 
     Attributes
     ----------
-    Q : array_like
+    Q : Array
         Action-value function estimates for each arm.
-    N : array_like
+    N : Array
         Number of tries for each arm.
     """
 
@@ -49,7 +49,7 @@ class EGreedy(BaseAgent):
 
     def __init__(
             self,
-            n_arms: jnp.int32,
+            n_arms: int,
             e: Scalar,
             optimistic_start: Scalar = 0.0,
             alpha: Scalar = 0.0
@@ -66,17 +66,17 @@ class EGreedy(BaseAgent):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32),
-            'optimistic_start': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32),
-            'alpha': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
+            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'e': gym.spaces.Box(0.0, 1.0, (1,), float),
+            'optimistic_start': gym.spaces.Box(0.0, jnp.inf, (1,), float),
+            'alpha': gym.spaces.Box(0.0, 1.0, (1,), float)
         })
 
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'action': gym.spaces.Discrete(self.n_arms),
-            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
+            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)
         })
 
     @property
@@ -90,7 +90,7 @@ class EGreedy(BaseAgent):
     @staticmethod
     def init(
             key: PRNGKey,
-            n_arms: jnp.int32,
+            n_arms: int,
             optimistic_start: Scalar
     ) -> EGreedyState:
         r"""
@@ -114,14 +114,14 @@ class EGreedy(BaseAgent):
 
         return EGreedyState(
             Q=jnp.full((n_arms, 1), optimistic_start),
-            N=jnp.ones((n_arms, 1), dtype=jnp.int32)
+            N=jnp.ones((n_arms, 1), dtype=int)
         )
 
     @staticmethod
     def update(
         state: EGreedyState,
         key: PRNGKey,
-        action: jnp.int32,
+        action: int,
         reward: Scalar,
         alpha: Scalar
     ) -> EGreedyState:
@@ -171,7 +171,7 @@ class EGreedy(BaseAgent):
         state: EGreedyState,
         key: PRNGKey,
         e: Scalar
-    ) -> jnp.int32:
+    ) -> int:
         r"""
         Epsilon-greedy agent follows the policy:
 
@@ -197,6 +197,6 @@ class EGreedy(BaseAgent):
             Selected action.
         """
 
-        max_q = (state.Q == state.Q.max()).astype(jnp.float32)
+        max_q = (state.Q == state.Q.max()).astype(float)
         probs = (1 - e) * max_q / jnp.sum(max_q) + e / state.Q.shape[0]
         return jax.random.choice(key, state.Q.shape[0], p=probs.squeeze())

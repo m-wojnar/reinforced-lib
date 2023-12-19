@@ -28,11 +28,11 @@ class ObservationDecoratorTest(unittest.TestCase):
         self.assertEqual(fn.observation_info.name, 'test_name')
 
     def test_observation_info_type(self):
-        @observation(observation_type=gym.spaces.Box(-1.0, 1.0))
+        @observation(observation_type=gym.spaces.Box(-1.0, 1.0, (1,), float))
         def fn():
             return 0.0
 
-        self.assertEqual(fn.observation_info.type, gym.spaces.Box(-1.0, 1.0))
+        self.assertEqual(fn.observation_info.type, gym.spaces.Box(-1.0, 1.0, (1,), float))
 
 
 class ParameterDecoratorTest(unittest.TestCase):
@@ -58,11 +58,11 @@ class ParameterDecoratorTest(unittest.TestCase):
         self.assertEqual(fn.parameter_info.name, 'test_name')
 
     def test_parameter_info_type(self):
-        @parameter(parameter_type=gym.spaces.Box(-1.0, 1.0))
+        @parameter(parameter_type=gym.spaces.Box(-1.0, 1.0, (1,), float))
         def fn():
             return 0.0
 
-        self.assertEqual(fn.parameter_info.type, gym.spaces.Box(-1.0, 1.0))
+        self.assertEqual(fn.parameter_info.type, gym.spaces.Box(-1.0, 1.0, (1,), float))
 
 
 # TODO add tests for test_* functions

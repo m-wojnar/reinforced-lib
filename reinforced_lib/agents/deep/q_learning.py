@@ -57,15 +57,15 @@ class QLearning(BaseAgent):
         Architecture of the Q-network.
     obs_space_shape : Shape
         Shape of the observation space.
-    act_space_size : jnp.int32
+    act_space_size : int
         Size of the action space.
     optimizer : optax.GradientTransformation, optional
         Optimizer of the Q-network. If None, the Adam optimizer with learning rate 1e-3 is used.
-    experience_replay_buffer_size : jnp.int32, default=10000
+    experience_replay_buffer_size : int, default=10000
         Size of the experience replay buffer.
-    experience_replay_batch_size : jnp.int32, default=64
+    experience_replay_batch_size : int, default=64
         Batch size of the samples from the experience replay buffer.
-    experience_replay_steps : jnp.int32, default=5
+    experience_replay_steps : int, default=5
         Number of experience replay steps per update.
     discount : Scalar, default=0.99
         Discount factor. :math:`\gamma = 0.0` means no discount, :math:`\gamma = 1.0` means infinite discount. :math:`0 \leq \gamma \leq 1`
@@ -86,11 +86,11 @@ class QLearning(BaseAgent):
             self,
             q_network: hk.TransformedWithState,
             obs_space_shape: Shape,
-            act_space_size: jnp.int32,
+            act_space_size: int,
             optimizer: optax.GradientTransformation = None,
-            experience_replay_buffer_size: jnp.int32 = 10000,
-            experience_replay_batch_size: jnp.int32 = 64,
-            experience_replay_steps: jnp.int32 = 5,
+            experience_replay_buffer_size: int = 10000,
+            experience_replay_batch_size: int = 64,
+            experience_replay_steps: int = 5,
             discount: Scalar = 0.99,
             epsilon: Scalar = 1.0,
             epsilon_decay: Scalar = 0.999,
@@ -144,29 +144,29 @@ class QLearning(BaseAgent):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'obs_space_shape': gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), jnp.int32)),
-            'act_space_size': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'experience_replay_buffer_size': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'experience_replay_batch_size': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'discount': gym.spaces.Box(0.0, 1.0, (1,)),
-            'epsilon': gym.spaces.Box(0.0, 1.0, (1,)),
-            'epsilon_decay': gym.spaces.Box(0.0, 1.0, (1,)),
-            'epsilon_min': gym.spaces.Box(0.0, 1.0, (1,))
+            'obs_space_shape': gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), int)),
+            'act_space_size': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'experience_replay_buffer_size': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'experience_replay_batch_size': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'discount': gym.spaces.Box(0.0, 1.0, (1,), float),
+            'epsilon': gym.spaces.Box(0.0, 1.0, (1,), float),
+            'epsilon_decay': gym.spaces.Box(0.0, 1.0, (1,), float),
+            'epsilon_min': gym.spaces.Box(0.0, 1.0, (1,), float)
         })
 
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape),
+            'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape, float),
             'action': gym.spaces.Discrete(self.act_space_size),
-            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
+            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
             'terminal': gym.spaces.MultiBinary(1)
         })
 
     @property
     def sample_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape)
+            'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape, float)
         })
 
     @property
@@ -230,7 +230,7 @@ class QLearning(BaseAgent):
             params_target: hk.Params,
             net_state_target: hk.State,
             batch: tuple,
-            non_zero_loss: jnp.bool_,
+            non_zero_loss: bool,
             q_network: hk.TransformedWithState,
             discount: Scalar
     ) -> tuple[Scalar, hk.State]:
@@ -271,7 +271,7 @@ class QLearning(BaseAgent):
         q_key, q_target_key = jax.random.split(key)
 
         q_values, state = q_network.apply(params, net_state, q_key, states)
-        q_values = jnp.take_along_axis(q_values, actions.astype(jnp.int32), axis=-1)
+        q_values = jnp.take_along_axis(q_values, actions.astype(int), axis=-1)
 
         q_values_target, _ = q_network.apply(params_target, net_state_target, q_target_key, next_states)
         target = rewards + (1 - terminals) * discount * jnp.max(q_values_target, axis=-1, keepdims=True)
@@ -288,10 +288,10 @@ class QLearning(BaseAgent):
             env_state: Array,
             action: Array,
             reward: Scalar,
-            terminal: jnp.bool_,
+            terminal: bool,
             step_fn: Callable,
             experience_replay: ExperienceReplay,
-            experience_replay_steps: jnp.int32,
+            experience_replay_steps: int,
             epsilon_decay: Scalar,
             epsilon_min: Scalar
     ) -> QLearningState:
@@ -364,8 +364,8 @@ class QLearning(BaseAgent):
             key: PRNGKey,
             env_state: Array,
             q_network: hk.TransformedWithState,
-            act_space_size: jnp.int32
-    ) -> jnp.int32:
+            act_space_size: int
+    ) -> int:
         r"""
         Samples random action with probability :math:`\epsilon` and the greedy action with probability
         :math:`1 - \epsilon`. The greedy action is the action with the highest Q-value.
@@ -380,7 +380,7 @@ class QLearning(BaseAgent):
             The current state of the environment.
         q_network : hk.TransformedWithState
             The Q-network.
-        act_space_size : jnp.int32
+        act_space_size : int
             The size of the action space.
 
         Returns
@@ -392,6 +392,6 @@ class QLearning(BaseAgent):
         network_key, action_key = jax.random.split(key)
 
         q, _ = q_network.apply(state.params, state.state, network_key, env_state)
-        max_q = (q == q.max()).astype(jnp.float32)
+        max_q = (q == q.max()).astype(float)
         probs = (1 - state.epsilon) * max_q / jnp.sum(max_q) + state.epsilon / q.shape[0]
         return jax.random.choice(action_key, act_space_size, p=probs.squeeze())

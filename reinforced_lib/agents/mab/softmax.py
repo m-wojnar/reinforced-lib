@@ -15,7 +15,7 @@ class SoftmaxState(AgentState):
 
     Attributes
     ----------
-    H : array_like
+    H : Array
         Preference for each arm.
     r : float
         Average of all obtained rewards :math:`\bar{R}`.
@@ -25,7 +25,7 @@ class SoftmaxState(AgentState):
 
     H: Array
     r: Scalar
-    n: jnp.int64
+    n: int
 
 
 class Softmax(BaseAgent):
@@ -50,7 +50,7 @@ class Softmax(BaseAgent):
 
     def __init__(
             self,
-            n_arms: jnp.int32,
+            n_arms: int,
             lr: Scalar,
             alpha: Scalar = 0.0,
             tau: Scalar = 1.0,
@@ -70,17 +70,17 @@ class Softmax(BaseAgent):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'lr': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32),
-            'alpha': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32),
-            'tau': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32)
+            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'lr': gym.spaces.Box(0.0, jnp.inf, (1,), float),
+            'alpha': gym.spaces.Box(0.0, 1.0, (1,), float),
+            'tau': gym.spaces.Box(0.0, jnp.inf, (1,), float)
         })
 
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'action': gym.spaces.Discrete(self.n_arms),
-            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
+            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)
         })
 
     @property
@@ -94,7 +94,7 @@ class Softmax(BaseAgent):
     @staticmethod
     def init(
             key: PRNGKey,
-            n_arms: jnp.int32
+            n_arms: int
     ) -> SoftmaxState:
         r"""
         Creates and initializes instance of the Softmax agent for ``n_arms`` arms. Preferences :math:`H` for each arm
@@ -124,7 +124,7 @@ class Softmax(BaseAgent):
     def update(
         state: SoftmaxState,
         key: PRNGKey,
-        action: jnp.int32,
+        action: int,
         reward: Scalar,
         lr: Scalar,
         alpha: Scalar,
@@ -192,7 +192,7 @@ class Softmax(BaseAgent):
         state: SoftmaxState,
         key: PRNGKey,
         tau: Scalar
-    ) -> jnp.int32:
+    ) -> int:
         r"""
         The policy of the Softmax algorithm is stochastic. The algorithm draws the next action from the softmax
         distribution. The probability of selecting action :math:`i` is calculated as:

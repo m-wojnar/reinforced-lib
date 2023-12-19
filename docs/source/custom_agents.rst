@@ -47,7 +47,7 @@ We define the Epsilon-greedy agent, which will have 3 static methods:
     @staticmethod
     def init(
         key: PRNGKey,
-        n_arms: jnp.int32
+        n_arms: int
     ) -> EGreedyState:
 
         return EGreedyState(
@@ -56,7 +56,7 @@ We define the Epsilon-greedy agent, which will have 3 static methods:
             Q=jnp.zeros(n_arms),
 
             # The numbers of tries are set as ones, to avoid null division in Q value update
-            N=jnp.ones(n_arms, dtype=jnp.int32)
+            N=jnp.ones(n_arms, dtype=int)
         )
     
     # This method updates the agents state
@@ -64,7 +64,7 @@ We define the Epsilon-greedy agent, which will have 3 static methods:
     def update(
         state: EGreedyState,
         key: PRNGKey,
-        action: jnp.int32,
+        action: int,
         reward: Scalar,
     ) -> EGreedyState:
 
@@ -83,7 +83,7 @@ We define the Epsilon-greedy agent, which will have 3 static methods:
         state: EGreedyState,
         key: PRNGKey,
         e: Scalar
-    ) -> jnp.int32:
+    ) -> int:
 
         # Split PRNGkey to use it twice
         epsilon_key, choice_key = jax.random.split(key)
@@ -107,7 +107,7 @@ Having defined these static methods, we can implement the class constructor:
     
     def __init__(
         self, 
-        n_arms: jnp.int32, 
+        n_arms: int,
         e: Scalar
     ) -> None:
 
@@ -139,8 +139,8 @@ provide initialization arguments specified by :ref:`extensions <Extensions>`.
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
+            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'e': gym.spaces.Box(0.0, 1.0, (1,), float)
         })
 
 Specifying the action space of the agent is accomplished by implementing the ``action_space`` property.
@@ -168,7 +168,7 @@ the library can automatically generate an example set of parameters during the e
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'action': gym.spaces.Discrete(self.n_arms),
-            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
+            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)
         })
     
     # Parameters required by the 'sample' method in Gymnasium format.
@@ -207,7 +207,7 @@ to create your own agent.
 
         def __init__(
                 self,
-                n_arms: jnp.int32,
+                n_arms: int,
                 e: Scalar
         ) -> None:
             assert 0 <= e <= 1
@@ -221,15 +221,15 @@ to create your own agent.
         @staticmethod
         def parameter_space() -> gym.spaces.Dict:
             return gym.spaces.Dict({
-                'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-                'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
+                'n_arms': gym.spaces.Box(1, jnp.inf, (1,), int),
+                'e': gym.spaces.Box(0.0, 1.0, (1,), float)
             })
 
         @property
         def update_observation_space(self) -> gym.spaces.Dict:
             return gym.spaces.Dict({
                 'action': gym.spaces.Discrete(self.n_arms),
-                'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
+                'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)
             })
 
         @property
@@ -243,19 +243,19 @@ to create your own agent.
         @staticmethod
         def init(
                 key: PRNGKey,
-                n_arms: jnp.int32
+                n_arms: int
         ) -> EGreedyState:
 
             return EGreedyState(
                 Q=jnp.zeros(n_arms),
-                N=jnp.ones(n_arms, dtype=jnp.int32)
+                N=jnp.ones(n_arms, dtype=int)
             )
 
         @staticmethod
         def update(
             state: EGreedyState,
             key: PRNGKey,
-            action: jnp.int32,
+            action: int,
             reward: Scalar
         ) -> EGreedyState:
 
@@ -269,7 +269,7 @@ to create your own agent.
             state: EGreedyState,
             key: PRNGKey,
             e: Scalar
-        ) -> jnp.int32:
+        ) -> int:
 
             epsilon_key, choice_key = jax.random.split(key)
 

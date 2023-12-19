@@ -11,17 +11,17 @@ from reinforced_lib.agents import BaseAgent, AgentState
 @dataclass
 class NormalThompsonSamplingState(AgentState):
     """
-    Container for the state of the normal-gamma Thompson sampling agent.
+    Container for the state of the normal Thompson sampling agent.
 
     Attributes
     ----------
-    alpha : array_like
-        The concentration parameter of the gamma distribution.
-    beta : array_like
-        The scale parameter of the gamma distribution.
-    lam : array_like
+    alpha : Array
+        The concentration parameter of the inverse-gamma distribution.
+    beta : Array
+        The scale parameter of the inverse-gamma distribution.
+    lam : Array
         The number of observations.
-    mu : array_like
+    mu : Array
         The mean of the normal distribution.
     """
 
@@ -33,10 +33,10 @@ class NormalThompsonSamplingState(AgentState):
 
 class NormalThompsonSampling(BaseAgent):
     r"""
-    Normal-gamma [10]_ Thompson sampling agent. The implementation is based on the work of Murphy [11]_.
-    The normal-gamma distribution is a conjugate prior for the normal distribution with unknown mean and variance.
-    The parameters of the normal-gamma distribution are updated after each observation. The mean of the normal
-    distribution is sampled from the normal-gamma distribution and the action with the highest mean is selected.
+    Normal Thompson sampling agent [11]_. The normal-inverse-gamma distribution is a conjugate prior for the normal
+    distribution with unknown mean and variance. The parameters of the distribution are updated after each observation.
+    The mean of the normal distribution is sampled from the normal-inverse-gamma distribution and the action with
+    the highest expected value is selected.
 
     Parameters
     ----------
@@ -53,14 +53,13 @@ class NormalThompsonSampling(BaseAgent):
 
     References
     ----------
-    .. [10] Normal-gamma distribution. Wikipedia. https://en.wikipedia.org/wiki/Normal-gamma_distribution
-    .. [11] Kevin P. Murphy. 2007. Conjugate Bayesian analysis of the Gaussian distribution.
+    .. [10] Kevin P. Murphy. 2007. Conjugate Bayesian analysis of the Gaussian distribution.
        https://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf
     """
 
     def __init__(
             self,
-            n_arms: jnp.int32,
+            n_arms: int,
             alpha: Scalar,
             beta: Scalar,
             lam: Scalar,
@@ -79,18 +78,18 @@ class NormalThompsonSampling(BaseAgent):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'alpha': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32),
-            'beta': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32),
-            'lam': gym.spaces.Box(0.0, jnp.inf, (1,), jnp.float32),
-            'mu': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
+            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'alpha': gym.spaces.Box(0.0, jnp.inf, (1,), float),
+            'beta': gym.spaces.Box(0.0, jnp.inf, (1,), float),
+            'lam': gym.spaces.Box(0.0, jnp.inf, (1,), float),
+            'mu': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)
         })
 
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'action': gym.spaces.Discrete(self.n_arms),
-            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
+            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)
         })
 
     @property
@@ -104,15 +103,15 @@ class NormalThompsonSampling(BaseAgent):
     @staticmethod
     def init(
             key: PRNGKey,
-            n_arms: jnp.int32,
+            n_arms: int,
             alpha: Scalar,
             beta: Scalar,
             lam: Scalar,
             mu: Scalar
     ) -> NormalThompsonSamplingState:
         r"""
-        Creates and initializes an instance of the normal-gamma Thompson sampling agent for ``n_arms`` arms
-        and the given initial parameters for the prior distribution.
+        Creates and initializes an instance of the normal Thompson sampling agent for ``n_arms`` arms and the
+        given initial parameters for the prior distribution.
 
         Parameters
         ----------
@@ -131,7 +130,7 @@ class NormalThompsonSampling(BaseAgent):
         Returns
         -------
         NormalThompsonSamplingState
-            Initial state of the normal-gamma Thompson sampling agent.
+            Initial state of the normal Thompson sampling agent.
         """
 
         return NormalThompsonSamplingState(
@@ -145,11 +144,11 @@ class NormalThompsonSampling(BaseAgent):
     def update(
             state: NormalThompsonSamplingState,
             key: PRNGKey,
-            action: jnp.int32,
+            action: int,
             reward: Scalar
     ) -> NormalThompsonSamplingState:
         r"""
-        Normal-gamma Thompson sampling update according to [11]_.
+        Normal Thompson sampling update according to [11]_.
 
         .. math::
           \begin{align}
@@ -202,14 +201,14 @@ class NormalThompsonSampling(BaseAgent):
         ----------
         key : PRNGKey
             A PRNG key used as the random key.
-        concentration : array_like
+        concentration : Array
             The concentration parameter of the inverse-gamma distribution.
-        scale : array_like
+        scale : Array
             The scale parameter of the inverse-gamma distribution.
 
         Returns
         -------
-        array_like
+        Array
             Sampled values from the inverse gamma distribution.
         """
 
@@ -217,9 +216,9 @@ class NormalThompsonSampling(BaseAgent):
         return 1 / gamma
 
     @staticmethod
-    def sample(state: NormalThompsonSamplingState, key: PRNGKey) -> jnp.int32:
+    def sample(state: NormalThompsonSamplingState, key: PRNGKey) -> int:
         r"""
-        The normal-gamma Thompson sampling policy is stochastic. The algorithm draws :math:`q_a` from the distribution
+        The normal Thompson sampling policy is stochastic. The algorithm draws :math:`q_a` from the distribution
         :math:`\operatorname{Normal}(\mu(a), \operatorname{scale}(a)/\sqrt{\lambda(a)})` for each arm :math:`a` where
         :math:`\text{scale}(a)` is sampled from the inverse gamma distribution with parameters :math:`\alpha(a)` and
         :math:`\beta(a)`. The next action is selected as :math:`A = \operatorname*{argmax}_{a \in \mathscr{A}} q_a`,

@@ -1,14 +1,14 @@
 import warnings
 warnings.filterwarnings('ignore')
 
+import jax.numpy as jnp
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
 
 
 COLUMN_WIDTH = 7.0
-COLUMN_HEIGHT = 2 * COLUMN_WIDTH / (1 + np.sqrt(5))
+COLUMN_HEIGHT = 2 * COLUMN_WIDTH / (1 + jnp.sqrt(5))
 PLOT_PARAMS = {
     'figure.figsize': (COLUMN_WIDTH, COLUMN_HEIGHT),
     'figure.dpi': 72,
@@ -42,14 +42,14 @@ def ra_sim_eval():
     axs[0].set_title('ns-3')
     axs[0].set_xlabel(r'Discount factor $\gamma$')
     axs[0].set_ylabel(r'Degree of exploration c')
-    axs[0].set_xticks(np.arange(len(gammas)) + 0.5)
+    axs[0].set_xticks(jnp.arange(len(gammas)) + 0.5)
     axs[0].set_xticklabels(gammas)
     axs[0].tick_params(axis='both', which='major', labelsize=7)
 
     sns.heatmap(df_ra, ax=axs[1], vmin=20, vmax=45, cbar=False, cmap='viridis', square=True)
     axs[1].set_title('ra-sim')
     axs[1].set_xlabel(r'Discount factor $\gamma$')
-    axs[1].set_xticks(np.arange(len(gammas)) + 0.5)
+    axs[1].set_xticks(jnp.arange(len(gammas)) + 0.5)
     axs[1].set_xticklabels(gammas, fontsize=7)
     axs[1].yaxis.set_visible(False)
 

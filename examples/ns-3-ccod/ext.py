@@ -1,7 +1,7 @@
 from chex import Array
 
 import gymnasium as gym
-import numpy as np
+import jax.numpy as jnp
 
 from reinforced_lib.exts import BaseExt, observation, parameter
 
@@ -25,11 +25,11 @@ class IEEE_802_11_CCOD(BaseExt):
         self.history_length = history_length
 
     observation_space = gym.spaces.Dict({
-        'history': gym.spaces.Box(0, 1, (max_history_length,), np.float32),
-        'reward': gym.spaces.Box(-np.inf, np.inf, (1,))
+        'history': gym.spaces.Box(0, 1, (max_history_length,), float),
+        'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
     })
 
-    def preprocess(self, history: Array) -> Array:
+    def preprocess(self, history: list) -> Array:
         """
         Preprocess the history according to the CCOD algorithm. The history is
         split into windows of equal length and the mean and standard deviation
@@ -41,57 +41,57 @@ class IEEE_802_11_CCOD(BaseExt):
 
         Parameters
         ----------
-        history : array_like
+        history : Array
             History of the transmission failure probability.
 
         Returns
         -------
-        array_like
+        Array
             Preprocessed history.
         """
 
-        history = history[:self.history_length]
+        history = jnp.array(history[:self.history_length])
         window = self.history_length // 2
-        res = np.empty((4, 2))
+        res = jnp.empty((4, 2))
 
         for i, pos in enumerate(range(0, self.history_length, window // 2)):
-            res[i, 0] = np.mean(history[pos:pos + window])
-            res[i, 1] = np.std(history[pos:pos + window])
+            res = res.at[i, 0].set(jnp.mean(history[pos:pos + window]))
+            res = res.at[i, 1].set(jnp.std(history[pos:pos + window]))
 
-        return np.clip(res, 0, 1)
+        return jnp.clip(res, 0, 1)
 
-    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (4, 2), np.float32))
-    def env_state(self, history: Array, *args, **kwargs) -> np.ndarray:
+    @observation(observation_type=gym.spaces.Box(-jnp.inf, jnp.inf, (4, 2), float))
+    def env_state(self, history: list, *args, **kwargs) -> Array:
         return self.preprocess(history)
 
     @observation(observation_type=gym.spaces.MultiBinary(1))
     def terminal(self, *args, **kwargs) -> bool:
         return False
 
-    @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    @parameter(parameter_type=gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float))
     def min_reward(self) -> float:
         return 0.
 
-    @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    @parameter(parameter_type=gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float))
     def max_reward(self) -> float:
         return 1.
 
-    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(0, np.inf, (1,), np.int32)))
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(0, jnp.inf, (1,), int)))
     def obs_space_shape(self) -> tuple:
         return 4, 2
 
-    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), int)))
     def act_space_shape(self) -> tuple:
         return tuple((1,))
 
-    @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
+    @parameter(parameter_type=gym.spaces.Box(1, jnp.inf, (1,), int))
     def act_space_size(self) -> int:
         return 7
 
-    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)))
     def min_action(self) -> tuple:
         return 0
 
-    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)))
     def max_action(self) -> tuple:
         return 6

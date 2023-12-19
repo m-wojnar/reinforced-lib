@@ -451,7 +451,7 @@ class RLib:
         path : str, optional
             Path to the checkpoint file. If none specified, saves to the default path.
             If the ``.pkl.lz4`` suffix is not detected, it will be appended automatically.
-        agent_ids : int or array_like, optional
+        agent_ids : int or Array, optional
             The identifier of the agent instance(s) to save. If none specified, saves the state of all agents.
         
         Returns
