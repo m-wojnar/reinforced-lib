@@ -102,7 +102,7 @@ rate adaptation scenario controlled by the UCB agent.
 .. code-block:: bash
 
     cd $REINFORCED_LIB
-    ./test/test_ns3_integration.sh
+    ./test/test_ns3_integration.sh $YOUR_NS3_PATH
 
 On success, in your home directory, there should be a ``rlib-ns3-integration-test.csv`` file generated filled with some data.
 
