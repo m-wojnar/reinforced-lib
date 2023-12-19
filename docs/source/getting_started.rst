@@ -393,6 +393,25 @@ mandatory, we strongly encourage their implementation as they allow easy samplin
 methods. To learn more about the agent's methods, check out the :ref:`Custom agents <custom_agents>` section.
 
 
+64-bit floating-point precision
+-------------------------------
+
+By default, JAX uses 32-bit floating-point precision. However, in some cases, you might want to use 64-bit
+floating-point precision. The easiest way to achieve this is to set the ``JAX_ENABLE_X64`` environment variable to
+``True``:
+
+.. code-block:: bash
+
+    export JAX_ENABLE_X64=True
+
+Alternatively, you can set the environment variable in your Python script:
+
+.. code-block:: python
+
+    import os
+    os.environ['JAX_ENABLE_X64'] = 'True'
+
+
 Real-world examples
 -------------------
 

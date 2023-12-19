@@ -32,7 +32,8 @@ class Softmax(BaseAgent):
     r"""
     Softmax agent with baseline and optional exponential recency-weighted average update. It learns a preference
     function :math:`H`, which indicates a preference of selecting one arm over others. Algorithm policy can be
-    controlled by the temperature parameter :math:`\tau`. The implementation is inspired by the work of Sutton and Barto [5]_.
+    controlled by the temperature parameter :math:`\tau`. The implementation is inspired by the work of Sutton
+    and Barto [5]_. **Note:** For this agent, some environments find it very beneficial to use 64-bit JAX mode!
 
     Parameters
     ----------
