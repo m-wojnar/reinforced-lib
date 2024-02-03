@@ -95,7 +95,7 @@ import optax
 from chex import Array
 
 from reinforced_lib import RLib
-from reinforced_lib.agents.deep import QLearning
+from reinforced_lib.agents.deep import DQN
 from reinforced_lib.exts import Gymnasium
 
 
@@ -106,7 +106,7 @@ def q_network(x: Array) -> Array:
 
 if __name__ == '__main__':
     rl = RLib(
-        agent_type=QLearning,
+        agent_type=DQN,
         agent_params={
             'q_network': q_network,
             'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),

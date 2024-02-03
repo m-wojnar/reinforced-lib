@@ -295,7 +295,7 @@ replay buffer:
 .. code-block:: python
 
     @dataclass
-    class QLearningState(AgentState):
+    class DQNState(AgentState):
         params: hk.Params
         state: hk.State
         opt_state: optax.OptState
@@ -332,7 +332,7 @@ By implementing the constructor in this manner, users gain the flexibility to de
         return hk.nets.MLP([64, 64, 2])(x)
 
     rl = RLib(
-        agent_type=QLearning,
+        agent_type=DQN,
         agent_params={
             'q_network': q_network,
             'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2)

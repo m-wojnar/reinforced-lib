@@ -70,10 +70,10 @@ class DDPG(BaseAgent):
     r"""
     Deep deterministic policy gradient [3]_ [4]_ agent with white Gaussian noise exploration and experience replay
     buffer. The agent simultaneously learns a Q-function and a policy. The Q-function is updated using the Bellman
-    equation. The policy is learned using the gradient of the Q-function with respect to the policy parameters,
-    it is trained to maximize the Q-value. The agent uses two Q-networks (critics) and two policy networks (actors)
-    to stabilize the learning process and avoid overestimation. The target networks are updated with a soft update.
-    This agent follows the off-policy learning paradigm and is suitable for environments with continuous action spaces.
+    equation. The policy is learned using the gradient of the Q-function with respect to the policy parameters
+    to maximize the Q-value. The agent uses two Q-networks (critics) and two policy networks (actors) to stabilize
+    the learning process and avoid overestimation. The target networks are updated with a soft update. This agent
+    follows the off-policy learning paradigm and is suitable for environments with continuous action spaces.
 
     Parameters
     ----------
@@ -245,7 +245,7 @@ class DDPG(BaseAgent):
     ) -> DDPGState:
         r"""
         Initializes the Q-networks and the policy networks, optimizers, and experience replay buffer.
-        First state of the environment is assumed to be a tensor of zeros.
+        The first state of the environment is assumed to be a tensor of zeros.
 
         Parameters
         ----------
@@ -308,7 +308,7 @@ class DDPG(BaseAgent):
             key: PRNGKey,
             ddpg_state: DDPGState,
             batch: tuple,
-            non_zero_loss: bool,
+            buffer_ready: bool,
             q_network: hk.TransformedWithState,
             a_network: hk.TransformedWithState,
             discount: Scalar
@@ -331,7 +331,7 @@ class DDPG(BaseAgent):
             The state of the deep deterministic policy gradient agent.
         batch : tuple
             A batch of transitions from the experience replay buffer.
-        non_zero_loss : bool
+        buffer_ready : bool
             Flag used to avoid updating the Q-network when the experience replay buffer is not full.
         q_network : hk.TransformedWithState
             The Q-network.
@@ -358,7 +358,7 @@ class DDPG(BaseAgent):
         target = jax.lax.stop_gradient(target)
         loss = optax.l2_loss(q_values, target).mean()
 
-        return loss * non_zero_loss, q_state
+        return loss * buffer_ready, q_state
 
     @staticmethod
     def a_loss_fn(
@@ -366,7 +366,7 @@ class DDPG(BaseAgent):
             key: PRNGKey,
             ddpg_state: DDPGState,
             batch: tuple,
-            non_zero_loss: bool,
+            buffer_ready: bool,
             q_network: hk.TransformedWithState,
             a_network: hk.TransformedWithState
     ) -> tuple[Scalar, hk.State]:
@@ -385,7 +385,7 @@ class DDPG(BaseAgent):
             The state of the deep deterministic policy gradient agent.
         batch : tuple
             A batch of transitions from the experience replay buffer.
-        non_zero_loss : bool
+        buffer_ready : bool
             Flag used to avoid updating the policy network when the experience replay buffer is not full.
         q_network : hk.TransformedWithState
             The Q-network.
@@ -405,7 +405,7 @@ class DDPG(BaseAgent):
         q_values, _ = q_network.apply(ddpg_state.q_params, ddpg_state.q_state, q_key, states, actions)
         loss = -jnp.mean(q_values)
 
-        return loss * non_zero_loss, a_state
+        return loss * buffer_ready, a_state
 
     @staticmethod
     def update(
@@ -477,16 +477,16 @@ class DDPG(BaseAgent):
         a_params, a_net_state, a_opt_state = state.a_params, state.a_state, state.a_opt_state
         a_params_target, a_state_target = state.a_params_target, state.a_state_target
 
-        non_zero_loss = experience_replay.is_ready(replay_buffer)
+        buffer_ready = experience_replay.is_ready(replay_buffer)
 
         for _ in range(experience_replay_steps):
             batch_key, q_network_key, a_network_key, key = jax.random.split(key, 4)
             batch = experience_replay.sample(replay_buffer, batch_key)
 
             q_params, q_net_state, q_opt_state, _ = q_step_fn(
-                q_params, (q_network_key, state, batch, non_zero_loss), q_opt_state)
+                q_params, (q_network_key, state, batch, buffer_ready), q_opt_state)
             a_params, a_net_state, a_opt_state, _ = a_step_fn(
-                a_params, (a_network_key, state, batch, non_zero_loss), a_opt_state)
+                a_params, (a_network_key, state, batch, buffer_ready), a_opt_state)
 
             q_params_target, q_state_target = optax.incremental_update(
                 (q_params, q_net_state), (q_params_target, q_state_target), tau)

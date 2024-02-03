@@ -8,7 +8,7 @@ import gymnasium as gym
 gym.logger.set_level(40)
 
 from reinforced_lib import RLib
-from reinforced_lib.agents.deep import QLearning
+from reinforced_lib.agents.deep import DQN
 from reinforced_lib.exts import Gymnasium
 from reinforced_lib.logs import StdoutLogger, TensorboardLogger
 
@@ -33,7 +33,7 @@ def run(num_epochs: int, render_every: int, seed: int) -> None:
     """
 
     rl = RLib(
-        agent_type=QLearning,
+        agent_type=DQN,
         agent_params={
             'q_network': q_network,
             'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),

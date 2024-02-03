@@ -17,7 +17,7 @@ from ext import IEEE_802_11_CCOD
 from py_interface import *
 
 from reinforced_lib import RLib
-from reinforced_lib.agents.deep import DQN, DDPG
+from reinforced_lib.agents.deep import DDQN, DDPG
 from reinforced_lib.logs import SourceType, TensorboardLogger
 
 
@@ -230,7 +230,7 @@ if __name__ == '__main__':
     agent = args.pop('agent')
 
     agent_type = {
-        'DQN': DQN,
+        'DQN': DDQN,
         'DDPG': DDPG
     }
     default_params = {

@@ -54,7 +54,7 @@ significantly simplified. Below, we present the basic training loop with the sim
     from chex import Array
 
     from reinforced_lib import RLib
-    from reinforced_lib.agents.deep import QLearning
+    from reinforced_lib.agents.deep import DQN
     from reinforced_lib.exts import Gymnasium
 
 
@@ -65,7 +65,7 @@ significantly simplified. Below, we present the basic training loop with the sim
 
     if __name__ == '__main__':
         rl = RLib(
-            agent_type=QLearning,
+            agent_type=DQN,
             agent_params={
                 'q_network': q_network,
                 'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
@@ -157,7 +157,7 @@ You can easily change the logger type, add more sources, and customize the param
         logger_params={'plots_smoothing': 0.9}
     )
 
-Note that ``terminal`` is the observation name, ``epsilon`` is name of the state of the ``QLearning`` agent,
+Note that ``terminal`` is the observation name, ``epsilon`` is name of the state of the ``DQN`` agent,
 and ``action`` is the name of the metric. You can mix sources names as long as it does not lead to inconclusiveness.
 In the example above, it can be seen that ``action`` is both the name of the observation and the metric. In this case,
 you have to write the source name as a tuple containing a name and the type of the source ``(str, SourceType)``
@@ -266,12 +266,12 @@ optimizer:
 .. code-block:: python
 
     from reinforced_lib import RLib
-    from reinforced_lib.agents.deep import QLearning
+    from reinforced_lib.agents.deep import DQN
     from reinforced_lib.exts import Gymnasium
 
     # Setting up the experiment
     rl = RLib(
-        agent_type=QLearning,
+        agent_type=DQN,
         agent_params={
             'q_network': q_network,
             'optimizer': optax.adam(1e-3),

@@ -165,7 +165,7 @@ class ExpectedSarsa(BaseAgent):
     ) -> ExpectedSarsaState:
         r"""
         Initializes the Q-network, optimizer and experience replay buffer with given parameters.
-        First state of the environment is assumed to be a tensor of zeros.
+        The first state of the environment is assumed to be a tensor of zeros.
 
         Parameters
         ----------
@@ -208,7 +208,7 @@ class ExpectedSarsa(BaseAgent):
             params_target: hk.Params,
             net_state_target: hk.State,
             batch: tuple,
-            non_zero_loss: bool,
+            buffer_ready: bool,
             q_network: hk.TransformedWithState,
             discount: Scalar,
             tau: Scalar
@@ -234,7 +234,7 @@ class ExpectedSarsa(BaseAgent):
             The state of the target Q-network.
         batch : tuple
             A batch of transitions from the experience replay buffer.
-        non_zero_loss : bool
+        buffer_ready : bool
             Flag used to avoid updating the Q-network when the experience replay buffer is not full.
         q_network : hk.TransformedWithState
             The Q-network.
@@ -262,7 +262,7 @@ class ExpectedSarsa(BaseAgent):
         target = jax.lax.stop_gradient(target)
         loss = optax.l2_loss(q_values, target).mean()
 
-        return loss * non_zero_loss, state
+        return loss * buffer_ready, state
 
     @staticmethod
     def update(
@@ -319,13 +319,13 @@ class ExpectedSarsa(BaseAgent):
         params, net_state, opt_state = state.params, state.state, state.opt_state
         params_target, net_state_target = deepcopy(params), deepcopy(net_state)
         
-        non_zero_loss = experience_replay.is_ready(replay_buffer)
+        buffer_ready = experience_replay.is_ready(replay_buffer)
 
         for _ in range(experience_replay_steps):
             batch_key, network_key, key = jax.random.split(key, 3)
             batch = experience_replay.sample(replay_buffer, batch_key)
 
-            loss_params = (network_key, net_state, params_target, net_state_target, batch, non_zero_loss)
+            loss_params = (network_key, net_state, params_target, net_state_target, batch, buffer_ready)
             params, net_state, opt_state, _ = step_fn(params, loss_params, opt_state)
 
         return ExpectedSarsaState(

@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep.ddpg import DDPGState
-from reinforced_lib.agents.deep.dqn import DQNState
+from reinforced_lib.agents.deep.ddqn import DDQNState
 
 
 if __name__ == '__main__':
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     rl = RLib.load(args.loadPath)
 
     if args.agent == 'DQN':
-        rl._agent_containers[0].state = DQNState(
+        rl._agent_containers[0].state = DDQNState(
             params=rl._agent_containers[0].state.params,
             state=rl._agent_containers[0].state.state,
             params_target=None,
