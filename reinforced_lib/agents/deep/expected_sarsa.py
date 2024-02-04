@@ -23,7 +23,7 @@ class ExpectedSarsaState(AgentState):
     ----------
     params : hk.Params
         Parameters of the Q-network.
-    state : hk.State
+    net_state : hk.State
         State of the Q-network.
     opt_state : optax.OptState
         Optimizer state.
@@ -34,7 +34,7 @@ class ExpectedSarsaState(AgentState):
     """
 
     params: hk.Params
-    state: hk.State
+    net_state: hk.State
     opt_state: optax.OptState
 
     replay_buffer: ReplayBuffer
@@ -105,7 +105,7 @@ class ExpectedSarsa(BaseAgent):
             obs_space_shape=self.obs_space_shape,
             q_network=q_network,
             optimizer=optimizer,
-            experience_replay=er
+            er=er
         ))
         self.update = jax.jit(partial(
             self.update,
@@ -115,7 +115,7 @@ class ExpectedSarsa(BaseAgent):
                 optimizer=optimizer,
                 loss_fn=partial(self.loss_fn, q_network=q_network, discount=discount, tau=tau)
             ),
-            experience_replay=er,
+            er=er,
             experience_replay_steps=experience_replay_steps
         ))
         self.sample = jax.jit(partial(
@@ -161,7 +161,7 @@ class ExpectedSarsa(BaseAgent):
             obs_space_shape: Shape,
             q_network: hk.TransformedWithState,
             optimizer: optax.GradientTransformation,
-            experience_replay: ExperienceReplay
+            er: ExperienceReplay
     ) -> ExpectedSarsaState:
         r"""
         Initializes the Q-network, optimizer and experience replay buffer with given parameters.
@@ -177,7 +177,7 @@ class ExpectedSarsa(BaseAgent):
             The Q-network.
         optimizer : optax.GradientTransformation
             The optimizer.
-        experience_replay : ExperienceReplay
+        er : ExperienceReplay
             The experience replay buffer.
 
         Returns
@@ -187,14 +187,14 @@ class ExpectedSarsa(BaseAgent):
         """
 
         x_dummy = jnp.empty(obs_space_shape)
-        params, state = q_network.init(key, x_dummy)
+        params, net_state = q_network.init(key, x_dummy)
 
         opt_state = optimizer.init(params)
-        replay_buffer = experience_replay.init()
+        replay_buffer = er.init()
 
         return ExpectedSarsaState(
             params=params,
-            state=state,
+            net_state=net_state,
             opt_state=opt_state,
             replay_buffer=replay_buffer,
             prev_env_state=jnp.zeros(obs_space_shape)
@@ -208,7 +208,6 @@ class ExpectedSarsa(BaseAgent):
             params_target: hk.Params,
             net_state_target: hk.State,
             batch: tuple,
-            buffer_ready: bool,
             q_network: hk.TransformedWithState,
             discount: Scalar,
             tau: Scalar
@@ -234,8 +233,6 @@ class ExpectedSarsa(BaseAgent):
             The state of the target Q-network.
         batch : tuple
             A batch of transitions from the experience replay buffer.
-        buffer_ready : bool
-            Flag used to avoid updating the Q-network when the experience replay buffer is not full.
         q_network : hk.TransformedWithState
             The Q-network.
         discount : Scalar
@@ -252,7 +249,7 @@ class ExpectedSarsa(BaseAgent):
         states, actions, rewards, terminals, next_states = batch
         q_key, q_target_key = jax.random.split(key)
 
-        q_values, state = q_network.apply(params, net_state, q_key, states)
+        q_values, net_state = q_network.apply(params, net_state, q_key, states)
         q_values = jnp.take_along_axis(q_values, actions.astype(int), axis=-1)
 
         q_values_target, _ = q_network.apply(params_target, net_state_target, q_target_key, next_states)
@@ -262,7 +259,7 @@ class ExpectedSarsa(BaseAgent):
         target = jax.lax.stop_gradient(target)
         loss = optax.l2_loss(q_values, target).mean()
 
-        return loss * buffer_ready, state
+        return loss, net_state
 
     @staticmethod
     def update(
@@ -274,7 +271,7 @@ class ExpectedSarsa(BaseAgent):
             terminal: bool,
             q_network: hk.TransformedWithState,
             step_fn: Callable,
-            experience_replay: ExperienceReplay,
+            er: ExperienceReplay,
             experience_replay_steps: int
     ) -> ExpectedSarsaState:
         r"""
@@ -300,7 +297,7 @@ class ExpectedSarsa(BaseAgent):
             The Q-network.
         step_fn : Callable
             The function that performs a single gradient step on the Q-network.
-        experience_replay : ExperienceReplay
+        er : ExperienceReplay
             The experience replay buffer.
         experience_replay_steps : int
             The number of experience replay steps.
@@ -311,26 +308,26 @@ class ExpectedSarsa(BaseAgent):
             The updated state of the deep expected SARSA agent.
         """
 
-        replay_buffer = experience_replay.append(
-            state.replay_buffer, state.prev_env_state,
-            action, reward, terminal, env_state
-        )
+        replay_buffer = er.append(state.replay_buffer, state.prev_env_state, action, reward, terminal, env_state)
+        params_target, net_state_target = deepcopy(state.params), deepcopy(state.net_state)
 
-        params, net_state, opt_state = state.params, state.state, state.opt_state
-        params_target, net_state_target = deepcopy(params), deepcopy(net_state)
-        
-        buffer_ready = experience_replay.is_ready(replay_buffer)
-
-        for _ in range(experience_replay_steps):
+        def for_loop_fn(_: int, carry: tuple) -> tuple:
+            params, net_state, opt_state, key = carry
             batch_key, network_key, key = jax.random.split(key, 3)
-            batch = experience_replay.sample(replay_buffer, batch_key)
 
-            loss_params = (network_key, net_state, params_target, net_state_target, batch, buffer_ready)
+            loss_params = (network_key, net_state, params_target, net_state_target, er.sample(replay_buffer, batch_key))
             params, net_state, opt_state, _ = step_fn(params, loss_params, opt_state)
+
+            return params, net_state, opt_state, key
+
+        params, net_state, opt_state, _ = jax.lax.fori_loop(
+            0, experience_replay_steps * er.is_ready(replay_buffer), for_loop_fn,
+            (state.params, state.net_state, state.opt_state, key)
+        )
 
         return ExpectedSarsaState(
             params=params,
-            state=net_state,
+            net_state=net_state,
             opt_state=opt_state,
             replay_buffer=replay_buffer,
             prev_env_state=env_state
@@ -372,7 +369,7 @@ class ExpectedSarsa(BaseAgent):
             Selected action.
         """
 
-        network_key, categorical_key = jax.random.split(key)
+        network_key, action_key = jax.random.split(key)
 
-        logits = q_network.apply(state.params, state.state, network_key, env_state)[0]
-        return jax.random.categorical(categorical_key, logits / tau)
+        logits = q_network.apply(state.params, state.net_state, network_key, env_state)[0]
+        return jax.random.categorical(action_key, logits / tau)

@@ -23,11 +23,11 @@ class DDQNState(AgentState):
     ----------
     params : hk.Params
         Parameters of the main Q-network.
-    state : hk.State
+    net_state : hk.State
         State of the main Q-network.
     params_target : hk.Params
         Parameters of the target Q-network.
-    state_target : hk.State
+    net_state_target : hk.State
         State of the target Q-network.
     opt_state : optax.OptState
         Optimizer state of the main Q-network.
@@ -40,10 +40,10 @@ class DDQNState(AgentState):
     """
 
     params: hk.Params
-    state: hk.State
+    net_state: hk.State
 
     params_target: hk.Params
-    state_target: hk.State
+    net_state_target: hk.State
 
     opt_state: optax.OptState
 
@@ -133,7 +133,7 @@ class DDQN(BaseAgent):
             obs_space_shape=self.obs_space_shape,
             q_network=q_network,
             optimizer=optimizer,
-            experience_replay=er,
+            er=er,
             epsilon=epsilon
         ))
         self.update = jax.jit(partial(
@@ -143,7 +143,7 @@ class DDQN(BaseAgent):
                 optimizer=optimizer,
                 loss_fn=partial(self.loss_fn, q_network=q_network, discount=discount)
             ),
-            experience_replay=er,
+            er=er,
             experience_replay_steps=experience_replay_steps,
             epsilon_decay=epsilon_decay,
             epsilon_min=epsilon_min,
@@ -194,7 +194,7 @@ class DDQN(BaseAgent):
             obs_space_shape: Shape,
             q_network: hk.TransformedWithState,
             optimizer: optax.GradientTransformation,
-            experience_replay: ExperienceReplay,
+            er: ExperienceReplay,
             epsilon: Scalar
     ) -> DDQNState:
         r"""
@@ -211,7 +211,7 @@ class DDQN(BaseAgent):
             The Q-network.
         optimizer : optax.GradientTransformation
             The optimizer.
-        experience_replay : ExperienceReplay
+        er : ExperienceReplay
             The experience replay buffer.
         epsilon : Scalar
             The initial :math:`\epsilon`-greedy parameter.
@@ -223,16 +223,16 @@ class DDQN(BaseAgent):
         """
 
         x_dummy = jnp.empty(obs_space_shape)
-        params, state = q_network.init(key, x_dummy)
+        params, net_state = q_network.init(key, x_dummy)
 
         opt_state = optimizer.init(params)
-        replay_buffer = experience_replay.init()
+        replay_buffer = er.init()
 
         return DDQNState(
             params=params,
-            state=state,
+            net_state=net_state,
             params_target=deepcopy(params),
-            state_target=deepcopy(state),
+            net_state_target=deepcopy(net_state),
             opt_state=opt_state,
             replay_buffer=replay_buffer,
             prev_env_state=jnp.zeros(obs_space_shape),
@@ -243,9 +243,8 @@ class DDQN(BaseAgent):
     def loss_fn(
             params: hk.Params,
             key: PRNGKey,
-            ddqn_state: DDQNState,
+            state: DDQNState,
             batch: tuple,
-            buffer_ready: bool,
             q_network: hk.TransformedWithState,
             discount: Scalar
     ) -> tuple[Scalar, hk.State]:
@@ -262,12 +261,10 @@ class DDQN(BaseAgent):
             The parameters of the Q-network.
         key : PRNGKey
             A PRNG key used as the random key.
-        ddqn_state : DDQNState
+        state : DDQNState
             The state of the double deep Q-learning agent.
         batch : tuple
             A batch of transitions from the experience replay buffer.
-        buffer_ready : bool
-            Flag used to avoid updating the Q-network when the experience replay buffer is not full.
         q_network : hk.TransformedWithState
             The Q-network.
         discount : Scalar
@@ -282,16 +279,16 @@ class DDQN(BaseAgent):
         states, actions, rewards, terminals, next_states = batch
         q_key, q_target_key = jax.random.split(key)
 
-        q_values, state = q_network.apply(params, ddqn_state.state, q_key, states)
+        q_values, net_state = q_network.apply(params, state.net_state, q_key, states)
         q_values = jnp.take_along_axis(q_values, actions.astype(int), axis=-1)
 
-        q_values_target, _ = q_network.apply(ddqn_state.params_target, ddqn_state.state_target, q_target_key, next_states)
+        q_values_target, _ = q_network.apply(state.params_target, state.net_state_target, q_target_key, next_states)
         target = rewards + (1 - terminals) * discount * jnp.max(q_values_target, axis=-1, keepdims=True)
 
         target = jax.lax.stop_gradient(target)
         loss = optax.l2_loss(q_values, target).mean()
 
-        return loss * buffer_ready, state
+        return loss, net_state
 
     @staticmethod
     def update(
@@ -302,7 +299,7 @@ class DDQN(BaseAgent):
             reward: Scalar,
             terminal: bool,
             step_fn: Callable,
-            experience_replay: ExperienceReplay,
+            er: ExperienceReplay,
             experience_replay_steps: int,
             epsilon_decay: Scalar,
             epsilon_min: Scalar,
@@ -331,7 +328,7 @@ class DDQN(BaseAgent):
             Whether the episode has terminated.
         step_fn : Callable
             The function that performs a single gradient step on the Q-network.
-        experience_replay : ExperienceReplay
+        er : ExperienceReplay
             The experience replay buffer.
         experience_replay_steps : int
             The number of experience replay steps.
@@ -348,29 +345,28 @@ class DDQN(BaseAgent):
             The updated state of the double Q-learning agent.
         """
 
-        replay_buffer = experience_replay.append(
-            state.replay_buffer, state.prev_env_state,
-            action, reward, terminal, env_state
-        )
+        replay_buffer = er.append(state.replay_buffer, state.prev_env_state, action, reward, terminal, env_state)
 
-        params, net_state, opt_state = state.params, state.state, state.opt_state
-        params_target, state_target = state.params_target, state.state_target
-
-        buffer_ready = experience_replay.is_ready(replay_buffer)
-
-        for _ in range(experience_replay_steps):
+        def for_loop_fn(_: int, carry: tuple) -> tuple:
+            params, net_state, params_target, net_state_target, opt_state, key = carry
             batch_key, network_key, key = jax.random.split(key, 3)
-            batch = experience_replay.sample(replay_buffer, batch_key)
 
-            params, net_state, opt_state, _ = step_fn(params, (network_key, state, batch, buffer_ready), opt_state)
-            params_target, state_target = optax.incremental_update(
-                (params, net_state), (params_target, state_target), tau)
+            loss_params = (network_key, state, er.sample(replay_buffer, batch_key))
+            params, net_state, opt_state, _ = step_fn(params, loss_params, opt_state)
+            params_target, net_state_target = optax.incremental_update((params, net_state), (params_target, net_state_target), tau)
+
+            return params, net_state, params_target, net_state_target, opt_state, key
+
+        params, net_state, params_target, net_state_target, opt_state, _ = jax.lax.fori_loop(
+            0, experience_replay_steps * er.is_ready(replay_buffer), for_loop_fn,
+            (state.params, state.net_state, state.params_target, state.net_state_target, state.opt_state, key)
+        )
 
         return DDQNState(
             params=params,
-            state=net_state,
+            net_state=net_state,
             params_target=params_target,
-            state_target=state_target,
+            net_state_target=net_state_target,
             opt_state=opt_state,
             replay_buffer=replay_buffer,
             prev_env_state=env_state,
@@ -410,7 +406,8 @@ class DDQN(BaseAgent):
 
         network_key, action_key = jax.random.split(key)
 
-        q, _ = q_network.apply(state.params, state.state, network_key, env_state)
+        q, _ = q_network.apply(state.params, state.net_state, network_key, env_state)
         max_q = (q == q.max()).astype(float)
         probs = (1 - state.epsilon) * max_q / jnp.sum(max_q) + state.epsilon / q.shape[0]
+
         return jax.random.choice(action_key, act_space_size, p=probs.squeeze())

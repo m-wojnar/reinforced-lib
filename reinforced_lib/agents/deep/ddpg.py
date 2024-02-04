@@ -23,21 +23,21 @@ class DDPGState(AgentState):
     ----------
     q_params : haiku.Params
         Parameters of the Q-network (critic).
-    q_state : haiku.State
+    q_net_state : haiku.State
         State of the Q-network (critic).
     q_params_target : haiku.Params
         Parameters of the target Q-network.
-    q_state_target : haiku.State
+    q_net_state_target : haiku.State
         State of the target Q-network.
     q_opt_state : optax.OptState
         Optimizer state of the Q-network.
     a_params : haiku.Params
         Parameters of the policy network (actor).
-    a_state : haiku.State
+    a_net_state : haiku.State
         State of the policy network (actor).
     a_params_target : haiku.Params
         Parameters of the target policy network.
-    a_state_target : haiku.State
+    a_net_state_target : haiku.State
         State of the target policy network.
     a_opt_state : optax.OptState
         Optimizer state of the policy network.
@@ -50,15 +50,15 @@ class DDPGState(AgentState):
     """
 
     q_params: hk.Params
-    q_state: hk.State
+    q_net_state: hk.State
     q_params_target: hk.Params
-    q_state_target: hk.State
+    q_net_state_target: hk.State
     q_opt_state: optax.OptState
 
     a_params: hk.Params
-    a_state: hk.State
+    a_net_state: hk.State
     a_params_target: hk.Params
-    a_state_target: hk.State
+    a_net_state_target: hk.State
     a_opt_state: optax.OptState
 
     replay_buffer: ReplayBuffer
@@ -168,10 +168,13 @@ class DDPG(BaseAgent):
 
         self.init = jax.jit(partial(
             self.init,
-            obs_space_shape=self.obs_space_shape, act_space_shape=self.act_space_shape,
-            q_network=q_network, a_network=a_network,
-            q_optimizer=q_optimizer, a_optimizer=a_optimizer,
-            experience_replay=er,
+            obs_space_shape=self.obs_space_shape,
+            act_space_shape=self.act_space_shape,
+            q_network=q_network,
+            a_network=a_network,
+            q_optimizer=q_optimizer,
+            a_optimizer=a_optimizer,
+            er=er,
             noise=noise
         ))
         self.update = jax.jit(partial(
@@ -186,8 +189,10 @@ class DDPG(BaseAgent):
                 optimizer=a_optimizer,
                 loss_fn=partial(self.a_loss_fn, q_network=q_network, a_network=a_network)
             ),
-            experience_replay=er, experience_replay_steps=experience_replay_steps,
-            noise_decay=noise_decay, noise_min=noise_min,
+            er=er,
+            experience_replay_steps=experience_replay_steps,
+            noise_decay=noise_decay,
+            noise_min=noise_min,
             tau=tau
         ))
         self.sample = jax.jit(partial(
@@ -240,7 +245,7 @@ class DDPG(BaseAgent):
             a_network: hk.TransformedWithState,
             q_optimizer: optax.GradientTransformation,
             a_optimizer: optax.GradientTransformation,
-            experience_replay: ExperienceReplay,
+            er: ExperienceReplay,
             noise: Scalar
     ) -> DDPGState:
         r"""
@@ -263,7 +268,7 @@ class DDPG(BaseAgent):
             The Q-network optimizer.
         a_optimizer : optax.GradientTransformation
             The policy network optimizer.
-        experience_replay : ExperienceReplay
+        er : ExperienceReplay
             The experience replay buffer.
         noise : Scalar
             The initial noise value.
@@ -279,23 +284,23 @@ class DDPG(BaseAgent):
 
         key, q_key, a_key = jax.random.split(key, 3)
 
-        q_params, q_state = q_network.init(q_key, s_dummy, a_dummy)
-        a_params, a_state = a_network.init(a_key, s_dummy)
+        q_params, q_net_state = q_network.init(q_key, s_dummy, a_dummy)
+        a_params, a_net_state = a_network.init(a_key, s_dummy)
 
         q_opt_state = q_optimizer.init(q_params)
         a_opt_state = a_optimizer.init(a_params)
-        replay_buffer = experience_replay.init()
+        replay_buffer = er.init()
 
         return DDPGState(
             q_params=q_params,
-            q_state=q_state,
+            q_net_state=q_net_state,
             q_params_target=deepcopy(q_params),
-            q_state_target=deepcopy(q_state),
+            q_net_state_target=deepcopy(q_net_state),
             q_opt_state=q_opt_state,
             a_params=a_params,
-            a_state=a_state,
+            a_net_state=a_net_state,
             a_params_target=deepcopy(a_params),
-            a_state_target=deepcopy(a_state),
+            a_net_state_target=deepcopy(a_net_state),
             a_opt_state=a_opt_state,
             replay_buffer=replay_buffer,
             prev_env_state=jnp.zeros(obs_space_shape),
@@ -306,9 +311,8 @@ class DDPG(BaseAgent):
     def q_loss_fn(
             q_params: hk.Params,
             key: PRNGKey,
-            ddpg_state: DDPGState,
+            state: DDPGState,
             batch: tuple,
-            buffer_ready: bool,
             q_network: hk.TransformedWithState,
             a_network: hk.TransformedWithState,
             discount: Scalar
@@ -327,12 +331,10 @@ class DDPG(BaseAgent):
             The parameters of the Q-network.
         key : PRNGKey
             A PRNG key used as the random key.
-        ddpg_state : DDPGState
+        state : DDPGState
             The state of the deep deterministic policy gradient agent.
         batch : tuple
             A batch of transitions from the experience replay buffer.
-        buffer_ready : bool
-            Flag used to avoid updating the Q-network when the experience replay buffer is not full.
         q_network : hk.TransformedWithState
             The Q-network.
         a_network : hk.TransformedWithState
@@ -349,24 +351,23 @@ class DDPG(BaseAgent):
         states, actions, rewards, terminals, next_states = batch
         q_key, q_target_key, a_target_key = jax.random.split(key, 3)
 
-        q_values, q_state = q_network.apply(q_params, ddpg_state.q_state, q_key, states, actions)
+        q_values, q_net_state = q_network.apply(q_params, state.q_net_state, q_key, states, actions)
 
-        actions_target, _ = a_network.apply(ddpg_state.a_params_target, ddpg_state.a_state_target, a_target_key, next_states)
-        q_values_target, _ = q_network.apply(ddpg_state.q_params_target, ddpg_state.q_state_target, q_target_key, next_states, actions_target)
+        actions_target, _ = a_network.apply(state.a_params_target, state.a_net_state_target, a_target_key, next_states)
+        q_values_target, _ = q_network.apply(state.q_params_target, state.q_net_state_target, q_target_key, next_states, actions_target)
         target = rewards + (1 - terminals) * discount * q_values_target
 
         target = jax.lax.stop_gradient(target)
         loss = optax.l2_loss(q_values, target).mean()
 
-        return loss * buffer_ready, q_state
+        return loss, q_net_state
 
     @staticmethod
     def a_loss_fn(
             a_params: hk.Params,
             key: PRNGKey,
-            ddpg_state: DDPGState,
+            state: DDPGState,
             batch: tuple,
-            buffer_ready: bool,
             q_network: hk.TransformedWithState,
             a_network: hk.TransformedWithState
     ) -> tuple[Scalar, hk.State]:
@@ -381,12 +382,10 @@ class DDPG(BaseAgent):
             The parameters of the policy network.
         key : PRNGKey
             A PRNG key used as the random key.
-        ddpg_state : DDPGState
+        state : DDPGState
             The state of the deep deterministic policy gradient agent.
         batch : tuple
             A batch of transitions from the experience replay buffer.
-        buffer_ready : bool
-            Flag used to avoid updating the policy network when the experience replay buffer is not full.
         q_network : hk.TransformedWithState
             The Q-network.
         a_network : hk.TransformedWithState
@@ -401,11 +400,11 @@ class DDPG(BaseAgent):
         states, _, _, _, _ = batch
         a_key, q_key = jax.random.split(key)
 
-        actions, a_state = a_network.apply(a_params, ddpg_state.a_state, a_key, states)
-        q_values, _ = q_network.apply(ddpg_state.q_params, ddpg_state.q_state, q_key, states, actions)
+        actions, a_net_state = a_network.apply(a_params, state.a_net_state, a_key, states)
+        q_values, _ = q_network.apply(state.q_params, state.q_net_state, q_key, states, actions)
         loss = -jnp.mean(q_values)
 
-        return loss * buffer_ready, a_state
+        return loss, a_net_state
 
     @staticmethod
     def update(
@@ -417,7 +416,7 @@ class DDPG(BaseAgent):
             terminal: bool,
             q_step_fn: Callable,
             a_step_fn: Callable,
-            experience_replay: ExperienceReplay,
+            er: ExperienceReplay,
             experience_replay_steps: int,
             noise_decay: Scalar,
             noise_min: Scalar,
@@ -449,7 +448,7 @@ class DDPG(BaseAgent):
             The function that performs a single gradient step on the Q-network.
         a_step_fn : Callable
             The function that performs a single gradient step on the policy network.
-        experience_replay : ExperienceReplay
+        er : ExperienceReplay
             The experience replay buffer.
         experience_replay_steps : int
             The number of experience replay steps.
@@ -466,44 +465,42 @@ class DDPG(BaseAgent):
             The updated state of the deep deterministic policy gradient agent.
         """
 
-        replay_buffer = experience_replay.append(
-            state.replay_buffer, state.prev_env_state,
-            action, reward, terminal, env_state
-        )
+        replay_buffer = er.append(state.replay_buffer, state.prev_env_state, action, reward, terminal, env_state)
 
-        q_params, q_net_state, q_opt_state = state.q_params, state.q_state, state.q_opt_state
-        q_params_target, q_state_target = state.q_params_target, state.q_state_target
+        def for_loop_fn(_: int, carry: tuple) -> tuple:
+            q_params, q_net_state, q_params_target, q_net_state_target, q_opt_state, \
+            a_params, a_net_state, a_params_target, a_net_state_target, a_opt_state, key = carry
 
-        a_params, a_net_state, a_opt_state = state.a_params, state.a_state, state.a_opt_state
-        a_params_target, a_state_target = state.a_params_target, state.a_state_target
-
-        buffer_ready = experience_replay.is_ready(replay_buffer)
-
-        for _ in range(experience_replay_steps):
             batch_key, q_network_key, a_network_key, key = jax.random.split(key, 4)
-            batch = experience_replay.sample(replay_buffer, batch_key)
+            batch = er.sample(replay_buffer, batch_key)
 
-            q_params, q_net_state, q_opt_state, _ = q_step_fn(
-                q_params, (q_network_key, state, batch, buffer_ready), q_opt_state)
-            a_params, a_net_state, a_opt_state, _ = a_step_fn(
-                a_params, (a_network_key, state, batch, buffer_ready), a_opt_state)
+            q_params, q_net_state, q_opt_state, _ = q_step_fn(q_params, (q_network_key, state, batch), q_opt_state)
+            a_params, a_net_state, a_opt_state, _ = a_step_fn(a_params, (a_network_key, state, batch), a_opt_state)
 
-            q_params_target, q_state_target = optax.incremental_update(
-                (q_params, q_net_state), (q_params_target, q_state_target), tau)
-            a_params_target, a_state_target = optax.incremental_update(
-                (a_params, a_net_state), (a_params_target, a_state_target), tau)
+            q_params_target, q_net_state_target = optax.incremental_update((q_params, q_net_state), (q_params_target, q_net_state_target), tau)
+            a_params_target, a_net_state_target = optax.incremental_update((a_params, a_net_state), (a_params_target, a_net_state_target), tau)
+
+            return q_params, q_net_state, q_params_target, q_net_state_target, q_opt_state, \
+                   a_params, a_net_state, a_params_target, a_net_state_target, a_opt_state, key
+
+        q_params, q_net_state, q_params_target, q_net_state_target, q_opt_state, \
+        a_params, a_net_state, a_params_target, a_net_state_target, a_opt_state, _ = jax.lax.fori_loop(
+            0, experience_replay_steps, for_loop_fn,
+            (state.q_params, state.q_net_state, state.q_params_target, state.q_net_state_target, state.q_opt_state,
+            state.a_params, state.a_net_state, state.a_params_target, state.a_net_state_target, state.a_opt_state, key)
+        )
 
         return DDPGState(
             q_params=q_params,
-            q_state=q_net_state,
-            q_opt_state=q_opt_state,
+            q_net_state=q_net_state,
             q_params_target=q_params_target,
-            q_state_target=q_state_target,
+            q_net_state_target=q_net_state_target,
+            q_opt_state=q_opt_state,
             a_params=a_params,
-            a_state=a_net_state,
-            a_opt_state=a_opt_state,
+            a_net_state=a_net_state,
             a_params_target=a_params_target,
-            a_state_target=a_state_target,
+            a_net_state_target=a_net_state_target,
+            a_opt_state=a_opt_state,
             replay_buffer=replay_buffer,
             prev_env_state=env_state,
             noise=jnp.maximum(state.noise * noise_decay, noise_min)
@@ -545,7 +542,7 @@ class DDPG(BaseAgent):
 
         network_key, noise_key = jax.random.split(key)
 
-        action, _ = a_network.apply(state.a_params, state.a_state, network_key, env_state)
+        action, _ = a_network.apply(state.a_params, state.a_net_state, network_key, env_state)
         action += jax.random.normal(noise_key, action.shape) * state.noise
 
         return jnp.clip(action, min_action, max_action)
