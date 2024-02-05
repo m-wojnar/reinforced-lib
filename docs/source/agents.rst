@@ -167,11 +167,3 @@ Upper confidence bound (UCB)
 .. autoclass:: UCB
     :show-inheritance:
     :members:
-
-
-Particle filter (Core)
-----------------------
-
-.. automodule:: reinforced_lib.agents.core.particle_filter
-    :show-inheritance:
-    :members:

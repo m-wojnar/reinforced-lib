@@ -287,7 +287,7 @@ Although the above example is a simple one, it is not hard to extend it to deep 
 This can be achieved by leveraging the JAX ecosystem, along with the `flax <https://flax.readthedocs.io/>`_
 library, which provides a convenient way to define neural networks, and `optax <https://optax.readthedocs.io/>`_,
 which provides a set of optimizers. Below, we provide excerpts of the code for the :ref:`deep Q-learning agent
-<Deep Q-Learning>`.
+<Deep Q-Learning (DQN)>`.
 
 The state of the DRL agent often contains parameters and state of the neural network as well as an experience
 replay buffer:

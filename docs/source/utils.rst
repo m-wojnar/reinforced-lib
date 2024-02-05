@@ -16,3 +16,10 @@ Experience Replay
 
 .. automodule:: reinforced_lib.utils.experience_replay
     :members:
+
+Particle filter (Core)
+----------------------
+
+.. automodule:: reinforced_lib.utils.particle_filter
+    :show-inheritance:
+    :members:
