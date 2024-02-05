@@ -284,7 +284,7 @@ Deep learning agents
 --------------------
 
 Although the above example is a simple one, it is not hard to extend it to deep reinforcement learning (DRL) agents.
-This can be achieved by leveraging the JAX ecosystem, along with the `haiku <https://dm-haiku.readthedocs.io/>`_
+This can be achieved by leveraging the JAX ecosystem, along with the `flax <https://flax.readthedocs.io/>`_
 library, which provides a convenient way to define neural networks, and `optax <https://optax.readthedocs.io/>`_,
 which provides a set of optimizers. Below, we provide excerpts of the code for the :ref:`deep Q-learning agent
 <Deep Q-Learning>`.
@@ -296,8 +296,8 @@ replay buffer:
 
     @dataclass
     class DQNState(AgentState):
-        params: hk.Params
-        state: hk.State
+        params: dict
+        state: dict
         opt_state: optax.OptState
 
         replay_buffer: ReplayBuffer
@@ -311,7 +311,7 @@ users to have full control over their choice and enhancing the agent's flexibili
 
     def __init__(
         self,
-        q_network: hk.TransformedWithState,
+        q_network: nn.Module,
         optimizer: optax.GradientTransformation = None,
         ...
     ) -> None:
@@ -327,14 +327,19 @@ By implementing the constructor in this manner, users gain the flexibility to de
 
 .. code-block:: python
 
-    @hk.transform_with_state
-    def q_network(x: Array) -> Array:
-        return hk.nets.MLP([64, 64, 2])(x)
+    class QNetwork(nn.Module):
+        @nn.compact
+        def __call__(self, x):
+            x = nn.Dense(64)(x)
+            x = nn.relu(x)
+            x = nn.Dense(64)(x)
+            x = nn.relu(x)
+            return nn.Dense(2)(x)
 
     rl = RLib(
         agent_type=DQN,
         agent_params={
-            'q_network': q_network,
+            'q_network': QNetwork(),
             'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2)
         },
         ...

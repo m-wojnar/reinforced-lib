@@ -90,25 +90,28 @@ effortlessly using Reinforced-lib.
 
 ```python
 import gymnasium as gym
-import haiku as hk
 import optax
 from chex import Array
+from flax import linen as nn
 
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import DQN
 from reinforced_lib.exts import Gymnasium
 
 
-@hk.transform_with_state
-def q_network(x: Array) -> Array:
-    return hk.nets.MLP([256, 2])(x)
+class QNetwork(nn.Module):
+    @nn.compact
+    def __call__(self, x: Array) -> Array:
+        x = nn.Dense(256)(x)
+        x = nn.relu(x)
+        return nn.Dense(2)(x)
 
 
 if __name__ == '__main__':
     rl = RLib(
         agent_type=DQN,
         agent_params={
-            'q_network': q_network,
+            'q_network': QNetwork(),
             'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
         },
         ext_type=Gymnasium,

@@ -21,7 +21,7 @@ if __name__ == '__main__':
 
     rl = RLib.load(args.loadPath)
 
-    if args.agent == 'DQN':
+    if args.agent == 'DDQN':
         rl._agent_containers[0].state = DDQNState(
             params=rl._agent_containers[0].state.params,
             state=rl._agent_containers[0].state.state,

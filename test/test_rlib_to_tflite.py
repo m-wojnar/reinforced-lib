@@ -2,9 +2,9 @@ import os
 import unittest
 from glob import glob
 
-import haiku as hk
 import jax.numpy as jnp
 import optax
+from flax import linen as nn
 
 from reinforced_lib.agents.deep import DDPG
 from reinforced_lib.agents.mab import ThompsonSampling
@@ -110,19 +110,27 @@ class TestRLibToTflite(unittest.TestCase):
         except ModuleNotFoundError:
             return
 
-        @hk.transform_with_state
-        def q_network(s, a):
-            return hk.nets.MLP([64, 1])(s)
+        class QNetwork(nn.Module):
+            @nn.compact
+            def __call__(self, x):
+                x = nn.Dense(64)(x)
+                x = nn.relu(x)
+                return nn.Dense(1)(x)
 
-        @hk.transform_with_state
-        def a_network(s):
-            return hk.nets.MLP([32, 32, 1])(s)
+        class ANetwork(nn.Module):
+            @nn.compact
+            def __call__(self, x):
+                x = nn.Dense(32)(x)
+                x = nn.relu(x)
+                x = nn.Dense(32)(x)
+                x = nn.relu(x)
+                return nn.Dense(1)(x)
 
         rl = RLib(
             agent_type=DDPG,
             agent_params={
-                'q_network': q_network,
-                'a_network': a_network,
+                'q_network': QNetwork(),
+                'a_network': ANetwork(),
                 'q_optimizer': optax.adam(2e-3),
                 'a_optimizer': optax.adam(1e-3)
             },
@@ -137,19 +145,27 @@ class TestRLibToTflite(unittest.TestCase):
         except ModuleNotFoundError:
             return
 
-        @hk.transform_with_state
-        def q_network(s, a):
-            return hk.nets.MLP([64, 1])(s)
+        class QNetwork(nn.Module):
+            @nn.compact
+            def __call__(self, x):
+                x = nn.Dense(64)(x)
+                x = nn.relu(x)
+                return nn.Dense(1)(x)
 
-        @hk.transform_with_state
-        def a_network(s):
-            return hk.nets.MLP([32, 32, 1])(s)
+        class ANetwork(nn.Module):
+            @nn.compact
+            def __call__(self, x):
+                x = nn.Dense(32)(x)
+                x = nn.relu(x)
+                x = nn.Dense(32)(x)
+                x = nn.relu(x)
+                return nn.Dense(1)(x)
 
         rl = RLib(
             agent_type=DDPG,
             agent_params={
-                'q_network': q_network,
-                'a_network': a_network,
+                'q_network': QNetwork(),
+                'a_network': ANetwork(),
                 'q_optimizer': optax.adam(2e-3),
                 'a_optimizer': optax.adam(1e-3)
             },

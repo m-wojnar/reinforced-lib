@@ -8,10 +8,10 @@ Conference (WCNC), 2021. https://doi.org/10.1109/WCNC49053.2021.9417575
 from argparse import ArgumentParser
 from ctypes import *
 
-import haiku as hk
 import jax.numpy as jnp
 import optax
 from chex import Array
+from flax import linen as nn
 
 from ext import IEEE_802_11_CCOD
 from py_interface import *
@@ -78,34 +78,53 @@ def add_batch_dim(x: Array, base_ndims: int) -> Array:
         return x
 
 
-def apply_lstm(x: Array, hidden_size: int) -> Array:
-    core = hk.LSTM(hidden_size)
-    initial_state = core.initial_state(x.shape[0])
-    _, lstm_state = hk.dynamic_unroll(core, x, initial_state, time_major=False)
-    return lstm_state.hidden
+class LSTM(nn.Module):
+    hidden_size: int
+
+    @nn.compact
+    def __call__(self, x: Array) -> Array:
+        (_, x), _ = nn.RNN(nn.OptimizedLSTMCell(self.hidden_size), return_carry=True)(x)
+        return x
 
 
-@hk.transform_with_state
-def dqn_network(x: Array) -> Array:
-    x = add_batch_dim(x, base_ndims=2)
-    x = apply_lstm(x, LSTM_HIDDEN_SIZE)
-    return hk.nets.MLP([128, 64, 7])(x)
+class MLP(nn.Module):
+    features: list[int]
+
+    @nn.compact
+    def __call__(self, x: Array) -> Array:
+        for feat in self.features:
+            x = nn.Dense(feat)(x)
+            x = nn.relu(x)
+        return x
 
 
-@hk.transform_with_state
-def ddpg_q_network(s: Array, a: Array) -> Array:
-    s = add_batch_dim(s, base_ndims=2)
-    s = apply_lstm(s, LSTM_HIDDEN_SIZE)
-    a = add_batch_dim(a, base_ndims=1)
-    x = jnp.concatenate([s, a], axis=1)
-    return hk.nets.MLP([128, 64, 1])(x)
+class DQNNetwork(nn.Module):
+    @nn.compact
+    def __call__(self, x: Array) -> Array:
+        x = add_batch_dim(x, base_ndims=2)
+        x = LSTM(LSTM_HIDDEN_SIZE)(x)
+        x = MLP([128, 64])(x)
+        return nn.Dense(7)(x)
 
 
-@hk.transform_with_state
-def ddpg_a_network(s: Array) -> Array:
-    s = add_batch_dim(s, base_ndims=2)
-    s = apply_lstm(s, LSTM_HIDDEN_SIZE)
-    return hk.nets.MLP([128, 64, 1])(s).squeeze()
+class DDPGQNetwork(nn.Module):
+    @nn.compact
+    def __call__(self, s: Array, a: Array) -> Array:
+        s = add_batch_dim(s, base_ndims=2)
+        s = LSTM(LSTM_HIDDEN_SIZE)(s)
+        a = add_batch_dim(a, base_ndims=1)
+        x = jnp.concatenate([s, a], axis=1)
+        x = MLP([128, 64])(x)
+        return nn.Dense(1)(x)
+
+
+class DDPGANetwork(nn.Module):
+    @nn.compact
+    def __call__(self, s: Array) -> Array:
+        s = add_batch_dim(s, base_ndims=2)
+        s = LSTM(LSTM_HIDDEN_SIZE)(s)
+        s = MLP([128, 64])(s)
+        return nn.Dense(1)(s).squeeze()
 
 
 def run(
@@ -198,7 +217,7 @@ if __name__ == '__main__':
     args = ArgumentParser()
 
     # Python arguments
-    args.add_argument('--agent', default='DQN', type=str)
+    args.add_argument('--agent', default='DDQN', type=str)
     args.add_argument('--loadPath', default='', type=str)
     args.add_argument('--mempoolKey', default=1234, type=int)
     args.add_argument('--ns3Path', required=True, type=str)
@@ -230,12 +249,12 @@ if __name__ == '__main__':
     agent = args.pop('agent')
 
     agent_type = {
-        'DQN': DDQN,
+        'DDQN': DDQN,
         'DDPG': DDPG
     }
     default_params = {
-        'DQN': {
-            'q_network': dqn_network,
+        'DDQN': {
+            'q_network': DQNNetwork(),
             'optimizer': optax.adam(DQN_LEARNING_RATE),
             'experience_replay_buffer_size': REPLAY_BUFFER_SIZE,
             'experience_replay_batch_size': REPLAY_BUFFER_BATCH_SIZE,
@@ -247,9 +266,9 @@ if __name__ == '__main__':
             'tau': SOFT_UPDATE
         },
         'DDPG': {
-            'a_network': ddpg_a_network,
+            'a_network': DDPGANetwork(),
             'a_optimizer': optax.adam(DDPG_A_LEARNING_RATE),
-            'q_network': ddpg_q_network,
+            'q_network': DDPGQNetwork(),
             'q_optimizer': optax.adam(DDPG_Q_LEARNING_RATE),
             'experience_replay_buffer_size': REPLAY_BUFFER_SIZE,
             'experience_replay_batch_size': REPLAY_BUFFER_BATCH_SIZE,

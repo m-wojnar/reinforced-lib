@@ -3,15 +3,15 @@ from functools import partial
 from typing import Callable
 
 import gymnasium as gym
-import haiku as hk
 import jax
 import jax.numpy as jnp
 import optax
 from chex import dataclass, Array, PRNGKey, Scalar, Shape, Numeric
+from flax import linen as nn
 
 from reinforced_lib.agents import BaseAgent, AgentState
 from reinforced_lib.utils.experience_replay import experience_replay, ExperienceReplay, ReplayBuffer
-from reinforced_lib.utils.jax_utils import gradient_step
+from reinforced_lib.utils.jax_utils import forward, gradient_step, init
 
 
 @dataclass
@@ -21,23 +21,23 @@ class DDPGState(AgentState):
 
     Attributes
     ----------
-    q_params : haiku.Params
+    q_params : dict
         Parameters of the Q-network (critic).
-    q_net_state : haiku.State
+    q_net_state : dict
         State of the Q-network (critic).
-    q_params_target : haiku.Params
+    q_params_target : dict
         Parameters of the target Q-network.
-    q_net_state_target : haiku.State
+    q_net_state_target : dict
         State of the target Q-network.
     q_opt_state : optax.OptState
         Optimizer state of the Q-network.
-    a_params : haiku.Params
+    a_params : dict
         Parameters of the policy network (actor).
-    a_net_state : haiku.State
+    a_net_state : dict
         State of the policy network (actor).
-    a_params_target : haiku.Params
+    a_params_target : dict
         Parameters of the target policy network.
-    a_net_state_target : haiku.State
+    a_net_state_target : dict
         State of the target policy network.
     a_opt_state : optax.OptState
         Optimizer state of the policy network.
@@ -49,16 +49,16 @@ class DDPGState(AgentState):
         Current noise level.
     """
 
-    q_params: hk.Params
-    q_net_state: hk.State
-    q_params_target: hk.Params
-    q_net_state_target: hk.State
+    q_params: dict
+    q_net_state: dict
+    q_params_target: dict
+    q_net_state_target: dict
     q_opt_state: optax.OptState
 
-    a_params: hk.Params
-    a_net_state: hk.State
-    a_params_target: hk.Params
-    a_net_state_target: hk.State
+    a_params: dict
+    a_net_state: dict
+    a_params_target: dict
+    a_net_state_target: dict
     a_opt_state: optax.OptState
 
     replay_buffer: ReplayBuffer
@@ -77,10 +77,10 @@ class DDPG(BaseAgent):
 
     Parameters
     ----------
-    q_network : hk.TransformedWithState
+    q_network : nn.Module
         Architecture of the Q-networks (critics).
         The input to the network should be two tensors of observations and actions respectively.
-    a_network : hk.TransformedWithState
+    a_network : nn.Module
         Architecture of the policy networks (actors).
     obs_space_shape : Shape
         Shape of the observation space.
@@ -122,8 +122,8 @@ class DDPG(BaseAgent):
 
     def __init__(
             self,
-            q_network: hk.TransformedWithState,
-            a_network: hk.TransformedWithState,
+            q_network: nn.Module,
+            a_network: nn.Module,
             obs_space_shape: Shape,
             act_space_shape: Shape,
             min_action: Numeric,
@@ -198,7 +198,8 @@ class DDPG(BaseAgent):
         self.sample = jax.jit(partial(
             self.sample,
             a_network=a_network,
-            min_action=min_action, max_action=max_action
+            min_action=min_action,
+            max_action=max_action
         ))
 
     @staticmethod
@@ -241,8 +242,8 @@ class DDPG(BaseAgent):
             key: PRNGKey,
             obs_space_shape: Shape,
             act_space_shape: Shape,
-            q_network: hk.TransformedWithState,
-            a_network: hk.TransformedWithState,
+            q_network: nn.Module,
+            a_network: nn.Module,
             q_optimizer: optax.GradientTransformation,
             a_optimizer: optax.GradientTransformation,
             er: ExperienceReplay,
@@ -260,9 +261,9 @@ class DDPG(BaseAgent):
             The shape of the observation space.
         act_space_shape : Shape
             The shape of the action space.
-        q_network : hk.TransformedWithState
+        q_network : nn.Module
             The Q-network.
-        a_network : hk.TransformedWithState
+        a_network : nn.Module
             The policy network.
         q_optimizer : optax.GradientTransformation
             The Q-network optimizer.
@@ -284,8 +285,8 @@ class DDPG(BaseAgent):
 
         key, q_key, a_key = jax.random.split(key, 3)
 
-        q_params, q_net_state = q_network.init(q_key, s_dummy, a_dummy)
-        a_params, a_net_state = a_network.init(a_key, s_dummy)
+        q_params, q_net_state = init(q_network, q_key, s_dummy, a_dummy)
+        a_params, a_net_state = init(a_network, a_key, s_dummy)
 
         q_opt_state = q_optimizer.init(q_params)
         a_opt_state = a_optimizer.init(a_params)
@@ -309,14 +310,14 @@ class DDPG(BaseAgent):
 
     @staticmethod
     def q_loss_fn(
-            q_params: hk.Params,
+            q_params: dict,
             key: PRNGKey,
             state: DDPGState,
             batch: tuple,
-            q_network: hk.TransformedWithState,
-            a_network: hk.TransformedWithState,
+            q_network: nn.Module,
+            a_network: nn.Module,
             discount: Scalar
-    ) -> tuple[Scalar, hk.State]:
+    ) -> tuple[Scalar, dict]:
         r"""
         Loss is the mean squared Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r
         + \gamma \max Q'(s', \pi'(s')) - Q(s, a) \right)^2 \right]` where :math:`s` is the current state, :math:`a`
@@ -327,7 +328,7 @@ class DDPG(BaseAgent):
 
         Parameters
         ----------
-        q_params : hk.Params
+        q_params : dict
             The parameters of the Q-network.
         key : PRNGKey
             A PRNG key used as the random key.
@@ -335,26 +336,26 @@ class DDPG(BaseAgent):
             The state of the deep deterministic policy gradient agent.
         batch : tuple
             A batch of transitions from the experience replay buffer.
-        q_network : hk.TransformedWithState
+        q_network : nn.Module
             The Q-network.
-        a_network : hk.TransformedWithState
+        a_network : nn.Module
             The policy network.
         discount : Scalar
             The discount factor.
 
         Returns
         -------
-        tuple[Scalar, hk.State]
+        tuple[Scalar, dict]
             The loss and the new state of the Q-network.
         """
 
         states, actions, rewards, terminals, next_states = batch
         q_key, q_target_key, a_target_key = jax.random.split(key, 3)
 
-        q_values, q_net_state = q_network.apply(q_params, state.q_net_state, q_key, states, actions)
+        q_values, q_net_state = forward(q_network, q_params, state.q_net_state, q_key, states, actions)
 
-        actions_target, _ = a_network.apply(state.a_params_target, state.a_net_state_target, a_target_key, next_states)
-        q_values_target, _ = q_network.apply(state.q_params_target, state.q_net_state_target, q_target_key, next_states, actions_target)
+        actions_target, _ = forward(a_network, state.a_params_target, state.a_net_state_target, a_target_key, next_states)
+        q_values_target, _ = forward(q_network, state.q_params_target, state.q_net_state_target, q_target_key, next_states, actions_target)
         target = rewards + (1 - terminals) * discount * q_values_target
 
         target = jax.lax.stop_gradient(target)
@@ -364,13 +365,13 @@ class DDPG(BaseAgent):
 
     @staticmethod
     def a_loss_fn(
-            a_params: hk.Params,
+            a_params: dict,
             key: PRNGKey,
             state: DDPGState,
             batch: tuple,
-            q_network: hk.TransformedWithState,
-            a_network: hk.TransformedWithState
-    ) -> tuple[Scalar, hk.State]:
+            q_network: nn.Module,
+            a_network: nn.Module
+    ) -> tuple[Scalar, dict]:
         r"""
         The policy network is updated using the gradient of the Q-network to maximize the Q-value of the current state
         and action :math:`\max_{\theta} \mathbb{E}_{s, a} \left[ Q(s, \pi_{\theta}(s)) \right]`. Q-network parameters are
@@ -378,7 +379,7 @@ class DDPG(BaseAgent):
 
         Parameters
         ----------
-        a_params : hk.Params
+        a_params : dict
             The parameters of the policy network.
         key : PRNGKey
             A PRNG key used as the random key.
@@ -386,22 +387,22 @@ class DDPG(BaseAgent):
             The state of the deep deterministic policy gradient agent.
         batch : tuple
             A batch of transitions from the experience replay buffer.
-        q_network : hk.TransformedWithState
+        q_network : nn.Module
             The Q-network.
-        a_network : hk.TransformedWithState
+        a_network : nn.Module
             The policy network.
 
         Returns
         -------
-        tuple[Scalar, hk.State]
+        tuple[Scalar, dict]
             The loss and the new state of the policy network.
         """
 
         states, _, _, _, _ = batch
         a_key, q_key = jax.random.split(key)
 
-        actions, a_net_state = a_network.apply(a_params, state.a_net_state, a_key, states)
-        q_values, _ = q_network.apply(state.q_params, state.q_net_state, q_key, states, actions)
+        actions, a_net_state = forward(a_network, a_params, state.a_net_state, a_key, states)
+        q_values, _ = forward(q_network, state.q_params, state.q_net_state, q_key, states, actions)
         loss = -jnp.mean(q_values)
 
         return loss, a_net_state
@@ -511,7 +512,7 @@ class DDPG(BaseAgent):
             state: DDPGState,
             key: PRNGKey,
             env_state: Array,
-            a_network: hk.TransformedWithState,
+            a_network: nn.Module,
             min_action: Scalar,
             max_action: Scalar
     ) -> Numeric:
@@ -527,7 +528,7 @@ class DDPG(BaseAgent):
             A PRNG key used as the random key.
         env_state : Array
             The current state of the environment.
-        a_network : hk.TransformedWithState
+        a_network : nn.Module
             The policy network.
         min_action : Scalar or Array
             The minimum value of the action.
@@ -542,7 +543,7 @@ class DDPG(BaseAgent):
 
         network_key, noise_key = jax.random.split(key)
 
-        action, _ = a_network.apply(state.a_params, state.a_net_state, network_key, env_state)
+        action, _ = forward(a_network, state.a_params, state.a_net_state, network_key, env_state)
         action += jax.random.normal(noise_key, action.shape) * state.noise
 
         return jnp.clip(action, min_action, max_action)

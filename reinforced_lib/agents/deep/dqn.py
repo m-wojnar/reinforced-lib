@@ -3,15 +3,15 @@ from functools import partial
 from typing import Callable
 
 import gymnasium as gym
-import haiku as hk
 import jax
 import jax.numpy as jnp
 import optax
 from chex import dataclass, Array, PRNGKey, Scalar, Shape
+from flax import linen as nn
 
 from reinforced_lib.agents import BaseAgent, AgentState
 from reinforced_lib.utils.experience_replay import experience_replay, ExperienceReplay, ReplayBuffer
-from reinforced_lib.utils.jax_utils import gradient_step
+from reinforced_lib.utils.jax_utils import forward, gradient_step, init
 
 
 @dataclass
@@ -21,9 +21,9 @@ class DQNState(AgentState):
 
     Attributes
     ----------
-    params : hk.Params
+    params : dict
         Parameters of the Q-network.
-    net_state : hk.State
+    net_state : dict
         State of the Q-network.
     opt_state : optax.OptState
         Optimizer state.
@@ -35,8 +35,8 @@ class DQNState(AgentState):
         :math:`\epsilon`-greedy parameter.
     """
 
-    params: hk.Params
-    net_state: hk.State
+    params: dict
+    net_state: dict
     opt_state: optax.OptState
 
     replay_buffer: ReplayBuffer
@@ -53,7 +53,7 @@ class DQN(BaseAgent):
 
     Parameters
     ----------
-    q_network : hk.TransformedWithState
+    q_network : nn.Module
         Architecture of the Q-network.
     obs_space_shape : Shape
         Shape of the observation space.
@@ -84,7 +84,7 @@ class DQN(BaseAgent):
 
     def __init__(
             self,
-            q_network: hk.TransformedWithState,
+            q_network: nn.Module,
             obs_space_shape: Shape,
             act_space_size: int,
             optimizer: optax.GradientTransformation = None,
@@ -177,7 +177,7 @@ class DQN(BaseAgent):
     def init(
             key: PRNGKey,
             obs_space_shape: Shape,
-            q_network: hk.TransformedWithState,
+            q_network: nn.Module,
             optimizer: optax.GradientTransformation,
             er: ExperienceReplay,
             epsilon: Scalar
@@ -192,7 +192,7 @@ class DQN(BaseAgent):
             A PRNG key used as the random key.
         obs_space_shape : Shape
             The shape of the observation space.
-        q_network : hk.TransformedWithState
+        q_network : nn.Module
             The Q-network.
         optimizer : optax.GradientTransformation
             The optimizer.
@@ -208,7 +208,7 @@ class DQN(BaseAgent):
         """
 
         x_dummy = jnp.empty(obs_space_shape)
-        params, net_state = q_network.init(key, x_dummy)
+        params, net_state = init(q_network, key, x_dummy)
 
         opt_state = optimizer.init(params)
         replay_buffer = er.init()
@@ -224,15 +224,15 @@ class DQN(BaseAgent):
 
     @staticmethod
     def loss_fn(
-            params: hk.Params,
+            params: dict,
             key: PRNGKey,
-            net_state: hk.State,
-            params_target: hk.Params,
-            net_state_target: hk.State,
+            net_state: dict,
+            params_target: dict,
+            net_state_target: dict,
             batch: tuple,
-            q_network: hk.TransformedWithState,
+            q_network: nn.Module,
             discount: Scalar
-    ) -> tuple[Scalar, hk.State]:
+    ) -> tuple[Scalar, dict]:
         r"""
         Loss is the mean squared Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r +
         \gamma \max_{a'} Q(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state, :math:`a` is the
@@ -241,36 +241,36 @@ class DQN(BaseAgent):
 
         Parameters
         ----------
-        params : hk.Params
+        params : dict
             The parameters of the Q-network.
         key : PRNGKey
             A PRNG key used as the random key.
-        net_state : hk.State
+        net_state : dict
             The state of the Q-network.
-        params_target : hk.Params
+        params_target : dict
             The parameters of the target Q-network.
-        net_state_target : hk.State
+        net_state_target : dict
             The state of the target Q-network.
         batch : tuple
             A batch of transitions from the experience replay buffer.
-        q_network : hk.TransformedWithState
+        q_network : nn.Module
             The Q-network.
         discount : Scalar
             The discount factor.
 
         Returns
         -------
-        Tuple[Scalar, hk.State]
+        Tuple[Scalar, dict]
             The loss and the new state of the Q-network.
         """
 
         states, actions, rewards, terminals, next_states = batch
         q_key, q_target_key = jax.random.split(key)
 
-        q_values, net_state = q_network.apply(params, net_state, q_key, states)
+        q_values, net_state = forward(q_network, params, net_state, q_key, states)
         q_values = jnp.take_along_axis(q_values, actions.astype(int), axis=-1)
 
-        q_values_target, _ = q_network.apply(params_target, net_state_target, q_target_key, next_states)
+        q_values_target, _ = forward(q_network, params_target, net_state_target, q_target_key, next_states)
         target = rewards + (1 - terminals) * discount * jnp.max(q_values_target, axis=-1, keepdims=True)
 
         target = jax.lax.stop_gradient(target)
@@ -360,7 +360,7 @@ class DQN(BaseAgent):
             state: DQNState,
             key: PRNGKey,
             env_state: Array,
-            q_network: hk.TransformedWithState,
+            q_network: nn.Module,
             act_space_size: int
     ) -> int:
         r"""
@@ -375,7 +375,7 @@ class DQN(BaseAgent):
             A PRNG key used as the random key.
         env_state : Array
             The current state of the environment.
-        q_network : hk.TransformedWithState
+        q_network : nn.Module
             The Q-network.
         act_space_size : int
             The size of the action space.
@@ -388,7 +388,7 @@ class DQN(BaseAgent):
 
         network_key, action_key = jax.random.split(key)
 
-        q, _ = q_network.apply(state.params, state.net_state, network_key, env_state)
+        q, _ = forward(q_network, state.params, state.net_state, network_key, env_state)
         max_q = (q == q.max()).astype(float)
         probs = (1 - state.epsilon) * max_q / jnp.sum(max_q) + state.epsilon / q.shape[0]
 

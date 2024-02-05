@@ -12,7 +12,7 @@ OUTPUT_FILE="basic_results.csv"
 
 cd "$RESULTS_DIR"
 
-AGENTS=("CSMA" "DQN" "DDPG")
+AGENTS=("CSMA" "DDQN" "DDPG")
 N_WIFIS=(5 15 30 50)
 N_REPS=10
 

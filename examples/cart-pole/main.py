@@ -1,8 +1,8 @@
 from argparse import ArgumentParser
 
-import haiku as hk
 import optax
 from chex import Array
+from flax import linen as nn
 
 import gymnasium as gym
 gym.logger.set_level(40)
@@ -13,9 +13,12 @@ from reinforced_lib.exts import Gymnasium
 from reinforced_lib.logs import StdoutLogger, TensorboardLogger
 
 
-@hk.transform_with_state
-def q_network(x: Array) -> Array:
-    return hk.nets.MLP([256, 2])(x)
+class QNetwork(nn.Module):
+    @nn.compact
+    def __call__(self, x: Array) -> Array:
+        x = nn.Dense(256)(x)
+        x = nn.relu(x)
+        return nn.Dense(2)(x)
 
 
 def run(num_epochs: int, render_every: int, seed: int) -> None:
@@ -35,7 +38,7 @@ def run(num_epochs: int, render_every: int, seed: int) -> None:
     rl = RLib(
         agent_type=DQN,
         agent_params={
-            'q_network': q_network,
+            'q_network': QNetwork(),
             'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
             'discount': 0.95,
             'epsilon_decay': 0.9975

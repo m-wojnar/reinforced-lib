@@ -11,7 +11,7 @@ DATA_FILE = os.path.join(TOOLS_DIR, 'outputs', 'all_results.csv')
 
 ALL_MANAGERS = {
     'CSMA': 'Standard 802.11',
-    'DQN': 'CCOD w/ DQN',
+    'DDQN': 'CCOD w/ DQN',
     'DDPG': 'CCOD w/ DDPG'
 }
 CONFIDENCE_INTERVAL = 0.99
