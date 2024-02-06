@@ -28,6 +28,7 @@ SIMULATION_TIME = 60
 MAX_HISTORY_LENGTH = IEEE_802_11_CCOD.max_history_length
 HISTORY_LENGTH = 300
 THR_SCALE = 5 * 150 * INTERACTION_PERIOD * 10
+STEPS_PER_EPISODE = int(SIMULATION_TIME / INTERACTION_PERIOD)
 
 DQN_LEARNING_RATE = 4e-4
 DQN_EPSILON = 0.9
@@ -37,8 +38,8 @@ DQN_EPSILON_MIN = 0.001
 DDPG_Q_LEARNING_RATE = 4e-3
 DDPG_A_LEARNING_RATE = 4e-4
 DDPG_NOISE = 4.0
-DDPG_NOISE_DECAY = 0.99994
-DDPG_NOISE_MIN = 0.001
+DDPG_NOISE_DECAY = 0.999988
+DDPG_NOISE_MIN = 1.372
 
 REWARD_DISCOUNT = 0.7
 LSTM_HIDDEN_SIZE = 8
@@ -80,51 +81,62 @@ def add_batch_dim(x: Array, base_ndims: int) -> Array:
 
 class LSTM(nn.Module):
     hidden_size: int
+    activation_fn: nn.activation
+    kernel_initializer: nn.initializers.Initializer
+    carry_initializer: nn.initializers.Initializer
 
     @nn.compact
     def __call__(self, x: Array) -> Array:
-        (_, x), _ = nn.RNN(nn.OptimizedLSTMCell(self.hidden_size), return_carry=True)(x)
-        return x
+        return nn.RNN(nn.OptimizedLSTMCell(
+            self.hidden_size,
+            activation_fn=self.activation_fn,
+            kernel_init=self.kernel_initializer,
+            carry_init=self.carry_initializer
+        ))(x)
 
 
 class MLP(nn.Module):
     features: list[int]
+    activation_fn: nn.activation
+    kernel_init: nn.initializers.Initializer
 
     @nn.compact
     def __call__(self, x: Array) -> Array:
-        for feat in self.features:
-            x = nn.Dense(feat)(x)
-            x = nn.relu(x)
+        for feature in self.features:
+            x = nn.Dense(feature, kernel_init=self.kernel_init)(x)
+            x = self.activation_fn(x)
         return x
 
 
 class DQNNetwork(nn.Module):
     @nn.compact
-    def __call__(self, x: Array) -> Array:
-        x = add_batch_dim(x, base_ndims=2)
-        x = LSTM(LSTM_HIDDEN_SIZE)(x)
-        x = MLP([128, 64])(x)
-        return nn.Dense(7)(x)
+    def __call__(self, s: Array) -> Array:
+        s = add_batch_dim(s, base_ndims=2)
+        s = LSTM(LSTM_HIDDEN_SIZE, nn.relu, nn.initializers.glorot_uniform(), nn.initializers.zeros_init())(s)[:, -1]
+        s = MLP([128, 64], nn.relu, nn.initializers.glorot_uniform())(s)
+        return nn.Dense(7, kernel_init=nn.initializers.glorot_uniform())(s)
 
 
 class DDPGQNetwork(nn.Module):
     @nn.compact
     def __call__(self, s: Array, a: Array) -> Array:
         s = add_batch_dim(s, base_ndims=2)
-        s = LSTM(LSTM_HIDDEN_SIZE)(s)
+        s = LSTM(LSTM_HIDDEN_SIZE, nn.tanh, nn.initializers.uniform(1 / jnp.sqrt(LSTM_HIDDEN_SIZE)), nn.initializers.normal(1.0))(s)[:, -1]
+        s = nn.relu(s)
         a = add_batch_dim(a, base_ndims=1)
         x = jnp.concatenate([s, a], axis=1)
-        x = MLP([128, 64])(x)
-        return nn.Dense(1)(x)
+        x = MLP([128, 64], nn.relu, nn.initializers.variance_scaling(1 / 3, 'fan_in', 'uniform'))(x)
+        return nn.Dense(1, kernel_init=nn.initializers.uniform(3e-3))(x)
 
 
 class DDPGANetwork(nn.Module):
     @nn.compact
     def __call__(self, s: Array) -> Array:
         s = add_batch_dim(s, base_ndims=2)
-        s = LSTM(LSTM_HIDDEN_SIZE)(s)
-        s = MLP([128, 64])(s)
-        return nn.Dense(1)(s).squeeze()
+        s = LSTM(LSTM_HIDDEN_SIZE, nn.tanh, nn.initializers.uniform(1 / jnp.sqrt(LSTM_HIDDEN_SIZE)), nn.initializers.normal(1.0))(s)[:, -1]
+        s = nn.relu(s)
+        s = MLP([128, 64], nn.relu, nn.initializers.variance_scaling(1 / 3, 'fan_in', 'uniform'))(s)
+        return nn.Dense(1, kernel_init=nn.initializers.uniform(3e-3))(s).squeeze()
 
 
 def run(
@@ -267,9 +279,13 @@ if __name__ == '__main__':
         },
         'DDPG': {
             'a_network': DDPGANetwork(),
-            'a_optimizer': optax.adam(DDPG_A_LEARNING_RATE),
+            'a_optimizer': optax.adam(
+                optax.piecewise_constant_schedule(DDPG_A_LEARNING_RATE, {5 * STEPS_PER_EPISODE: 0.1, 10 * STEPS_PER_EPISODE: 0.1})
+            ),
             'q_network': DDPGQNetwork(),
-            'q_optimizer': optax.adam(DDPG_Q_LEARNING_RATE),
+            'q_optimizer': optax.adam(
+                optax.piecewise_constant_schedule(DDPG_Q_LEARNING_RATE, {5 * STEPS_PER_EPISODE: 0.1, 10 * STEPS_PER_EPISODE: 0.1})
+            ),
             'experience_replay_buffer_size': REPLAY_BUFFER_SIZE,
             'experience_replay_batch_size': REPLAY_BUFFER_BATCH_SIZE,
             'experience_replay_steps': REPLAY_BUFFER_STEPS,
