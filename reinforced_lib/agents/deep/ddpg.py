@@ -22,9 +22,9 @@ class DDPGState(AgentState):
     Attributes
     ----------
     q_params : dict
-        Parameters of the Q-network (critic).
+        Parameters of the Q-network.
     q_net_state : dict
-        State of the Q-network (critic).
+        State of the Q-network.
     q_params_target : dict
         Parameters of the target Q-network.
     q_net_state_target : dict
@@ -32,9 +32,9 @@ class DDPGState(AgentState):
     q_opt_state : optax.OptState
         Optimizer state of the Q-network.
     a_params : dict
-        Parameters of the policy network (actor).
+        Parameters of the policy network.
     a_net_state : dict
-        State of the policy network (actor).
+        State of the policy network.
     a_params_target : dict
         Parameters of the target policy network.
     a_net_state_target : dict
@@ -71,17 +71,17 @@ class DDPG(BaseAgent):
     Deep deterministic policy gradient [3]_ [4]_ agent with white Gaussian noise exploration and experience replay
     buffer. The agent simultaneously learns a Q-function and a policy. The Q-function is updated using the Bellman
     equation. The policy is learned using the gradient of the Q-function with respect to the policy parameters
-    to maximize the Q-value. The agent uses two Q-networks (critics) and two policy networks (actors) to stabilize
-    the learning process and avoid overestimation. The target networks are updated with a soft update. This agent
-    follows the off-policy learning paradigm and is suitable for environments with continuous action spaces.
+    to maximize the Q-value. The agent uses two Q-networks and two policy networks to stabilize the learning process
+    and avoid overestimation. The target networks are updated with a soft update. This agent follows the off-policy
+    learning paradigm and is suitable for environments with continuous action spaces.
 
     Parameters
     ----------
     q_network : nn.Module
-        Architecture of the Q-networks (critics).
+        Architecture of the Q-networks.
         The input to the network should be two tensors of observations and actions respectively.
     a_network : nn.Module
-        Architecture of the policy networks (actors).
+        Architecture of the policy networks.
     obs_space_shape : Shape
         Shape of the observation space.
     act_space_shape : Shape
