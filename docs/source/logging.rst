@@ -63,3 +63,13 @@ TensorboardLogger
 .. autoclass:: TensorboardLogger
     :show-inheritance:
     :members:
+
+
+WeightsAndBiasesLogger
+----------------------
+
+.. currentmodule:: reinforced_lib.logs.wandb_logger
+
+.. autoclass:: WeightsAndBiasesLogger
+    :show-inheritance:
+    :members:

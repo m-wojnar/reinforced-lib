@@ -62,7 +62,7 @@ class WeightsAndBiasesLogger(BaseLogger):
             Scalar to log.
         """
 
-        self.log_other(source, value, None)
+        self._log(source, value)
 
     def log_array(self, source: Source, value: Array, *_) -> None:
         """
@@ -76,7 +76,7 @@ class WeightsAndBiasesLogger(BaseLogger):
             Array to log.
         """
 
-        self.log_other(source, value, None)
+        self._log(source, value)
 
     def log_dict(self, source: Source, value: dict, *_) -> None:
         """
@@ -90,7 +90,7 @@ class WeightsAndBiasesLogger(BaseLogger):
             Dictionary to log.
         """
 
-        self.log_other(source, value, None)
+        self._log(source, value)
 
     def log_other(self, source: Source, value: any, *_) -> None:
         """
@@ -100,8 +100,22 @@ class WeightsAndBiasesLogger(BaseLogger):
         ----------
         source : Source
             Source of the logged value.
-        value : dict
-            Dictionary to log.
+        value : any
+            Value of any type to log.
+        """
+
+        self._log(source, value)
+
+    def _log(self, source: Source, value: any) -> None:
+        """
+        Adds a given value to the logger.
+
+        Parameters
+        ----------
+        source : Source
+            Source of the logged value.
+        value : Numeric
+            Value to log.
         """
 
         name = self.source_to_name(source)
