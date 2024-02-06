@@ -73,7 +73,7 @@ class TensorboardLogger(BaseLogger):
 
     def log_array(self, source: Source, value: Array, *_) -> None:
         """
-        Adds a given array to the summary writer as a histogram.
+        Log values from an array to the same plot. Creates multiple line plots for each value in the array.
 
         Parameters
         ----------
@@ -85,7 +85,7 @@ class TensorboardLogger(BaseLogger):
 
         name = self.source_to_name(source)
         step = self._get_step(name)
-        self._writer.add_histogram(name, value, step)
+        self._writer.add_scalars(name, {str(i): float(v) for i, v in enumerate(value)}, step)
 
     def log_dict(self, source: Source, value: dict, *_) -> None:
         """
@@ -109,8 +109,8 @@ class TensorboardLogger(BaseLogger):
         ----------
         source : Source
             Source of the logged value.
-        value : dict
-            Dictionary to log.
+        value : any
+            Value of any type to log.
         """
 
         name = self.source_to_name(source)

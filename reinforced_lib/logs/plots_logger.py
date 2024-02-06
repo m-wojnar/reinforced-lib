@@ -127,7 +127,7 @@ class PlotsLogger(BaseLogger):
 
     def log_array(self, source: Source, value: Array, *_) -> None:
         """
-        Adds a given array to the plot values.
+        Log values from an array to the same plot. Creates multiple line plots for each value in the array.
 
         Parameters
         ----------
@@ -141,7 +141,7 @@ class PlotsLogger(BaseLogger):
 
     def _log(self, source: Source, value: Numeric) -> None:
         """
-        Adds a given scalar to the plot values.
+        Adds a given value to the plot.
 
         Parameters
         ----------
