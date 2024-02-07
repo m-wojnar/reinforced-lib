@@ -79,41 +79,19 @@ def add_batch_dim(x: Array, base_ndims: int) -> Array:
         return x
 
 
-class LSTM(nn.Module):
-    hidden_size: int
-    activation_fn: nn.activation
-    kernel_initializer: nn.initializers.Initializer
-    carry_initializer: nn.initializers.Initializer
-
-    @nn.compact
-    def __call__(self, x: Array) -> Array:
-        return nn.RNN(nn.OptimizedLSTMCell(
-            self.hidden_size,
-            activation_fn=self.activation_fn,
-            kernel_init=self.kernel_initializer,
-            carry_init=self.carry_initializer
-        ))(x)
-
-
-class MLP(nn.Module):
-    features: list[int]
-    activation_fn: nn.activation
-    kernel_init: nn.initializers.Initializer
-
-    @nn.compact
-    def __call__(self, x: Array) -> Array:
-        for feature in self.features:
-            x = nn.Dense(feature, kernel_init=self.kernel_init)(x)
-            x = self.activation_fn(x)
-        return x
-
-
 class DQNNetwork(nn.Module):
     @nn.compact
     def __call__(self, s: Array) -> Array:
         s = add_batch_dim(s, base_ndims=2)
-        s = LSTM(LSTM_HIDDEN_SIZE, nn.relu, nn.initializers.glorot_uniform(), nn.initializers.zeros_init())(s)[:, -1]
-        s = MLP([128, 64], nn.relu, nn.initializers.glorot_uniform())(s)
+        s = nn.RNN(nn.OptimizedLSTMCell(
+            LSTM_HIDDEN_SIZE,
+            activation_fn=nn.relu,
+            kernel_init=nn.initializers.glorot_uniform()
+        ))(s)[:, -1]
+        s = nn.Dense(128, kernel_init=nn.initializers.glorot_uniform())(s)
+        s = nn.relu(s)
+        s = nn.Dense(64, kernel_init=nn.initializers.glorot_uniform())(s)
+        s = nn.relu(s)
         return nn.Dense(7, kernel_init=nn.initializers.glorot_uniform())(s)
 
 
@@ -121,11 +99,18 @@ class DDPGQNetwork(nn.Module):
     @nn.compact
     def __call__(self, s: Array, a: Array) -> Array:
         s = add_batch_dim(s, base_ndims=2)
-        s = LSTM(LSTM_HIDDEN_SIZE, nn.tanh, nn.initializers.uniform(1 / jnp.sqrt(LSTM_HIDDEN_SIZE)), nn.initializers.normal(1.0))(s)[:, -1]
+        s = nn.RNN(nn.OptimizedLSTMCell(
+            LSTM_HIDDEN_SIZE,
+            kernel_init=nn.initializers.uniform(1 / jnp.sqrt(LSTM_HIDDEN_SIZE)),
+            carry_init=nn.initializers.normal(1.0)
+        ))(s)[:, -1]
         s = nn.relu(s)
         a = add_batch_dim(a, base_ndims=1)
         x = jnp.concatenate([s, a], axis=1)
-        x = MLP([128, 64], nn.relu, nn.initializers.variance_scaling(1 / 3, 'fan_in', 'uniform'))(x)
+        x = nn.Dense(128, kernel_init=nn.initializers.variance_scaling(1 / 3, 'fan_in', 'uniform'))(x)
+        x = nn.relu(x)
+        x = nn.Dense(64, kernel_init=nn.initializers.variance_scaling(1 / 3, 'fan_in', 'uniform'))(x)
+        x = nn.relu(x)
         return nn.Dense(1, kernel_init=nn.initializers.uniform(3e-3))(x)
 
 
@@ -133,9 +118,16 @@ class DDPGANetwork(nn.Module):
     @nn.compact
     def __call__(self, s: Array) -> Array:
         s = add_batch_dim(s, base_ndims=2)
-        s = LSTM(LSTM_HIDDEN_SIZE, nn.tanh, nn.initializers.uniform(1 / jnp.sqrt(LSTM_HIDDEN_SIZE)), nn.initializers.normal(1.0))(s)[:, -1]
+        s = nn.RNN(nn.OptimizedLSTMCell(
+            LSTM_HIDDEN_SIZE,
+            kernel_init=nn.initializers.uniform(1 / jnp.sqrt(LSTM_HIDDEN_SIZE)),
+            carry_init=nn.initializers.normal(1.0)
+        ))(s)[:, -1]
         s = nn.relu(s)
-        s = MLP([128, 64], nn.relu, nn.initializers.variance_scaling(1 / 3, 'fan_in', 'uniform'))(s)
+        s = nn.Dense(128, kernel_init=nn.initializers.variance_scaling(1 / 3, 'fan_in', 'uniform'))(s)
+        s = nn.relu(s)
+        s = nn.Dense(64, kernel_init=nn.initializers.variance_scaling(1 / 3, 'fan_in', 'uniform'))(s)
+        s = nn.relu(s)
         return nn.Dense(1, kernel_init=nn.initializers.uniform(3e-3))(s).squeeze()
 
 
