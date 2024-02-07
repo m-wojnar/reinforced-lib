@@ -103,7 +103,7 @@ class DDPGQNetwork(nn.Module):
             LSTM_HIDDEN_SIZE,
             kernel_init=nn.initializers.uniform(1 / jnp.sqrt(LSTM_HIDDEN_SIZE)),
             carry_init=nn.initializers.normal(1.0)
-        ))(s)[:, -1]
+        ))(s, init_key=self.make_rng('rlib'))[:, -1]
         s = nn.relu(s)
         a = add_batch_dim(a, base_ndims=1)
         x = jnp.concatenate([s, a], axis=1)
@@ -122,7 +122,7 @@ class DDPGANetwork(nn.Module):
             LSTM_HIDDEN_SIZE,
             kernel_init=nn.initializers.uniform(1 / jnp.sqrt(LSTM_HIDDEN_SIZE)),
             carry_init=nn.initializers.normal(1.0)
-        ))(s)[:, -1]
+        ))(s, init_key=self.make_rng('rlib'))[:, -1]
         s = nn.relu(s)
         s = nn.Dense(128, kernel_init=nn.initializers.variance_scaling(1 / 3, 'fan_in', 'uniform'))(s)
         s = nn.relu(s)

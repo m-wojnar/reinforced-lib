@@ -345,8 +345,15 @@ By implementing the constructor in this manner, users gain the flexibility to de
         ...
     )
 
+.. note::
+
+    In some cases, it is necessary to use a PRNG key in the definition of a neural network to allow the stochastic
+    behavior of the model. The flax library provides a ``make_rng(stream_name)`` method that can be used to generate
+    a PRNG key from a given stream. The DRL algorithms implemented in Reinforced-lib offer a stream called ``rlib``
+    by default, so you can use it in your custom model as follows: ``key = self.make_rng('rlib')``.
+
 During the development of a DRL agent, our library offers a set of :ref:`utility functions <JAX>` for your convenience.
-Among these functions is gradient_step, designed to streamline parameter updates for the agent using JAX and optax.
+Among these functions is ``gradient_step``, designed to streamline parameter updates for the agent using JAX and optax.
 In the following example code snippet, we showcase the implementation of a step function responsible for performing
 a single step, taking into account the network, optimizer, and the implemented loss function:
 
@@ -359,6 +366,10 @@ a single step, taking into account the network, optimizer, and the implemented l
         optimizer=optimizer,
         loss_fn=partial(self.loss_fn, q_network=q_network, ...)
     )
+
+There are also other utility functions that can make it easier to implement DRL agents with flax. These are the
+``init`` and ``forward`` methods which are used to initialize the network and to perform a forward pass through the
+network. You can find more information about these functions in the :ref:`documentation <Utils>`.
 
 Our Python library also includes a pre-built :ref:`experience replay buffer <Experience Replay>`, which is commonly
 utilized in DRL agents. The following code provides an illustrative example of how to use this utility:
