@@ -28,7 +28,6 @@ SIMULATION_TIME = 60
 MAX_HISTORY_LENGTH = IEEE_802_11_CCOD.max_history_length
 HISTORY_LENGTH = 300
 THR_SCALE = 5 * 150 * INTERACTION_PERIOD * 10
-STEPS_PER_EPISODE = int(SIMULATION_TIME / INTERACTION_PERIOD)
 
 DQN_LEARNING_RATE = 4e-4
 DQN_EPSILON = 0.9
@@ -38,8 +37,8 @@ DQN_EPSILON_MIN = 0.001
 DDPG_Q_LEARNING_RATE = 4e-3
 DDPG_A_LEARNING_RATE = 4e-4
 DDPG_NOISE = 4.0
-DDPG_NOISE_DECAY = 0.999988
-DDPG_NOISE_MIN = 1.372
+DDPG_NOISE_DECAY = 0.99994
+DDPG_NOISE_MIN = 0.0271
 
 REWARD_DISCOUNT = 0.7
 LSTM_HIDDEN_SIZE = 8
@@ -128,7 +127,8 @@ class DDPGANetwork(nn.Module):
         s = nn.relu(s)
         s = nn.Dense(64, kernel_init=nn.initializers.variance_scaling(1 / 3, 'fan_in', 'uniform'))(s)
         s = nn.relu(s)
-        return nn.Dense(1, kernel_init=nn.initializers.uniform(3e-3))(s).squeeze()
+        s = nn.Dense(1, kernel_init=nn.initializers.uniform(3e-3))(s).squeeze()
+        return 3 * nn.tanh(s) + 3  # restrict the output to the range [0, 6], different from the original implementation
 
 
 def run(
@@ -271,13 +271,9 @@ if __name__ == '__main__':
         },
         'DDPG': {
             'a_network': DDPGANetwork(),
-            'a_optimizer': optax.adam(
-                optax.piecewise_constant_schedule(DDPG_A_LEARNING_RATE, {5 * STEPS_PER_EPISODE: 0.1, 10 * STEPS_PER_EPISODE: 0.1})
-            ),
+            'a_optimizer': optax.adam(DDPG_A_LEARNING_RATE),
             'q_network': DDPGQNetwork(),
-            'q_optimizer': optax.adam(
-                optax.piecewise_constant_schedule(DDPG_Q_LEARNING_RATE, {5 * STEPS_PER_EPISODE: 0.1, 10 * STEPS_PER_EPISODE: 0.1})
-            ),
+            'q_optimizer': optax.adam(DDPG_Q_LEARNING_RATE),
             'experience_replay_buffer_size': REPLAY_BUFFER_SIZE,
             'experience_replay_batch_size': REPLAY_BUFFER_BATCH_SIZE,
             'experience_replay_steps': REPLAY_BUFFER_STEPS,

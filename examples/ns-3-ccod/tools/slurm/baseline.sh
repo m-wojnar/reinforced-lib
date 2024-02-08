@@ -10,7 +10,7 @@ SCENARIO="convergence"
 N_WIFI=55
 
 NUM_REPS=10
-SEED=200
+SEED=300
 
 for (( i = 1; i <= NUM_REPS; i += 1)); do
   CSV_PATH="$RLIB_DIR/outputs/CSMA_${SCENARIO}_${N_WIFI}_run${i}.csv"
