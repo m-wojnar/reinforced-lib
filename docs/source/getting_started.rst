@@ -143,6 +143,28 @@ allows you to monitor the training process in real time, create interactive visu
 analysis. You can use the ``TensorboardLogger`` along with other loggers built into Reinforced-lib. To learn more about
 available loggers, check out the :ref:`Logging module <logging_page>` section.
 
+.. warning::
+
+    Some loggers perform actions upon completion of the training, such as saving the logs, closing the file, or
+    uploading the logs to the cloud. Therefore, it is important to gracefully close the Reinforced-lib instance
+    to ensure that the logs are saved properly. If you create a Reinforced-lib instance in a function, the destructor
+    will be called automatically when the function ends and you do not have to worry about anything. However, if
+    you create an instance in the main script, you have to close it manually by calling the ``finish`` method:
+
+    .. code-block:: python
+
+        rl = RLib(...)
+        # ...
+        rl.finish()
+
+    or by using the ``del`` statement:
+
+    .. code-block:: python
+
+        rl = RLib(...)
+        # ...
+        del rl
+
 Advanced logging
 ~~~~~~~~~~~~~~~~
 
@@ -157,23 +179,13 @@ You can easily change the logger type, add more sources, and customize the param
         logger_params={'plots_smoothing': 0.9}
     )
 
-Note that ``terminal`` is the observation name, ``epsilon`` is name of the state of the ``QLearning`` agent,
+Note that ``terminal`` is the observation name, ``epsilon`` is name of the state of the ``DQN`` agent,
 and ``action`` is the name of the metric. You can mix sources names as long as it does not lead to inconclusiveness.
 In the example above, it can be seen that ``action`` is both the name of the observation and the metric. In this case,
 you have to write the source name as a tuple containing a name and the type of the source ``(str, SourceType)``
 as in the code above.
 
-You can also plug multiple loggers to one source:
-
-.. code-block:: python
-
-    rl = RLib(
-        ...
-        logger_types=[StdoutLogger, CsvLogger, PlotsLogger],
-        logger_sources='cumulative'
-    )
-
-Or mix different loggers and sources:
+You can also plug multiple loggers to output the logs to different destinations simultaneously:
 
 .. code-block:: python
 
@@ -183,8 +195,6 @@ Or mix different loggers and sources:
         logger_sources=['terminal', 'epsilon', ('action', SourceType.METRIC)],
     )
 
-In this case remember to provide a list of loggers that has the same length as the list of sources, because given
-loggers will be used to log values for consecutive sources.
 
 Custom logging
 ~~~~~~~~~~~~~~
@@ -210,7 +220,7 @@ It is possible to mix predefined sources with custom ones:
     rl = RLib(
         ...
         logger_types=[TensorboardLogger, PlotsLogger, StdoutLogger],
-        logger_sources=[None, None, ('reward', SourceType.METRIC)]
+        logger_sources=('reward', SourceType.METRIC)
     )
 
     rl.log('my_value', 42)
