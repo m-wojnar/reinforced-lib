@@ -13,7 +13,7 @@ from reinforced_lib.utils import timestamp
 class PlotsLogger(BaseLogger):
     r"""
     Logger that presents and saves values as matplotlib plots. Offers smoothing of the curve, scatter plots, and
-    multiple curves in a single chart (while logging arrays). ``PlotsLogger`` is able to synchronizes the logged
+    multiple curves in a single chart (while logging arrays). ``PlotsLogger`` is able to synchronize the logged
     values in time. This means that if the same source is logged less often than other sources, the step will be
     increased accordingly to maintain the appropriate spacing between the values on the x-axis.
 
