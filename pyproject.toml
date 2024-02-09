@@ -42,7 +42,7 @@ dependencies = [
     "lz4~=4.3.3",
     "matplotlib~=3.8.2",
     "optax~=0.1.8",
-    "tensorboardX~=2.6.2.2"
+    "tensorboardX~=2.6.2.2",
     "wandb~=0.16.2"
 ]
 
