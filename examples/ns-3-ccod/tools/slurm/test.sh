@@ -1,19 +1,32 @@
-#!/usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -l
+#!/bin/bash
+
+if [[ $# -ne 4 ]]; then
+  echo "Usage: $0 <agent> <scenario> <nWifi> <seed>"
+  exit 1
+fi
 
 NS3_DIR="${NS3_DIR:=$HOME/ns-3.37}"
 RLIB_DIR="${RLIB_DIR:=$HOME/reinforced-lib/examples/ns-3-ccod}"
 
 cd "$RLIB_DIR"
 
-AGENT="DDPG"
-AGENT_TYPE="continuous"
+AGENT=$1
 
-SCENARIO="convergence"
-N_WIFI=55
+if [[ $AGENT == "DDPG" ]]; then
+  AGENT_TYPE="continuous"
+elif [[ $AGENT == "DDQN" ]]; then
+  AGENT_TYPE="discrete"
+else
+  echo "Invalid agent type: $AGENT"
+  exit 2
+fi
+
+SCENARIO=$2
+N_WIFI=$3
+SEED=$4
 
 LAST_RUN=14
 NUM_REPS=10
-SEED=300
 MEMPOOL_KEY=1234
 
 CHECKPOINT_LOAD_PATH="$RLIB_DIR/checkpoints/${AGENT}_${SCENARIO}_${N_WIFI}_run_${LAST_RUN}.pkl.lz4"
