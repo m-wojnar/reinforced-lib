@@ -58,9 +58,8 @@ class LogsObserver:
             self._observations_loggers[logger].append((source, source))
             self._agent_state_loggers[logger].append((source, source))
             self._metrics_loggers[logger].append((source, source))
-        elif source is None:
-            self._custom_loggers[logger] = [(None, None)]
 
+        self._custom_loggers[logger] = [(None, None)]
         self._logger_sources[logger].append(source)
         self._logger_instances[logger_type] = logger
 
@@ -143,7 +142,7 @@ class LogsObserver:
         Parameters
         ----------
         loggers : dict
-            Dictionary with the loggers instances and the connected sources.
+            Dictionary with the logger instances and the connected sources.
         get_value : callable
             Function that gets the selected value from the observations, state, or metrics.
         """
@@ -151,10 +150,8 @@ class LogsObserver:
         for logger, sources in loggers.items():
             for source, name in sources:
                 if (value := get_value(name)) is not None:
-                    if name is None:
+                    if (custom := name is None):
                         source, value = value
-
-                    custom = name is None
 
                     if is_scalar(value):
                         logger.log_scalar(source, value, custom)

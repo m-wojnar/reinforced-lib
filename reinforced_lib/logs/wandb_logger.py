@@ -1,63 +1,58 @@
-import json
 from collections import defaultdict
 
+import wandb
 from chex import Array, Scalar
-from tensorboardX import SummaryWriter
 
 from reinforced_lib.logs import BaseLogger, Source
 
 
-class TensorboardLogger(BaseLogger):
-    """
-    Logger that saves values in TensorBoard [2]_ format. Offers a possibility to log to Comet [3]_.
-    ``TensorboardLogger`` synchronizes the logged values in time. This means that if the same source
-    is logged less often than other sources, the step will be increased accordingly to maintain the
-    appropriate spacing between the values on the x-axis.
+class WeightsAndBiasesLogger(BaseLogger):
+    r"""
+    Logger that saves values to Weights & Biases [4]_ platform. ``WeightsAndBiasesLogger`` synchronizes
+    the logged values in time. This means that if the same source is logged less often than other sources,
+    the step will be increased accordingly to maintain the appropriate spacing between the values on the x-axis.
+
+    **Note**: to use this logger, you need to log into W&B before running the script. The necessary steps are
+    described in the official documentation [4]_.
 
     Parameters
     ----------
-    tb_log_dir : str, optional
-        Path to the output directory. If None, the default directory is used.
-    tb_comet_config : dict, optional
-        Configuration for the Comet logger. If None, the logger is disabled.
-    tb_sync_steps : bool, default=False
+    wandb_sync_steps : bool, default=False
         Set to ``True`` if you want to synchronize the logged values in time.
+    wandb_kwargs : dict, optional
+        Additional keyword arguments passed to ``wandb.init`` function.
 
     References
     ----------
-    .. [2] TensorBoard. https://www.tensorflow.org/tensorboard
-    .. [3] Comet. https://www.comet.ml
+    .. [4] Weights & Biases. https://docs.wandb.ai/
     """
 
     def __init__(
             self,
-            tb_log_dir: str = None,
-            tb_comet_config: dict[str, any] = None,
-            tb_sync_steps: bool = False,
+            wandb_sync_steps: bool = False,
+            wandb_kwargs: dict = None,
             **kwargs,
     ) -> None:
         super().__init__(**kwargs)
 
-        if tb_comet_config is None:
-            tb_comet_config = {'disabled': True}
-
-        self._sync_steps = tb_sync_steps
+        self._sync_steps = wandb_sync_steps
         self._current_values = set()
         self._step = 0
-
-        self._writer = SummaryWriter(log_dir=tb_log_dir, comet_config=tb_comet_config)
         self._steps = defaultdict(int)
+
+        wandb.init(**(wandb_kwargs or {}))
+        wandb.define_metric('*', step_metric='global_step')
 
     def finish(self) -> None:
         """
-        Closes the summary writer.
+        Finishes the W&B run.
         """
 
-        self._writer.close()
+        wandb.finish()
 
     def log_scalar(self, source: Source, value: Scalar, *_) -> None:
         """
-        Adds a given scalar to the summary writer.
+        Logs a scalar value to the W&B logger.
 
         Parameters
         ----------
@@ -67,13 +62,11 @@ class TensorboardLogger(BaseLogger):
             Scalar to log.
         """
 
-        name = self.source_to_name(source)
-        step = self._get_step(name)
-        self._writer.add_scalar(name, value, step)
+        self._log(source, value)
 
     def log_array(self, source: Source, value: Array, *_) -> None:
         """
-        Log values from an array to the same plot. Creates multiple line plots for each value in the array.
+        Logs an array to the W&B logger.
 
         Parameters
         ----------
@@ -83,13 +76,11 @@ class TensorboardLogger(BaseLogger):
             Array to log.
         """
 
-        name = self.source_to_name(source)
-        step = self._get_step(name)
-        self._writer.add_scalars(name, {str(i): float(v) for i, v in enumerate(value)}, step)
+        self._log(source, value)
 
     def log_dict(self, source: Source, value: dict, *_) -> None:
         """
-        Logs a dictionary as a JSON string.
+        Logs a dictionary to the W&B logger.
 
         Parameters
         ----------
@@ -99,11 +90,11 @@ class TensorboardLogger(BaseLogger):
             Dictionary to log.
         """
 
-        self.log_other(source, value, None)
+        self._log(source, value)
 
     def log_other(self, source: Source, value: any, *_) -> None:
         """
-        Logs an object as a JSON string.
+        Logs an object to the W&B logger.
 
         Parameters
         ----------
@@ -113,9 +104,23 @@ class TensorboardLogger(BaseLogger):
             Value of any type to log.
         """
 
+        self._log(source, value)
+
+    def _log(self, source: Source, value: any) -> None:
+        """
+        Adds a given value to the logger.
+
+        Parameters
+        ----------
+        source : Source
+            Source of the logged value.
+        value : Numeric
+            Value to log.
+        """
+
         name = self.source_to_name(source)
         step = self._get_step(name)
-        self._writer.add_text(name, json.dumps(value), step)
+        wandb.log({'global_step': step, name: value})
 
     def _get_step(self, name: str) -> int:
         """
