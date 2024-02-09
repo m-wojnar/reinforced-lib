@@ -1,8 +1,7 @@
-from __future__ import annotations
-
 import os
 import pickle
 from copy import deepcopy
+from itertools import product
 from typing import Union
 
 import cloudpickle
@@ -203,15 +202,14 @@ class RLib:
             logger_sources: Union[Source, list[Source]] = None,
             logger_params: dict[str, any] = None
     ) -> None:
-        """
+        r"""
         Initializes loggers of types ``logger_types`` with parameters ``logger_params``. The logger types must inherit
         from the ``BaseLogger`` class. The logger types cannot be changed after the first agent instance has been
         initialized. ``logger_types`` and ``logger_sources`` can be objects or lists of objects, the function broadcasts
-        them to the same length. The ``logger_sources`` parameter specifies the sources to log. A source can be None
-        (then the logger is used to log a custom values passed by the ``log`` method), a name of the sources (e.g.,
-        "action") or tuple containing the name and the ``SourceType`` (e.g., ``("action", SourceType.OBSERVATION)``).
-        If the name itself is inconclusive (e.g., it occurs as a metric and as an observation), the behaviour depends
-        on the implementation of the logger.
+        them so that all loggers are connected to all sources. The ``logger_sources`` parameter specifies the sources
+        to log. A source can be a name (e.g., "action") or tuple containing the name and the ``SourceType`` (e.g.,
+        ``("action", SourceType.OBSERVATION)``). If the name itself is inconclusive (e.g., it occurs as a metric and
+        as an observation), the behavior depends on the implementation of the logger.
 
         Parameters
         ----------
@@ -232,27 +230,13 @@ class RLib:
 
         logger_params =  self._logger_params if  self._logger_params else {}
         logger_types, logger_sources = self._object_to_list(self._logger_types), self._object_to_list(self._logger_sources)
-        logger_types, logger_sources = self._broadcast(logger_types, logger_sources)
 
-        for logger_type, source in zip(logger_types, logger_sources):
+        for logger_type, source in product(logger_types, logger_sources):
             self._logs_observer.add_logger(source, logger_type, logger_params)
 
     @staticmethod
     def _object_to_list(obj: Union[any, list[any]]) -> list[any]:
         return obj if isinstance(obj, list) else [obj]
-
-    @staticmethod
-    def _broadcast(list_a: list[any], list_b: list[any]) -> tuple[list[any], list[any]]:
-        if len(list_a) == len(list_b):
-            return list_a, list_b
-
-        if len(list_a) == 1:
-            return list_a * len(list_b), list_b
-
-        if len(list_b) == 1:
-            return list_a, list_b * len(list_a)
-
-        raise TypeError('Incompatible length of given lists.')
 
     @property
     def observation_space(self) -> gym.spaces.Space:
@@ -505,7 +489,7 @@ class RLib:
             logger_types: Union[type, list[type]] = None,
             logger_sources: Union[Source, list[Source]] = None,
             logger_params: dict[str, any] = None
-    ) -> RLib:
+    ) -> 'RLib':
         """
         Loads the state of the experiment from a file in lz4 format.
 

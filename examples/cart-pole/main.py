@@ -10,7 +10,7 @@ gym.logger.set_level(40)
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import DQN
 from reinforced_lib.exts import Gymnasium
-from reinforced_lib.logs import StdoutLogger, TensorboardLogger
+from reinforced_lib.logs import StdoutLogger, TensorboardLogger, WeightsAndBiasesLogger
 
 
 class QNetwork(nn.Module):
@@ -45,7 +45,7 @@ def run(num_epochs: int, render_every: int, seed: int) -> None:
         },
         ext_type=Gymnasium,
         ext_params={'env_id': 'CartPole-v1'},
-        logger_types=[StdoutLogger, TensorboardLogger]
+        logger_types=[StdoutLogger, TensorboardLogger, WeightsAndBiasesLogger]
     )
 
     for epoch in range(num_epochs):

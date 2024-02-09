@@ -48,22 +48,11 @@ parameter. For instance:
     rl = RLib(
         ...
         logger_types=[PlotsLogger, CsvLogger, TensorboardLogger],
-        logger_sources='cumulative'
+        logger_sources=[('action', SourceType.METRIC), ('cumulative', SourceType.METRIC)]
     )
 
 In this example, three loggers (``PlotsLogger``, ``CsvLogger``, and ``TensorboardLogger``) are used, each logging
-the cumulative reward.
-
-It is also possible to mix different types of loggers. To do this, the user should specify a list of sources
-of the same length as the list of loggers. Each source will be logged by the corresponding logger. For example:
-
-.. code-block:: python
-
-    rl = RLib(
-        ...
-        logger_types=[PlotsLogger, CsvLogger, TensorboardLogger],
-        logger_sources=[('action', SourceType.METRIC), 'cumulative', 'Q']
-    )
+actions and cumulative rewards.
 
 Users are not restricted to predefined sources and can log any value using the ``log`` method of the ``RLib`` class.
 The ``log`` method takes two parameters: ``name`` and ``value``. The example below shows how to log a value from a
@@ -81,19 +70,7 @@ custom source:
         rl.log('Epoch len', epoch_len)
 
 Note that the ``log`` method does not take the ``SourceType`` parameter. In the provided example, all loggers
-will log all the custom values passed to the ``log`` method. To log both predefined and custom values, set the
-``logger_source`` as ``None`` for the desired logger, like this:
-
-.. code-block:: python
-
-    rl = RLib(
-        ...
-        logger_types=[StdoutLogger, PlotsLogger],
-        logger_sources=[None, 'cumulative']
-    )
-
-In this example, the ``StdoutLogger`` will log all values passed to the ``log`` method, while the ``PlotsLogger``
-will log only the cumulative reward.
+will log all the custom values passed to the ``log`` method.
 
 Loggers can be used to log values of different types. The base interface of loggers provides the following methods:
 
