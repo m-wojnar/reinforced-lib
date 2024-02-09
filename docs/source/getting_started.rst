@@ -49,25 +49,28 @@ significantly simplified. Below, we present the basic training loop with the sim
 .. code-block:: python
 
     import gymnasium as gym
-    import haiku as hk
     import optax
     from chex import Array
+    from flax import linen as nn
 
     from reinforced_lib import RLib
-    from reinforced_lib.agents.deep import QLearning
+    from reinforced_lib.agents.deep import DQN
     from reinforced_lib.exts import Gymnasium
 
 
-    @hk.transform_with_state
-    def q_network(x: Array) -> Array:
-        return hk.nets.MLP([256, 2])(x)
+    class QNetwork(nn.Module):
+        @nn.compact
+        def __call__(self, x: Array) -> Array:
+            x = nn.Dense(256)(x)
+            x = nn.relu(x)
+            return nn.Dense(2)(x)
 
 
     if __name__ == '__main__':
         rl = RLib(
-            agent_type=QLearning,
+            agent_type=DQN,
             agent_params={
-                'q_network': q_network,
+                'q_network': QNetwork(),
                 'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
             },
             ext_type=Gymnasium,
@@ -88,7 +91,7 @@ significantly simplified. Below, we present the basic training loop with the sim
 
 After the necessary imports, we create an instance of the ``RLib`` class. We provide the chosen
 agent type and the appropriate extension for the problem. This extension will help the agent to infer necessary
-information from the environment. Next create a Gymnasium environment and define the training loop. Inside the loop,
+information from the environment. Next create a gymnasium environment and define the training loop. Inside the loop,
 we call the ``sample`` method which passes the observations to the agent, updates the agent's internal state
 and returns an action proposed by the agent's policy. We apply the returned action in the environment to get its
 altered state. We encourage you to see the :ref:`API <api_page>` section for more details about the ``RLib`` class.
@@ -265,6 +268,62 @@ with the training, we load the whole experiment to a new RLib instance.
     # Continue the training
     # ...
 
+Reinforced-lib can even save the architecture of your agent's neural network. It is possible thanks to the
+`cloudpickle <https://github.com/cloudpipe/cloudpickle>`_ library allowing to serialize the flax modules.
+However, if you use your own implementation of agents or extensions, you have to ensure that they are available
+when you restore the experiment as Reinforced-lib does not save the source code of the custom classes.
+
+.. note::
+
+    Remember that the ``RLib`` class will not save the state of the environment. You have to save the environment
+    state separately if you want to continue the training from the exact point where you ended.
+
+.. warning::
+
+    As of today (2024-02-08), cloudpickle does not support the serialization of the custom modules defined outside of
+    the main definition. It means that if you implement part of your model in a separate class, you will not be able
+    to restore the experiment. We are working on a solution to this problem.
+
+    The temporary solution is to define the whole model in one class as follows:
+
+    .. code-block:: python
+
+        class QNetwork(nn.Module):
+            @nn.compact
+            def __call__(self, x):
+                class MyModule(nn.Module):
+                    @nn.compact
+                    def __call__(self, x):
+                        ...
+                        return x
+
+                x = MyModule()(x)
+                ...
+                return x
+
+    To improve code readability, you can also define modules in external functions and then call them to include
+    custom module definitions in the main class. For example:
+
+    .. code-block:: python
+
+        def my_module_fn():
+            class MyModule(nn.Module):
+                @nn.compact
+                def __call__(self, x):
+                    ...
+                    return x
+
+            return MyModule
+
+        class QNetwork(nn.Module):
+            @nn.compact
+            def __call__(self, x):
+                MyModule = my_module_fn(x)
+
+                x = MyModule()(x)
+                ...
+                return x
+
 
 Dynamic parameter change
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -276,14 +335,14 @@ optimizer:
 .. code-block:: python
 
     from reinforced_lib import RLib
-    from reinforced_lib.agents.deep import QLearning
+    from reinforced_lib.agents.deep import DQN
     from reinforced_lib.exts import Gymnasium
 
     # Setting up the experiment
     rl = RLib(
-        agent_type=QLearning,
+        agent_type=DQN,
         agent_params={
-            'q_network': q_network,
+            'q_network': QNetwork(),
             'optimizer': optax.adam(1e-3),
         },
         ext_type=Gymnasium,
@@ -300,7 +359,7 @@ optimizer:
     rl = RLib.load(
         "<checkpoint-path>",
         agent_params={
-            'q_network': q_network,
+            'q_network': QNetwork(),
             'optimizer': optax.adam(1e-4),
         }
     )

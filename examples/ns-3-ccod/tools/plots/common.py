@@ -1,6 +1,6 @@
 import os
 
-import jax.numpy as jnp
+import numpy as np
 import matplotlib.pylab as pl
 import pandas as pd
 from scipy.stats import t
@@ -11,13 +11,13 @@ DATA_FILE = os.path.join(TOOLS_DIR, 'outputs', 'all_results.csv')
 
 ALL_MANAGERS = {
     'CSMA': 'Standard 802.11',
-    'DQN': 'CCOD w/ DQN',
+    'DDQN': 'CCOD w/ DQN',
     'DDPG': 'CCOD w/ DDPG'
 }
 CONFIDENCE_INTERVAL = 0.99
 
 COLUMN_WIDTH = 3.5
-COLUMN_HIGHT = 2 * COLUMN_WIDTH / (1 + jnp.sqrt(5))
+COLUMN_HIGHT = 2 * COLUMN_WIDTH / (1 + np.sqrt(5))
 PLOT_PARAMS = {
     'figure.figsize': (COLUMN_WIDTH, COLUMN_HIGHT),
     'figure.dpi': 72,
@@ -36,7 +36,7 @@ PLOT_PARAMS = {
     'ytick.major.width': 0.5,
 }
 
-COLORS = pl.cm.viridis(jnp.linspace(0., 0.75, len(ALL_MANAGERS)))
+COLORS = pl.cm.viridis(np.linspace(0., 0.75, len(ALL_MANAGERS)))
 
 
 def get_thr_ci(
@@ -53,7 +53,7 @@ def get_thr_ci(
     alpha = 1 - ci_interval
     z = t.ppf(1 - alpha / 2, measurements - 1)
 
-    ci_low = mean - z * std / jnp.sqrt(measurements)
-    ci_high = mean + z * std / jnp.sqrt(measurements)
+    ci_low = mean - z * std / np.sqrt(measurements)
+    ci_high = mean + z * std / np.sqrt(measurements)
 
     return mean, ci_low, ci_high

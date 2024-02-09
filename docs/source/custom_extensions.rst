@@ -14,14 +14,14 @@ Key concepts of extensions
 There are three main benefits of using extensions:
 
 #. Automatic initialization of agents - an extension can provide default arguments that can be used to
-   initialize an agent. For example, if we would like to train the :ref:`deep Double Q-learning agent
-   <Deep Double Q-Learning (DQN)>` on a `cart-pole` environment without using any extension, we would
+   initialize an agent. For example, if we would like to train the :ref:`deep Q-learning agent
+   <Deep Q-Learning (DQN)>` on a `cart-pole` environment without using any extension, we would
    probably do it in the following way:
 
    .. code-block:: python
 
        rl = RLib(
-           agent_type=QLearning,
+           agent_type=DQN,
            agent_params={
                'q_network': q_network,
                'obs_space_shape': (4,),
@@ -36,7 +36,7 @@ There are three main benefits of using extensions:
    .. code-block:: python
 
        rl = RLib(
-           agent_type=QLearning,
+           agent_type=DQN,
            agent_params={'q_network': q_network}
            ext_type=Gymnasium,
            ext_params={'env_id': 'CartPole-v1'},
@@ -47,7 +47,7 @@ There are three main benefits of using extensions:
    .. code-block:: python
 
        rl = RLib(
-           agent_type=QLearning,
+           agent_type=DQN,
            agent_params={
                'q_network': q_network,
                'act_space_size': 3

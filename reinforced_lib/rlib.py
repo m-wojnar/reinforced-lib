@@ -27,7 +27,7 @@ class AgentContainer:
     ----------
     state : BaseAgent
         Current state of the agent.
-    key : jax.random.PRNGKey
+    key : PRNGKey
         A PRNG key used as the random key.
     action : any
         Action selected by the agent.

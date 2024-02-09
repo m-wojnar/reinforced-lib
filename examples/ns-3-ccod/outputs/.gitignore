@@ -1,4 +1,5 @@
 *
 !.gitignore
-!combine_basic_results.sh
 !combine_csv_files.sh
+!preprocess_basic_results.py
+!preprocess_csma_results.py

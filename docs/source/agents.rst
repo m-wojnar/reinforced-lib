@@ -19,16 +19,30 @@ BaseAgent
     :members:
 
 
-Deep Q-Learning
----------------
+Deep Q-Learning (DQN)
+---------------------
 
-.. currentmodule:: reinforced_lib.agents.deep.q_learning
+.. currentmodule:: reinforced_lib.agents.deep.dqn
 
-.. autoclass:: QLearningState
+.. autoclass:: DQNState
     :show-inheritance:
     :members:
 
-.. autoclass:: QLearning
+.. autoclass:: DQN
+    :show-inheritance:
+    :members:
+
+
+Double Deep Q-Learning (DDQN)
+-----------------------------
+
+.. currentmodule:: reinforced_lib.agents.deep.ddqn
+
+.. autoclass:: DDQNState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: DDQN
     :show-inheritance:
     :members:
 
@@ -43,20 +57,6 @@ Deep Expected SARSA
     :members:
 
 .. autoclass:: ExpectedSarsa
-    :show-inheritance:
-    :members:
-
-
-Deep Double Q-Learning (DQN)
-----------------------------
-
-.. currentmodule:: reinforced_lib.agents.deep.dqn
-
-.. autoclass:: DQNState
-    :show-inheritance:
-    :members:
-
-.. autoclass:: DQN
     :show-inheritance:
     :members:
 
@@ -165,13 +165,5 @@ Upper confidence bound (UCB)
     :members:
 
 .. autoclass:: UCB
-    :show-inheritance:
-    :members:
-
-
-Particle filter (Core)
-----------------------
-
-.. automodule:: reinforced_lib.agents.core.particle_filter
     :show-inheritance:
     :members:
