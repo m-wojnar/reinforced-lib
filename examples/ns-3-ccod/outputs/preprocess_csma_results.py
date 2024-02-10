@@ -19,7 +19,7 @@ if __name__ == '__main__':
         df = pd.read_csv(file, header=None)
 
         file = os.path.basename(file)
-        _, scenario, n_wifi, _ = file.split('_')
+        _, scenario, n_wifi, run = file.split('_')
 
         new_df = pd.DataFrame(columns=['agent', 'scenario', 'nWifi', 'seed', 'time', 'throughput'])
         new_df['time'] = df[1]
@@ -27,5 +27,5 @@ if __name__ == '__main__':
         new_df['agent'] = 'CSMA'
         new_df['scenario'] = scenario
         new_df['nWifi'] = n_wifi
-        new_df['seed'] = 300
+        new_df['seed'] = int(run[3:-4]) - 1 + (400 if scenario == 'convergence' else 300)
         new_df.to_csv(os.path.join(args.output, file), index=False, header=False)
