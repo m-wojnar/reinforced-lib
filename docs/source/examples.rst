@@ -10,18 +10,18 @@ Examples
 Integration with Gymnasium
 **************************
 
-`OpenAI Gymnasium <https://gymnasium.farama.org/>`_, formerly known as Gym, is a popular toolkit that provides a standardized interface for reinforcement learning environments. Gymnasium offers a variety of environments, from simple classic control tasks like balancing a pole, which is described below in detail, to complex games like Atari and MuJoCo. It even supports creating custom environments, making it a versatile tool for all things reinforcement learning research.
+`Gymnasium <https://gymnasium.farama.org/>`_, formerly known as OpenAI Gym, is a popular toolkit that provides a standardized interface for reinforcement learning environments. Gymnasium offers a variety of environments, from simple classic control tasks like balancing a pole, which is described below in detail, to complex games like Atari and MuJoCo. It even supports creating custom environments, making it a versatile tool for all things reinforcement learning research.
 
-Reinforced-lib on the other hand provides implementations of various reinforcement learning algorithms. It can seamlessly integrate with OpenAI Gymnasium by using the environments provided by Gymnasium as the learning context for the algorithms implemented in Reinforced-lib. This integration allows developers to easily train and evaluate their reinforcement learning models using a wide variety of pre-defined scenarios.
+Reinforced-lib on the other hand provides implementations of various reinforcement learning algorithms. It can seamlessly integrate with Gymnasium by using the environments provided by Gymnasium as the learning context for the algorithms implemented in Reinforced-lib. This integration allows developers to easily train and evaluate their reinforcement learning models using a wide variety of pre-defined scenarios.
 
 Cart Pole example
 =================
 
 The Cart Pole environment is a classic control task in which the goal is to balance a pole on a cart. The environment is described by a 4-dimensional state space, which consists of the cart's position, the cart's velocity, the pole's angle, and the pole's angular velocity. The agent can take one of two actions: push the cart to the left or push the cart to the right. The episode ends when the pole falls below a certain angle or the cart moves outside of the environment's boundaries. The goal is to keep the pole balanced for as long as possible.
 
-The following example demonstrates how to train a reinforcement learning agent using Reinforced-lib and OpenAI Gymnasium. The agent uses the Deep Q-Learning (DQN) algorithm to learn how to balance the pole. The DQN algorithm is implemented in Reinforced-lib and the Cart Pole environment is provided by Gymnasium.
+The following example demonstrates how to train a reinforcement learning agent using Reinforced-lib and Gymnasium. The agent uses the :ref:`Deep Q-Learning (DQN) <Deep Q-Learning (DQN)>` algorithm to learn how to balance the pole. The DQN algorithm is implemented in Reinforced-lib and the Cart Pole environment is provided by Gymnasium.
 
-We start with the neccessary imports:
+We start with the necessary imports:
 
 .. code-block:: python
 
@@ -46,7 +46,7 @@ We than define the QNetwork approximator as a simple dense, feed forward neural 
             x = nn.relu(x)
             return nn.Dense(2)(x)
 
-Next, we step into the run() function, which is responsible for training the agent. We start by instantiating the Reinforced-lib, specifying the ageent as a DQN, the extension as Gymnasium, and the loggers as StdoutLogger and TensorboardLogger to log both to the console and to a Tensorboard file.
+Next, we step into the ``run`` function, which is responsible for training the agent. We start by instantiating the Reinforced-lib, specifying the agent as a DQN, the extension as :ref:`Gymnasium <Gymnasium>`, and the loggers as :ref:`StdoutLogger <StdoutLogger>` and :ref:`TensorboardLogger <TensorboardLogger>` to log both to the console and to a TensorBoard file.  Note that we specify the environment type in the parameters of the extension to allow for automatic inference of environment properties, such as the state and action space sizes.
 
 .. code-block:: python
 
@@ -64,7 +64,7 @@ Next, we step into the run() function, which is responsible for training the age
             logger_types=[StdoutLogger, TensorboardLogger]
         )
 
-We then start the training loop where we iterate over the number of epochs and for each epoch we let the agent run in the environment. We start by resetting the environment and sampling the initial action of the agent. Then we run the agent in the environment by updating the environment state with the action and sampling the next action. We continue this loop until the environment reaches a terminal state. We log the length of the epoch and move on to the next epoch.
+We then start the training loop where we iterate over the number of epochs and for each epoch we let the agent interact with the environment. We start by resetting the environment and sampling the initial action of the agent. Then we run the agent in the environment by performing the action in the environment and sampling the next action. We continue this loop until the environment reaches a terminal state. We log the length of the epoch as the performance metric and move on to the next epoch.
 
 .. code-block:: python
 
@@ -84,7 +84,7 @@ We then start the training loop where we iterate over the number of epochs and f
             
             rl.log('epoch_len', epoch_len)
 
-We start the training by calling the run() function with the number of epochs as an argument:
+We start the training by calling the ``run`` function with the number of epochs as an argument:
 
 .. code-block:: python
 
@@ -148,6 +148,11 @@ The complete, runnable code can be copy pasted from the following snippet:
     if __name__ == '__main__':
         run(num_epochs=300)
 
+Other examples
+==============
+
+We provide a few more examples of Reinforced-lib and Gymnasium integration in the ``examples`` directory of the Reinforced-lib repository. The examples include the training of the DQN agent in the Cart Pole environment (described above) and the training of the DDPG agent in the Pendulum environment. The examples are fully runnable and can be used as a starting point for your own reinforcement learning experiments with Reinforced-lib and Gymnasium.
+
 
 .. _ns3_connection:
 
@@ -173,7 +178,7 @@ consists of the following:
   * ns3-ai (`GitHub repository <https://github.com/hust-diangroup/ns3-ai/>`_).
 
 Since the ns-3 requires the compilation, we will install all the required modules, transfer ns-3 files required for the
-communication with Reinforced-lib, and copile everything once at the very end.
+communication with Reinforced-lib, and compile everything once at the very end.
 
 
 Installing ns-3
@@ -200,7 +205,11 @@ Installing ns3-ai
 
 The ns3-ai module interconnects ns-3 and Reinforced-lib (or any other python-writen software) by transferring data through
 the shared memory pool. The memory is accessed by both sides thus making the connection. You can read more about the ns3-ai on the
-`ns3-ai official repository <https://github.com/hust-diangroup/ns3-ai>`_. Unfortunately, ns3-ai (as of 18.07.2023) is not compatible with the ns-3.36 or later. We have forked and modified the official ns3-ai repository to make it compatible with the 3.37 version. To install the compatible, forked version run the following commands
+`ns3-ai official repository <https://github.com/hust-diangroup/ns3-ai>`_.
+
+.. warning::
+
+    Unfortunately, ns3-ai (as of 18.07.2023) is not compatible with the ns-3.36 or later. We have forked and modified the official ns3-ai repository to make it compatible with the 3.37 version. To install the compatible, forked version run the following commands
 
 .. code-block:: bash
 
@@ -307,8 +316,8 @@ learn what is the function of each.
         --PrintHelp:                 Print this help message.
 
 
-Reinforced-lib (python) end
----------------------------
+Reinforced-lib (Python) part
+----------------------------
 
 The provided rate adaptation manager is implemented in the file ``$REINFORCED_LIB/examples/ns-3-ra/main.py``. Here we specify the
 communication with the ns-3 simulator by defining the environment's observation space and the action space, we create the ``RLib``
@@ -457,3 +466,8 @@ You can try running the following commands to test the Reinforced-lib rate adapt
     .. code-block:: bash
 
         python $REINFORCED_LIB/examples/ns-3-ra/main.py --agent="ParticleFilter" --ns3Path="$YOUR_NS3_PATH" --velocity=1
+
+Source code of the example
+===========================
+
+The complete, runnable code can be found in the ``examples/ns-3-ra`` directory of the Reinforced-lib repository. The example provides many useful scripts for reproducing our experiments and can be used as a starting point for your own reinforcement learning experiments with Reinforced-lib and ns-3. We also encourage you to see another example - implementation of the `centralized contention window optimization with DRL (CCOD) <https://ieeexplore.ieee.org/document/9417575?denied=>`_ in the ``examples/ns-3-ccod`` directory which presents a deep reinforcement learning scenario with Reinforced-lib and ns-3.
