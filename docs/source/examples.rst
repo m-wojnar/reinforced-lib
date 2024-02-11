@@ -4,6 +4,150 @@
 Examples
 ########
 
+.. _gym_integration:
+
+**************************
+Integration with Gymnasium
+**************************
+
+`OpenAI Gymnasium <https://gymnasium.farama.org/>`_, formerly known as Gym, is a popular toolkit that provides a standardized interface for reinforcement learning environments. Gymnasium offers a variety of environments, from simple classic control tasks like balancing a pole, which is described below in detail, to complex games like Atari and MuJoCo. It even supports creating custom environments, making it a versatile tool for all things reinforcement learning research.
+
+Reinforced-lib on the other hand provides implementations of various reinforcement learning algorithms. It can seamlessly integrate with OpenAI Gymnasium by using the environments provided by Gymnasium as the learning context for the algorithms implemented in Reinforced-lib. This integration allows developers to easily train and evaluate their reinforcement learning models using a wide variety of pre-defined scenarios.
+
+Cart Pole example
+=================
+
+The Cart Pole environment is a classic control task in which the goal is to balance a pole on a cart. The environment is described by a 4-dimensional state space, which consists of the cart's position, the cart's velocity, the pole's angle, and the pole's angular velocity. The agent can take one of two actions: push the cart to the left or push the cart to the right. The episode ends when the pole falls below a certain angle or the cart moves outside of the environment's boundaries. The goal is to keep the pole balanced for as long as possible.
+
+The following example demonstrates how to train a reinforcement learning agent using Reinforced-lib and OpenAI Gymnasium. The agent uses the Deep Q-Learning (DQN) algorithm to learn how to balance the pole. The DQN algorithm is implemented in Reinforced-lib and the Cart Pole environment is provided by Gymnasium.
+
+We start with the neccessary imports:
+
+.. code-block:: python
+
+    import gymnasium as gym
+    import optax
+    from chex import Array
+    from flax import linen as nn
+
+    from reinforced_lib import RLib
+    from reinforced_lib.agents.deep import DQN
+    from reinforced_lib.exts import Gymnasium
+    from reinforced_lib.logs import StdoutLogger, TensorboardLogger
+
+We than define the QNetwork approximator as a simple dense, feed forward neural network with a ReLU activation function:
+
+.. code-block:: python
+
+    class QNetwork(nn.Module):
+        @nn.compact
+        def __call__(self, x: Array) -> Array:
+            x = nn.Dense(256)(x)
+            x = nn.relu(x)
+            return nn.Dense(2)(x)
+
+Next, we step into the run() function, which is responsible for training the agent. We start by instantiating the Reinforced-lib, specifying the ageent as a DQN, the extension as Gymnasium, and the loggers as StdoutLogger and TensorboardLogger to log both to the console and to a Tensorboard file.
+
+.. code-block:: python
+
+    def run(num_epochs: int) -> None:
+        rl = RLib(
+            agent_type=DQN,
+            agent_params={
+                'q_network': QNetwork(),
+                'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
+                'discount': 0.95,
+                'epsilon_decay': 0.9975
+            },
+            ext_type=Gymnasium,
+            ext_params={'env_id': 'CartPole-v1'},
+            logger_types=[StdoutLogger, TensorboardLogger]
+        )
+
+We then start the training loop where we iterate over the number of epochs and for each epoch we let the agent run in the environment. We start by resetting the environment and sampling the initial action of the agent. Then we run the agent in the environment by updating the environment state with the action and sampling the next action. We continue this loop until the environment reaches a terminal state. We log the length of the epoch and move on to the next epoch.
+
+.. code-block:: python
+
+        for epoch in range(num_epochs):
+            env = gym.make('CartPole-v1', render_mode='no')
+
+            _, _ = env.reset()
+            action = env.action_space.sample()
+            terminal = False
+            epoch_len = 0
+
+            while not terminal:
+                env_state = env.step(action.item())
+                action = rl.sample(*env_state)
+                terminal = env_state[2] or env_state[3]
+                epoch_len += 1
+            
+            rl.log('epoch_len', epoch_len)
+
+We start the training by calling the run() function with the number of epochs as an argument:
+
+.. code-block:: python
+
+    if __name__ == '__main__':
+        run(num_epochs=300)
+
+The complete, runnable code can be copy pasted from the following snippet:
+
+.. code-block:: python
+
+    import gymnasium as gym
+    import optax
+    from chex import Array
+    from flax import linen as nn
+
+    from reinforced_lib import RLib
+    from reinforced_lib.agents.deep import DQN
+    from reinforced_lib.exts import Gymnasium
+    from reinforced_lib.logs import StdoutLogger, TensorboardLogger
+
+
+    class QNetwork(nn.Module):
+        @nn.compact
+        def __call__(self, x: Array) -> Array:
+            x = nn.Dense(256)(x)
+            x = nn.relu(x)
+            return nn.Dense(2)(x)
+
+
+    def run(num_epochs: int) -> None:
+        rl = RLib(
+            agent_type=DQN,
+            agent_params={
+                'q_network': QNetwork(),
+                'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
+                'discount': 0.95,
+                'epsilon_decay': 0.9975
+            },
+            ext_type=Gymnasium,
+            ext_params={'env_id': 'CartPole-v1'},
+            logger_types=[StdoutLogger, TensorboardLogger]
+        )
+
+        for epoch in range(num_epochs):
+            env = gym.make('CartPole-v1', render_mode='no')
+
+            _, _ = env.reset()
+            action = env.action_space.sample()
+            terminal = False
+            epoch_len = 0
+
+            while not terminal:
+                env_state = env.step(action.item())
+                action = rl.sample(*env_state)
+                terminal = env_state[2] or env_state[3]
+                epoch_len += 1
+            
+            rl.log('epoch_len', epoch_len)
+
+
+    if __name__ == '__main__':
+        run(num_epochs=300)
+
 
 .. _ns3_connection:
 
@@ -313,140 +457,3 @@ You can try running the following commands to test the Reinforced-lib rate adapt
     .. code-block:: bash
 
         python $REINFORCED_LIB/examples/ns-3-ra/main.py --agent="ParticleFilter" --ns3Path="$YOUR_NS3_PATH" --velocity=1
-
-
-.. _gym_integration:
-
-*********************************
-Gymnasium environment integration
-*********************************
-
-
-Our library supports defining RL environments in the `Gymnasium <https://gymnasium.farama.org/>`_ (former OpenAI Gym)
-format. We want to show you how well our agents are suited to work with the Gymnasium environments using an example
-of a simple recommender system.
-
-
-Recommender system example
-==========================
-
-Suppose that we have some goods to sell but for each user we can present a single product at a time. We assume that
-each user has some unknown to us preferences about our goods and we want to fit the presentation of the product to their
-taste. The situation can be modeled as a `multi-armed bandit problem <https://en.wikipedia.org/wiki/Multi-armed_bandit>`_
-and we can use our agents (for example the :ref:`epsilon-greedy <Epsilon-greedy>` one) to satisfy it.
-
-
-Environment definition
-----------------------
-
-With the convention of RL design, we recommend to define the environment class in a separate python file. After the imports section, you define the environment class with an appropriate constructor, which provides the dictionary of user preferences, the observation and action spaces.
-
-.. code-block:: python
-    :linenos:
-    :lineno-start: 5
-
-    class RecommenderSystemEnv(gym.Env):
-
-        def __init__(self, preferences: Dict) -> None:
-
-            self.action_space = gym.spaces.Discrete(len(preferences))
-            self.observation_space = gym.spaces.Space()
-            self._preferences = list(preferences.values())
-
-Because we inherit from the `gym.Env` class, we must provide the `reset()` and the `step()` methods at least, which are also necessary to make our recommender system environment work. The reset method is responsible only for seed setting. The step method pulls the bandit's arm and returns the reward.
-
-.. code-block:: python
-    :linenos:
-    :lineno-start: 19
-
-    def reset(
-            self,
-            seed: int = None,
-            options: Dict = None
-    ) -> Tuple[gym.spaces.Space, Dict]:
-
-        seed = seed if seed else np.random.randint(1000)
-        super().reset(seed=seed)
-        np.random.seed(seed)
-
-        return None, {}
-    
-    def step(self, action: int) -> Tuple[gym.spaces.Dict, int, bool, bool, Dict]:
-
-        reward = int(np.random.rand() < self._preferences[action])
-
-        return None, reward, False, False, {}
-
-
-Extension definition
---------------------
-
-To fully benefit from the Reinforced-lib's functionalities we recommend to implement an extension which will improve the
-communication between the agent and the environment, as described in the :ref:`Custom extensions <custom_extensions>`
-section. The source code with the implemented extension to our simple recommender system can be found in our
-`official repository <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/recommender_system/ext.py>`_.
-
-
-Agent - environment interaction
--------------------------------
-
-Once you have defined the environment (and optionally the extension), you can train the agent to act in it efficiently. As
-usual, we begin with necessary imports:
-
-.. code-block:: python
-    :linenos:
-    :lineno-start: 1
-
-    from env import RecommenderSystemEnv
-    from ext import RecommenderSystemExt
-
-    from reinforced_lib import RLib
-    from reinforced_lib.agents.mab import EGreedy
-    from reinforced_lib.logs import PlotsLogger, SourceType
-
-    import gymnasium as gym
-    gym.logger.set_level(40)
-
-We define a `run()` function that constructs the recommender system extension, creates, and resets the appropriate
-environment with user preferences derived from the extension. We also create and initialize the `RLib` instance with the selected agent, previously constructed extension and optionally some loggers to visualise the decision making process.
-
-.. code-block:: python
-    :linenos:
-    :lineno-start: 12
-
-    def run(episodes: int, seed: int) -> None:
-
-        # Construct the extension
-        ext = RecommenderSystemExt()
-
-        # Create and reset the environment which will simulate users behavior
-        env = RecommenderSystemEnv(ext.preferences)
-        _ = env.reset(seed=seed)
-
-        # Wrap everything under RLib object with designated agent
-        rl = RLib(
-            agent_type=EGreedy,
-            agent_params={'e': 0.25},
-            ext_type=RecommenderSystemExt,
-            logger_types=PlotsLogger,
-            logger_sources=[('action', SourceType.METRIC), ('cumulative', SourceType.METRIC)],
-            logger_params={'plots_scatter': True}
-        )
-        rl.init(seed)
-
-Finally we finish the `run()` function with a training loop that asks the agent to select an action, acts on the environment and receives some reward. Beforehand, we select an arbitrary action from the action space and perform the first rewarded step.
-
-.. code-block:: python
-    :linenos:
-    :lineno-start: 30
-
-        # Loop through each episode and update prior knowledge
-        act = env.action_space.sample()
-        _, reward, *_ = env.step(act)
-
-        for i in range(1, episodes):
-            act = rl.sample(reward=reward, time=i)
-            _, reward, *_ = env.step(act)
-
-Evaluating the `run()` function, with some finite number of episodes and a seed, should result in two plots,
-one representing the actions selected by the agent, and the second one representing the cumulative reward versus time.
