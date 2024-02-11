@@ -10,16 +10,16 @@ Examples
 Integration with Gymnasium
 **************************
 
-`OpenAI Gymnasium <https://gymnasium.farama.org/>`_, also known as Gym, is a popular toolkit for developing and comparing reinforcement learning algorithms by provides a standardized interface for environments. Gym offers a variety of environments, from simple classic control tasks like balancing a pole, which is described below in detail, to complex games like Atari and MuJoCo. It even supports creating custom environments, making it a versatile tool for all things reinforcement learning research.
+`OpenAI Gymnasium <https://gymnasium.farama.org/>`_, formerly known as Gym, is a popular toolkit that provides a standardized interface for reinforcement learning environments. Gymnasium offers a variety of environments, from simple classic control tasks like balancing a pole, which is described below in detail, to complex games like Atari and MuJoCo. It even supports creating custom environments, making it a versatile tool for all things reinforcement learning research.
 
-Reinforced-lib on the other hand provides implementations of various reinforcement learning algorithms. It can seamlessly integrate with OpenAI Gym by using the environments provided by Gym as the learning context for the algorithms implemented in Reinforced-lib. This integration allows developers to easily train and evaluate their reinforcement learning models using a wide variety of pre-defined scenarios.
+Reinforced-lib on the other hand provides implementations of various reinforcement learning algorithms. It can seamlessly integrate with OpenAI Gymnasium by using the environments provided by Gymnasium as the learning context for the algorithms implemented in Reinforced-lib. This integration allows developers to easily train and evaluate their reinforcement learning models using a wide variety of pre-defined scenarios.
 
 Cart Pole example
 =================
 
 The Cart Pole environment is a classic control task in which the goal is to balance a pole on a cart. The environment is described by a 4-dimensional state space, which consists of the cart's position, the cart's velocity, the pole's angle, and the pole's angular velocity. The agent can take one of two actions: push the cart to the left or push the cart to the right. The episode ends when the pole falls below a certain angle or the cart moves outside of the environment's boundaries. The goal is to keep the pole balanced for as long as possible.
 
-The following example demonstrates how to train a reinforcement learning agent using Reinforced-lib and OpenAI Gym. The agent uses the Deep Q-Network (DQN) algorithm to learn how to balance the pole. The DQN algorithm is implemented in Reinforced-lib and the Cart Pole environment is provided by Gym.
+The following example demonstrates how to train a reinforcement learning agent using Reinforced-lib and OpenAI Gymnasium. The agent uses the Deep Q-Learning (DQN) algorithm to learn how to balance the pole. The DQN algorithm is implemented in Reinforced-lib and the Cart Pole environment is provided by Gymnasium.
 
 We start with the neccessary imports:
 
@@ -64,7 +64,7 @@ Next, we step into the run() function, which is responsible for training the age
             logger_types=[StdoutLogger, TensorboardLogger]
         )
 
-We than start the training loop, where we iterate over the number of epochs and for each epoch we run the agent in the environment. We start by resetting the environment and sampling the agent's initial action. Than we run the agent int he environment by updating the environment state with the action and sampling the next action. We continue this loop until the environment reaches a terminal state. We log the length of the epoch and continue to the next epoch.
+We then start the training loop where we iterate over the number of epochs and for each epoch we let the agent run in the environment. We start by resetting the environment and sampling the initial action of the agent. Then we run the agent in the environment by updating the environment state with the action and sampling the next action. We continue this loop until the environment reaches a terminal state. We log the length of the epoch and move on to the next epoch.
 
 .. code-block:: python
 
