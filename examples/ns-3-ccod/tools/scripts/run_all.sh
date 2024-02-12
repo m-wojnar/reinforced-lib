@@ -1,7 +1,7 @@
 #!/bin/bash
 
 TOOLS_DIR="${TOOLS_DIR:=$HOME/reinforced-lib/examples/ns-3-ccod/tools}"
-cd "$TOOLS_DIR/slurm"
+cd "$TOOLS_DIR/scripts"
 
 for agent in "CSMA" "DDPG" "DDQN"; do
   for nWifi in 5 15 30 50; do

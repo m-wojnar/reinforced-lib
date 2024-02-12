@@ -35,7 +35,7 @@ We start with the necessary imports:
     from reinforced_lib.exts import Gymnasium
     from reinforced_lib.logs import StdoutLogger, TensorboardLogger
 
-We than define the QNetwork approximator as a simple dense, feed forward neural network with a ReLU activation function:
+We than define the QNetwork approximator as a simple multi-layer perceptron with a ReLU activation function:
 
 .. code-block:: python
 

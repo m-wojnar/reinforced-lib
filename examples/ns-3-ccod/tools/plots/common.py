@@ -37,6 +37,7 @@ PLOT_PARAMS = {
 }
 
 COLORS = pl.cm.viridis(np.linspace(0., 0.75, len(ALL_MANAGERS)))
+MARKERS = ['s', 'v', '^']
 
 
 def get_thr_ci(

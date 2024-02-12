@@ -29,6 +29,12 @@ LAST_RUN=14
 NUM_REPS=10
 MEMPOOL_KEY=1234
 
+# Special case for DDPG in basic scenario with 50 nodes - the neural network performance decreased
+# significantly in the last run, so we use the second-to-last run instead
+if [[ $AGENT == "DDPG" && $SCENARIO == "basic" && $N_WIFI == 50 ]]; then
+  LAST_RUN=13
+fi
+
 CHECKPOINT_LOAD_PATH="$RLIB_DIR/checkpoints/${AGENT}_${SCENARIO}_${N_WIFI}_run_${LAST_RUN}.pkl.lz4"
 CHECKPOINT_SAVE_PATH="$RLIB_DIR/checkpoints/${AGENT}_${SCENARIO}_${N_WIFI}_test.pkl.lz4"
 LOAD_PATH="$CHECKPOINT_SAVE_PATH"
