@@ -11,14 +11,14 @@ JAX
 .. automodule:: reinforced_lib.utils.jax_utils
     :members:
 
-Experience Replay
+Experience replay
 -----------------
 
 .. automodule:: reinforced_lib.utils.experience_replay
     :members:
 
-Particle filter (Core)
-----------------------
+Particle filter
+---------------
 
 .. automodule:: reinforced_lib.utils.particle_filter
     :show-inheritance:

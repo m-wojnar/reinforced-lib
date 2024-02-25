@@ -14,11 +14,11 @@
 [rtd-badge]: https://readthedocs.org/projects/reinforced-lib/badge/?version=latest
 [documentation]: https://reinforced-lib.readthedocs.io/en/latest/
 
-**Introducing Reinforced-lib:** a lightweight Python library for the rapid development of RL solutions. It is open-source, 
-prioritizes ease of use, provides comprehensive documentation, and offers both deep reinforcement learning 
-(DRL) and classic non-neural agents. Built on [JAX](https://jax.readthedocs.io/en/latest/), it facilitates exporting 
-trained models to embedded devices, and makes it great for research and prototyping with RL algorithms. Access to JAX's 
-just-in-time (JIT) compilation ensures high-performance results.
+**Introducing Reinforced-lib:** a lightweight Python library for the rapid development of reinforcement-learning (RL) 
+solutions. It is open-source, prioritizes ease of use, provides comprehensive documentation, and offers both deep 
+reinforcement learning (DRL) and classic non-neural agents. Built on [JAX](https://jax.readthedocs.io/en/latest/), 
+it facilitates exporting trained models to embedded devices, and makes it great for research and prototyping with RL 
+algorithms. Access to JAX's just-in-time (JIT) compilation ensures high-performance results.
 
 ## Installation
 
@@ -41,7 +41,7 @@ In the spirit of making Reinforced-lib a lightweight solution, we include only t
 requirements. To fully benefit from Reinforced-lib's conveniences, such as TF Lite export, install with the "full" suffix:
 
 ```bash
-pip3 install ".[full]"
+pip install ".[full]"
 ```
 
 ## Key components
@@ -50,8 +50,8 @@ Reinforced-lib facilitates seamless interaction between RL agents and the enviro
 within of the library, represented in the API as different modules.
 
 - **RLib** - The core module which provides a simple and intuitive interface to manage agents, use extensions, 
-  and configure the logging system. Even if you're not a reinforcement learning (RL) expert, *RLib* makes it easy to 
-  implement the agent-environment interaction loop.
+  and configure the logging system. Even if you're not an RL expert, *RLib* makes it easy to  implement the 
+  agent-environment interaction loop.
 
 - **Agents** - Choose from a variety of RL agents available in the *Agents* module. These agents are designed to be 
   versatile and work with any environment. If needed, you can even create your own agents using our documented recipes.
@@ -70,10 +70,14 @@ The figure below provides a visual representation of Reinforced-lib and the data
 ## JAX Backend
 
 Our library is built on top of JAX, a high-performance numerical computing library. JAX makes it easy to implement 
-RL algorithms efficiently. It provides powerful transformations, including JIT compilation,  automatic differentiation, 
+RL algorithms efficiently. It provides powerful transformations, including JIT compilation, automatic differentiation, 
 vectorization, and parallelization. Our library is fully compatible with DeepMind's JAX ecosystem, granting access to 
 state-of-the-art RL models and helper libraries. JIT compilation significantly accelerates execution and ensures 
 portability across different architectures (CPUs, GPUs, TPUs) without requiring code modifications.
+
+JAX offers another benefit through its robust pseudorandom number generator system, employed in our library to 
+guarantee result reproducibility. This critical aspect of scientific research is frequently underestimated but 
+remains highly significant.
 
 ## Edge Device Export
 

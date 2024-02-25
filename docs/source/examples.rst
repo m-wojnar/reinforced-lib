@@ -151,7 +151,7 @@ The complete, runnable code can be copy pasted from the following snippet:
 Other examples
 ==============
 
-We provide a few more examples of Reinforced-lib and Gymnasium integration in the ``examples`` directory of the Reinforced-lib repository. The examples include the training of the DQN agent in the Cart Pole environment (described above) and the training of the DDPG agent in the Pendulum environment. The examples are fully runnable and can be used as a starting point for your own reinforcement learning experiments with Reinforced-lib and Gymnasium.
+We provide a few more examples of Reinforced-lib and Gymnasium integration in the `examples <https://github.com/m-wojnar/reinforced-lib/tree/main/examples>`_ directory of the Reinforced-lib repository. The examples include the training of the DQN agent in the `Cart Pole environment <https://github.com/m-wojnar/reinforced-lib/tree/main/examples/cart-pole>`_ (described above) and the training of the DDPG agent in the `Pendulum environment <https://github.com/m-wojnar/reinforced-lib/tree/main/examples/pendulum>`_. The examples are fully runnable and can be used as a starting point for your own reinforcement learning experiments with Reinforced-lib and Gymnasium.
 
 
 .. _ns3_connection:
@@ -470,4 +470,4 @@ You can try running the following commands to test the Reinforced-lib rate adapt
 Source code of the example
 ===========================
 
-The complete, runnable code can be found in the ``examples/ns-3-ra`` directory of the Reinforced-lib repository. The example provides many useful scripts for reproducing our experiments and can be used as a starting point for your own reinforcement learning experiments with Reinforced-lib and ns-3. We also encourage you to see another example - implementation of the `centralized contention window optimization with DRL (CCOD) <https://ieeexplore.ieee.org/document/9417575?denied=>`_ in the ``examples/ns-3-ccod`` directory which presents a deep reinforcement learning scenario with Reinforced-lib and ns-3.
+The complete, runnable code can be found in the `examples/ns-3-ra <https://github.com/m-wojnar/reinforced-lib/tree/main/examples/ns-3-ra>`_ directory of the Reinforced-lib repository. The example provides many useful scripts for reproducing our experiments and can be used as a starting point for your own reinforcement learning experiments with Reinforced-lib and ns-3. We also encourage you to see another example - implementation of the `centralized contention window optimization with DRL (CCOD) <https://ieeexplore.ieee.org/document/9417575?denied=>`_ in the ``examples/ns-3-ccod`` directory which presents a deep reinforcement learning scenario with Reinforced-lib and ns-3.

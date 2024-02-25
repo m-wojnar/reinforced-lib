@@ -7,21 +7,21 @@ This module is a set of loggers. You can either choose one of our built-in logge
 your logger with the help of the :ref:`Custom loggers` guide.
 
 
-BaseLogger
-----------
-
-.. currentmodule:: reinforced_lib.logs.base_logger
-
-.. autoclass:: BaseLogger
-    :members:
-
-
 LogsObserver
 ------------
 
 .. currentmodule:: reinforced_lib.logs.logs_observer
 
 .. autoclass:: LogsObserver
+    :members:
+
+
+BaseLogger
+----------
+
+.. currentmodule:: reinforced_lib.logs.base_logger
+
+.. autoclass:: BaseLogger
     :members:
 
 

@@ -16,12 +16,29 @@ BaseExt
     :members:
 
 
+BasicMab
+--------
+
+.. currentmodule:: reinforced_lib.exts.basic_mab
+
+.. autoclass:: BasicMab
+    :show-inheritance:
+    :members:
+
+
 Gymnasium
 ---------
-
 
 .. currentmodule:: reinforced_lib.exts.gymnasium
 
 .. autoclass:: Gymnasium
     :show-inheritance:
     :members:
+
+
+Extension utils
+---------------
+
+.. automodule:: reinforced_lib.exts.utils
+    :members:
+    :no-index:

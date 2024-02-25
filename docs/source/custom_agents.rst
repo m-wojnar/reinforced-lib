@@ -371,7 +371,7 @@ There are also other utility functions that can make it easier to implement DRL 
 ``init`` and ``forward`` methods which are used to initialize the network and to perform a forward pass through the
 network. You can find more information about these functions in the :ref:`documentation <Utils>`.
 
-Our Python library also includes a pre-built :ref:`experience replay buffer <Experience Replay>`, which is commonly
+Our Python library also includes a pre-built :ref:`experience replay buffer <Experience replay>`, which is commonly
 utilized in DRL agents. The following code provides an illustrative example of how to use this utility:
 
 .. code-block:: python
