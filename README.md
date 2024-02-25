@@ -59,7 +59,7 @@ within of the library, represented in the API as different modules.
 - **Extensions** - Enhance agent observations with domain-specific knowledge by adding a suitable extension from the 
   *Extensions* module. This module enables seamless agent switching and parameter tuning without extensive reconfiguration.
 
-- **Logging** - This module allows you to monitor agent-environment interactions. Customize and adapt logging to your 
+- **Loggers** - This module allows you to monitor agent-environment interactions. Customize and adapt logging to your 
   specific needs, capturing training metrics, internal agent state, or environment observations. The library includes 
   various loggers for creating plots and output files, simplifying visualization and data processing.
 

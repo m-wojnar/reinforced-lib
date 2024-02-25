@@ -118,12 +118,12 @@ flag to ``False`` in the ``sample`` method:
     action = rl.sample(*env_state, is_training=False)
 
 
-Logging
+Loggers
 -------
 
-The logging module provides a simple yet powerful API for visualizing and analyzing the running algorithm or watching
+The loggers module provides a simple yet powerful API for visualizing and analyzing the running algorithm or watching
 the training process. You can monitor any observations passed to the agent, the agent's state, and the basic metrics in
-real time. If you want to learn more about the logging module, check out the :ref:`Custom loggers <custom_loggers>`
+real time. If you want to learn more about the loggers module, check out the :ref:`Custom loggers <custom_loggers>`
 section.
 
 Basic logging
@@ -144,7 +144,7 @@ parameter specifies the predefined source of the logger. The source is a name of
 or the metric. `TensorBoard <https://www.tensorflow.org/tensorboard>`_ is a powerful visualization toolkit that
 allows you to monitor the training process in real time, create interactive visualizations, and save the logs for later
 analysis. You can use the ``TensorboardLogger`` along with other loggers built into Reinforced-lib. To learn more about
-available loggers, check out the :ref:`Logging module <logging_page>` section.
+available loggers, check out the :ref:`Loggers module <loggers_page>` section.
 
 .. warning::
 

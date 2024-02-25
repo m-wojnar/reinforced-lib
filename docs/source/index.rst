@@ -28,7 +28,7 @@ Reinforced-lib facilitates seamless interaction between RL agents and the enviro
 
 * **Extensions** -- Enhance agent observations with domain-specific knowledge by adding a suitable extension from the *Extensions* module. This module enables seamless agent switching and parameter tuning without extensive reconfiguration.
 
-* **Logging** -- This module allows you to monitor agent-environment interactions. Customize and adapt logging to your specific needs, capturing training metrics, internal agent state, or environment observations. The library includes various loggers for creating plots and output files, simplifying visualization and data processing.
+* **Loggers** -- This module allows you to monitor agent-environment interactions. Customize and adapt logging to your specific needs, capturing training metrics, internal agent state, or environment observations. The library includes various loggers for creating plots and output files, simplifying visualization and data processing.
 
 The figure below provides a visual representation of Reinforced-lib and the data-flow between its modules.
 
@@ -67,7 +67,7 @@ API Documentation
 * :ref:`API <api_page>`
 * :ref:`Agents <agents_page>`
 * :ref:`Extensions <extensions_page>`
-* :ref:`Logging <logging_page>`
+* :ref:`Loggers <loggers_page>`
 * :ref:`Utils <utils_page>`
 * :ref:`Exceptions <exceptions_page>`
 
@@ -91,7 +91,7 @@ API Documentation
    API <api>
    Agents <agents>
    Extensions <extensions>
-   Logging <logging>
+   Loggers <loggers>
    Utils <utils>
    Exceptions <exceptions>
 

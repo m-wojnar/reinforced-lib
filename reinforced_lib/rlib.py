@@ -56,7 +56,7 @@ class RLib:
     ext_params : dict, optional
         Parameters of the selected extension.
     logger_types : type or list[type], optional
-        Types of the selected logging modules. Must inherit from the ``BaseLogger`` class.
+        Types of the selected loggers. Must inherit from the ``BaseLogger`` class.
     logger_sources : Source or list[Source], optional
         Sources to log.
     logger_params : dict, optional
@@ -214,11 +214,11 @@ class RLib:
         Parameters
         ----------
         logger_types : type or list[type]
-            Types of the selected logging modules.
+            Types of the selected loggers.
         logger_sources : Source or list[Source], optional
             Sources to log.
         logger_params : dict, optional
-            Parameters of the selected logging modules.
+            Parameters of the selected loggers.
         """
 
         if not self._init_loggers:
@@ -502,7 +502,7 @@ class RLib:
         ext_params : dict[str, any], optional
             Dictionary of altered extension parameters with their new values, by default None.
         logger_types : type or list[type], optional
-            Types of the selected logging modules. Must inherit from the ``BaseLogger`` class.
+            Types of the selected loggers. Must inherit from the ``BaseLogger`` class.
         logger_sources : Source or list[Source], optional
             Sources to log.
         logger_params : dict, optional

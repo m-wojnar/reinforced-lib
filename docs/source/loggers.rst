@@ -1,6 +1,6 @@
-.. _logging_page:
+.. _loggers_page:
 
-Logging module
+Loggers module
 ==============
 
 This module is a set of loggers. You can either choose one of our built-in loggers or implement
