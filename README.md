@@ -73,8 +73,7 @@ Our library is built on top of JAX, a high-performance numerical computing libra
 RL algorithms efficiently. It provides powerful transformations, including JIT compilation, automatic differentiation, 
 vectorization, and parallelization. Our library is fully compatible with DeepMind's JAX ecosystem, granting access to 
 state-of-the-art RL models and helper libraries. JIT compilation significantly accelerates execution and ensures 
-portability across different architectures (CPUs, GPUs, TPUs) without requiring code modifications.
-
+portability across different architectures (CPUs, GPUs, TPUs) without requiring code modifications. 
 JAX offers another benefit through its robust pseudorandom number generator system, employed in our library to 
 guarantee result reproducibility. This critical aspect of scientific research is frequently underestimated but 
 remains highly significant.

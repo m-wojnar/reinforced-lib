@@ -117,6 +117,41 @@ flag to ``False`` in the ``sample`` method:
 
     action = rl.sample(*env_state, is_training=False)
 
+Interaction with multiple agents
+--------------------------------
+
+Reinforced-lib allows you to use multiple agent instances in the same environment. This feature is useful when you want
+to train multiple agents in parallel or use multiple agents to solve the same problem. To achieve this, you need to
+initialize the instances of the agents by calling the ``init`` method of the ``RLib`` class a certain number of times:
+
+.. code-block:: python
+
+    rl = RLib(..)
+
+    for _ in range(n_agents):
+        rl.init()
+
+Reproducibility
+~~~~~~~~~~~~~~~
+
+JAX is focused on reproducibility, and it provides a robust pseudo-random number generator (PRNG) that allows you to
+control the randomness of the computations. PRNG requires setting the random seed to ensure that the results of the
+computation are reproducible. Reinforced-lib provides an API for setting the random seed for the JAX library.
+You can set the seed by providing the ``seed`` parameter when creating the instance of the agent:
+
+.. code-block:: python
+
+    rl = RLib(...)
+    rl.init(seed=123)
+
+The seed is initially configured as 42 and the ``init`` method is triggered automatically after the first sampling call.
+It eliminates the need to manually call the ``init`` method unless you want to provide custom seed, thus ensuring
+reproducibility.
+
+.. note::
+
+    Remember that the reproducibility of the computations is guaranteed only for the agents from Reinforced-lib.
+    You have to ensure that the environment you use is reproducible as well.
 
 Loggers
 -------
