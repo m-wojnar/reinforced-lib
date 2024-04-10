@@ -111,7 +111,7 @@ To cite this repository, please use the following BibTeX entry for the Reinforce
 .. code-block:: latex
 
     @article{reinforcedlib2022,
-      author = {Maksymilian Wojnar and Szymon Szott and Krzysztof Rusek and Wojciech Ciezobka}
+      author = {Maksymilian Wojnar and Szymon Szott and Krzysztof Rusek and Wojciech Ciezobka},
       title = {{R}einforced-lib: {R}apid prototyping of reinforcement learning solutions},
       journal = {SoftwareX},
       volume = {26},
