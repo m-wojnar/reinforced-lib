@@ -36,7 +36,7 @@ class ThompsonSampling(BaseAgent):
     ----------
     n_arms : int
         Number of bandit arms. :math:`N \in \mathbb{N}_{+}`.
-    decay : float, default=1.0
+    decay : float, default=0.0
         Decay rate. If equal to zero, smoothing is not applied. :math:`w \geq 0`.
 
     References
@@ -45,7 +45,7 @@ class ThompsonSampling(BaseAgent):
        for Wi-Fi 6 Dense Deployments. IEEE Access. 8. 168898-168909.
     """
 
-    def __init__(self, n_arms: int, decay: Scalar = 1.0) -> None:
+    def __init__(self, n_arms: int, decay: Scalar = 0.0) -> None:
         assert decay >= 0
 
         self.n_arms = n_arms
@@ -101,8 +101,8 @@ class ThompsonSampling(BaseAgent):
         """
 
         return ThompsonSamplingState(
-            alpha=jnp.zeros((n_arms,1)),
-            beta=jnp.zeros((n_arms,1))
+            alpha=jnp.zeros((n_arms, 1)),
+            beta=jnp.zeros((n_arms, 1))
         )
 
     @staticmethod
