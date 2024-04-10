@@ -15,6 +15,9 @@ Welcome to Reinforced-lib's documentation!
 .. image:: https://readthedocs.org/projects/reinforced-lib/badge/?version=latest
     :target: https://reinforced-lib.readthedocs.io/
 
+.. image:: https://img.shields.io/badge/DOI-10.1016/j.softx.2024.101706-blue.svg
+    :target: https://doi.org/10.1016/j.softx.2024.101706
+
 **Introducing Reinforced-lib:** a lightweight Python library for rapid development of reinforcement-learning (RL) solutions. It is open-source, prioritizes ease of use, provides comprehensive documentation, and offers both deep reinforcement learning (DRL) and classic non-neural agents. Built on `JAX <https://jax.readthedocs.io/en/latest/>`_, it facilitates exporting trained models to embedded devices, and makes it great for research and prototyping with RL algorithms. Access to JAX's JIT functionality ensure high-performance results.
 
 Key components

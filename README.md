@@ -4,6 +4,7 @@
 [![License: MPL 2.0][license-badge]][license]
 [![build and test][tests-badge]][github-actions]
 [![Documentation Status][rtd-badge]][documentation]
+[![DOI](https://img.shields.io/badge/DOI-10.1016/j.softx.2024.101706-blue.svg)](https://doi.org/10.1016/j.softx.2024.101706)
 
 [pypi-badge]: https://img.shields.io/pypi/v/reinforced-lib
 [pypi]: https://pypi.org/project/reinforced-lib/
