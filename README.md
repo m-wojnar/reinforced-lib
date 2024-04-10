@@ -136,13 +136,18 @@ if __name__ == '__main__':
 
 ## Citing Reinforced-lib
 
-To cite this repository:
+To cite this repository, please use the following BibTeX entry for the Reinforced-lib paper:
 
-```
-@software{reinforcedlib2022,
-  author = {Maksymilian Wojnar and Wojciech Ciężobka},
-  title = {{R}einforced-lib: {R}einforcement learning library},
-  url = {http://github.com/m-wojnar/reinforced-lib},
-  year = {2022},
+```bibtex
+@article{reinforcedlib2022,
+  author = {Maksymilian Wojnar and Szymon Szott and Krzysztof Rusek and Wojciech Ciezobka}
+  title = {{R}einforced-lib: {R}apid prototyping of reinforcement learning solutions},
+  journal = {SoftwareX},
+  volume = {26},
+  pages = {101706},
+  year = {2024},
+  issn = {2352-7110},
+  doi = {https://doi.org/10.1016/j.softx.2024.101706},
+  url = {https://www.sciencedirect.com/science/article/pii/S2352711024000773}
 }
 ```
