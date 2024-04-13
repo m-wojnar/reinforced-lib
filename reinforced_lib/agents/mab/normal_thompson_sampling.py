@@ -67,7 +67,7 @@ class NormalThompsonSampling(BaseAgent):
     ) -> None:
         assert alpha > 0
         assert beta > 0
-        assert lam > 0
+        assert lam >= 0
 
         self.n_arms = n_arms
 
