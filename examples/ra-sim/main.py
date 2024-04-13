@@ -86,7 +86,7 @@ if __name__ == '__main__':
     print(params_str_template.format(args.n_wifi, args.simulation_time, args.initial_position, args.velocity))
 
     start = perf_counter()
-    csv_results, mcs, rate, thr = run(ra_sim_args, ThompsonSampling, {}, args.seed)
+    csv_results, mcs, rate, thr = run(ra_sim_args, ThompsonSampling, {'decay': 1.0}, args.seed)
     end = perf_counter()
 
     print(results_str_template.format(end - start, thr, rate, mcs))
