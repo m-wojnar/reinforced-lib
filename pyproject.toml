@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "reinforced-lib"
-version = "1.1.0"
+version = "1.1.1"
 requires-python = ">=3.9, <4"
 
 description = "Reinforcement learning library"
@@ -33,17 +33,17 @@ classifiers = [
 ]
 
 dependencies = [
-    "chex~=0.1.85",
+    "chex~=0.1.86",
     "cloudpickle~=3.0.0",
-    "flax~=0.8.1",
+    "flax~=0.8.2",
     "gymnasium~=0.29.1",
-    "jax~=0.4.24",
-    "jaxlib~=0.4.24",
+    "jax~=0.4.26",
+    "jaxlib~=0.4.26",
     "lz4~=4.3.3",
-    "matplotlib~=3.8.2",
-    "optax~=0.1.9",
+    "matplotlib~=3.8.4",
+    "optax~=0.2.2",
     "tensorboardX~=2.6.2.2",
-    "wandb~=0.16.3"
+    "wandb~=0.16.6"
 ]
 
 [project.optional-dependencies]
