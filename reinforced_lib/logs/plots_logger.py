@@ -76,8 +76,7 @@ class PlotsLogger(BaseLogger):
             return smoothed
 
         def lineplot(values: list, steps: list, alpha: Scalar = 1.0, label: bool = False) -> None:
-            values = jnp.array(values)
-            values = jnp.squeeze(values)
+            values = jnp.array(values).squeeze()
 
             if values.ndim == 1:
                 plt.plot(steps, values, alpha=alpha, c='C0')

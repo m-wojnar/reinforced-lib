@@ -190,7 +190,7 @@ class ThompsonSampling(BaseAgent):
             Selected action.
         """
 
-        success_prob = jax.random.beta(key, 1 + state.alpha, 1 + state.beta).squeeze()
+        success_prob = jax.random.beta(key, 1 + state.alpha, 1 + state.beta).flatten()
         action = jnp.argmax(success_prob * context)
 
         return action

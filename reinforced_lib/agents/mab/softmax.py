@@ -216,4 +216,4 @@ class Softmax(BaseAgent):
             Selected action.
         """
 
-        return jax.random.categorical(key, state.H.squeeze() / tau)
+        return jax.random.categorical(key, state.H.flatten() / tau)

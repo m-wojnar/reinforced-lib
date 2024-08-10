@@ -392,4 +392,4 @@ class DQN(BaseAgent):
         max_q = (q == q.max()).astype(float)
         probs = (1 - state.epsilon) * max_q / jnp.sum(max_q) + state.epsilon / q.shape[0]
 
-        return jax.random.choice(action_key, act_space_size, p=probs.squeeze())
+        return jax.random.choice(action_key, act_space_size, p=probs.flatten())

@@ -189,4 +189,4 @@ class Exp3(BaseAgent):
         """
 
         pi = (1 - gamma) * state.omega / state.omega.sum() + gamma / state.omega.size
-        return jax.random.categorical(key, jnp.log(pi.squeeze()))
+        return jax.random.categorical(key, jnp.log(pi.flatten()))

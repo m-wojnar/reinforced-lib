@@ -199,4 +199,4 @@ class EGreedy(BaseAgent):
 
         max_q = (state.Q == state.Q.max()).astype(float)
         probs = (1 - e) * max_q / jnp.sum(max_q) + e / state.Q.shape[0]
-        return jax.random.choice(key, state.Q.shape[0], p=probs.squeeze())
+        return jax.random.choice(key, state.Q.shape[0], p=probs.flatten())

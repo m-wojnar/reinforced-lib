@@ -187,10 +187,10 @@ class UCB(BaseAgent):
         """
 
         Q = jnp.where(state.N == 0., jnp.inf, state.R / state.N)
-        t = jnp.sum(state.N)
+        t = jnp.maximum(1, jnp.sum(state.N))
 
         ucb = Q + c * jnp.sqrt(jnp.log(t) / jnp.maximum(state.N, 1))
         max_ucb = (ucb == jnp.max(ucb)).astype(float)
         probs = max_ucb / jnp.sum(max_ucb)
 
-        return jax.random.choice(key, probs.shape[0], p=probs.squeeze())
+        return jax.random.choice(key, probs.shape[0], p=probs.flatten())
