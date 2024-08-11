@@ -535,6 +535,8 @@ main (int argc, char *argv[])
     }
 
     Simulator::Destroy();
+    m_env->SetFinish ();
+
     cout << "Packets registered by handler: " << g_rxPktNum << " Packets" << endl;
 
     return 0;

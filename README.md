@@ -30,12 +30,12 @@ pip install reinforced-lib
 ```
 
 To have easy access to the [example files](https://github.com/m-wojnar/reinforced-lib/tree/main/examples)
-you can clone the source code from our repository, and than install it locally with pip:
+you can clone the source code from our repository, and then install it locally with pip:
 
 ```bash
 git clone git@github.com:m-wojnar/reinforced-lib.git
 cd reinforced-lib
-pip install .
+pip install -e .
 ```
 
 In the spirit of making Reinforced-lib a lightweight solution, we include only the necessary dependencies in the base 

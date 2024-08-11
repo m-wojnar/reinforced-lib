@@ -4,6 +4,8 @@
 #include "ns3/wifi-remote-station-manager.h"
 #include "ns3/ns3-ai-module.h"
 
+#define DEFAULT_MEMBLOCK_KEY 2333
+
 namespace ns3 {
 
 // ns3-ai structures
@@ -24,6 +26,8 @@ struct sAct
   uint32_t station_id;
   uint8_t mcs;
 } Packed;
+
+Ns3AIRL<sEnv, sAct> * m_env = new Ns3AIRL<sEnv, sAct> (DEFAULT_MEMBLOCK_KEY);
 
 // Structure holding additional information required by the RLibWifiManager
 struct RLibWifiRemoteStation : public WifiRemoteStation
@@ -64,8 +68,6 @@ private:
   uint32_t m_nWifi;
   uint32_t m_nss;
   double m_power;
-
-  Ns3AIRL<sEnv, sAct> * m_env;
 };
 
 }

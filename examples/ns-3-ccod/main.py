@@ -184,7 +184,7 @@ def run(
     else:
         rl = RLib.load(rlib_args['load_path'])
 
-    exp = Experiment(mempool_key, memory_size, simulation, ns3_path, debug=False)
+    exp = Experiment(mempool_key, memory_size, simulation, ns3_path, using_waf=False)
     var = Ns3AIRL(memblock_key, Env, Act)
 
     try:
