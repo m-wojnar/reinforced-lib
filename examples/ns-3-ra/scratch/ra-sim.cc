@@ -47,6 +47,8 @@ FlowState flowState;
 std::ostringstream csvOutput;
 std::string csvPrefix;
 
+RLibWifiManager rlib;
+
 /***** Main with scenario definition *****/
 
 int

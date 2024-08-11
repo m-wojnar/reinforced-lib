@@ -160,15 +160,48 @@ We provide a few more examples of Reinforced-lib and Gymnasium integration in th
 Connection with ns-3
 ********************
 
-We will demonstrate the cooperation of Reinforced-lib with an external WiFi simulation software based on an example of
-an ML-controlled rate adaptation (RA) manager. To simulate the WiFi environment, we will use the popular, research oriented
-network simulator -- ns-3. To learn more about the simulator, we encourage to visit the
+We will demonstrate the cooperation of Reinforced-lib with an external Wi-Fi simulation software based on an example of
+an ML-controlled rate adaptation (RA) manager. To simulate the Wi-Fi environment, we will use the popular, research
+oriented network simulator -- ns-3. To learn more about the simulator, we encourage to visit the
 `official website <https://www.nsnam.org/>`_ or read the
 `ns-3 tutorial <https://www.nsnam.org/docs/release/3.36/tutorial/html/index.html>`_.
 
 
-Environment setup
-=================
+Docker container setup
+======================
+
+To facilitate the setup of the Reinforced-lib and ns-3 connection, we provide a Dockerfile that contains all the necessary
+dependencies and configurations. You need to have Docker installed on your machine, which you can download from the
+`official website <https://www.docker.com/get-started>`_.
+
+To build the Docker image, use the Dockerfile `provided in the repository <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/ns-3-ra/Dockerfile>`_.
+Navigate to the directory where the Dockerfile is located and run the following command ("rlib-ns3" is the name of the image):
+
+.. code-block:: bash
+
+    docker build -t "rlib-ns3" .
+
+Once the image is built, you can run the interactive session with the following command:
+
+.. code-block:: bash
+
+    docker run -it "rlib-ns3" bash
+
+To persist the changes made in the container, you can create a volume and mount it to the container by adding the ``-v``
+flag to the ``docker run`` command:
+
+.. code-block:: bash
+
+    docker volume create "rlib-ns3-data"
+    docker run -it -v "rlib-ns3-data:/home" "rlib-ns3" bash
+
+Reinforced-lib and ns-3 are already installed in the container, so you can proceed with the experiments described in the
+:ref:`simulation scenario section <Simulation scenario>`. The library is located in the ``/home/reinforced-lib`` directory and the
+ns-3 in the ``/home/ns-3-dev`` directory.
+
+
+Manual setup
+============
 
 To perform experiments with Python-based Reinforced-lib and C++-based ns-3, you need to setup an environment which
 consists of the following:
@@ -207,14 +240,16 @@ The ns3-ai module interconnects ns-3 and Reinforced-lib (or any other python-wri
 the shared memory pool. The memory is accessed by both sides thus making the connection. You can read more about the ns3-ai on the
 `ns3-ai official repository <https://github.com/hust-diangroup/ns3-ai>`_.
 
-.. warning::
+.. note::
 
-    Unfortunately, ns3-ai (as of 18.07.2023) is not compatible with the ns-3.36 or later. We have forked and modified the official ns3-ai repository to make it compatible with the 3.37 version. To install the compatible, forked version run the following commands
+    ns3-ai (as of 10.08.2024) is aligned with the latest versions of ns-3. We recommend resetting the repository to a specific version to make it compatible with version 3.37.
 
 .. code-block:: bash
 
     cd $YOUR_NS3_PATH/contrib/
-    git clone --single-branch --branch ml4wifi https://github.com/m-wojnar/ns3-ai.git
+    git clone https://github.com/hust-diangroup/ns3-ai.git
+    cd ns3-ai
+    git reset --hard 86453e840c6e5df849d8c4e9c7f88eade637798c
     pip install "$YOUR_NS3_PATH/contrib/ns3-ai/py_interface"
 
 
@@ -241,12 +276,12 @@ following commands:
 Compiling ns3
 -------------
 
-To have the simulator working and fully integrated with the Reinforced-lib, we need to compile it. We do this from the ``YOUR_NS3_PATH`` in two steps, by first configuring the compilation and than by building ns-3:
+To have the simulator working and fully integrated with the Reinforced-lib, we need to compile it. We do this from the ``YOUR_NS3_PATH`` in two steps, by first configuring the compilation and then by building ns-3:
 
 .. code-block:: bash
 
     cd $YOUR_NS3_PATH
-    ./ns3 configure --build-profile=optimized --enable-examples --enable-tests
+    ./ns3 configure --build-profile=optimized --disable-examples --disable-tests
     ./ns3 build
 
 Once you have built ns-3, you can test the ns-3 and Reinforced-lib integration by executing the script that runs an example
@@ -261,9 +296,9 @@ On success, in your home directory, there should be a ``rlib-ns3-integration-tes
 
 .. _rlib-sim:
 
+
 Simulation scenario
 ===================
-
 
 ns-3 (C++) part
 ---------------
@@ -381,7 +416,7 @@ python and C++. You can learn more about the data exchange model
         ext_type=IEEE_802_11_ax_RA
     )
 
-    exp = Experiment(mempool_key, memory_size, 'ra-sim', ns3_path)
+    exp = Experiment(mempool_key, memory_size, 'ra-sim', ns3_path, using_waf=False)
     var = Ns3AIRL(memblock_key, Env, Act)
 
 In line 73, we create an instance of RLib by supplying the appropriate, parametrized agent and the 802.11ax environment extension.
