@@ -172,7 +172,7 @@ Docker container setup
 
 To facilitate the setup of the Reinforced-lib and ns-3 connection, we provide a Dockerfile that contains all the necessary
 dependencies and configurations. You need to have Docker installed on your machine, which you can download from the
-`official website <https://www.docker.com/get-started>`_.
+`Docker website <https://www.docker.com/get-started>`_.
 
 To build the Docker image, use the Dockerfile `provided in the repository <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/ns-3-ra/Dockerfile>`_.
 Navigate to the directory where the Dockerfile is located and run the following command ("rlib-ns3" is the name of the image):
