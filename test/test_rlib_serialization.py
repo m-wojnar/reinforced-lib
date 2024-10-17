@@ -3,7 +3,7 @@ import os
 import jax
 import jax.numpy as jnp
 
-from reinforced_lib.agents.mab import EGreedy
+from reinforced_lib.agents.mab import UCB
 from reinforced_lib.rlib import RLib
 from reinforced_lib.logs import *
 
@@ -19,8 +19,8 @@ class TestRLibSerialization(unittest.TestCase):
 
     def run_experiment(self, reload: bool, new_decay: float = None) -> list[int]:
         rl = RLib(
-            agent_type=EGreedy,
-            agent_params={'n_arms': len(self.arms_probs), 'e': 0.1},
+            agent_type=UCB,
+            agent_params={'n_arms': len(self.arms_probs), 'c': 0.1},
             no_ext_mode=True,
             logger_types=CsvLogger,
             logger_sources=['n_failed', 'n_successful', ('action', SourceType.METRIC)],
@@ -45,7 +45,7 @@ class TestRLibSerialization(unittest.TestCase):
                 save_path = rl.save()
 
                 if new_decay:
-                    rl = RLib.load(save_path, agent_params={'n_arms': len(self.arms_probs), 'e': 0.5})
+                    rl = RLib.load(save_path, agent_params={'n_arms': len(self.arms_probs), 'c': 0.0})
                 else:
                     rl = RLib.load(save_path)
                 reloaded = True
@@ -69,7 +69,7 @@ class TestRLibSerialization(unittest.TestCase):
         """
 
         actions_straight = self.run_experiment(reload=False)
-        actions_reload = self.run_experiment(reload=True, new_decay=2.0)
+        actions_reload = self.run_experiment(reload=True, new_decay=True)
         self.assertFalse(jnp.array_equal(actions_straight, actions_reload))
 
 
