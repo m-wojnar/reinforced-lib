@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep.ddpg import DDPGState
-from reinforced_lib.agents.deep.dqn import DQNState
+from reinforced_lib.agents.deep.ddqn import DDQNState
 
 
 if __name__ == '__main__':
@@ -21,32 +21,32 @@ if __name__ == '__main__':
 
     rl = RLib.load(args.loadPath)
 
-    if args.agent == 'DQN':
-        rl._agent_containers[0].state = DQNState(
+    if args.agent == 'DDQN':
+        rl._agent_containers[0].state = DDQNState(
             params=rl._agent_containers[0].state.params,
-            state=rl._agent_containers[0].state.state,
+            net_state=rl._agent_containers[0].state.net_state,
             params_target=None,
-            state_target=None,
+            net_state_target=None,
             opt_state=None,
             replay_buffer=None,
             prev_env_state=None,
-            epsilon=0
+            epsilon=0.
         )
     elif args.agent == 'DDPG':
         rl._agent_containers[0].state = DDPGState(
             q_params=None,
-            q_state=None,
+            q_net_state=None,
             q_params_target=None,
-            q_state_target=None,
+            q_net_state_target=None,
             q_opt_state=None,
             a_params=rl._agent_containers[0].state.a_params,
-            a_state=rl._agent_containers[0].state.a_state,
+            a_net_state=rl._agent_containers[0].state.a_net_state,
             a_params_target=None,
-            a_state_target=None,
+            a_net_state_target=None,
             a_opt_state=None,
             replay_buffer=None,
             prev_env_state=None,
-            noise=0
+            noise=0.
         )
 
     rl.save(agent_ids=0, path=args.savePath)

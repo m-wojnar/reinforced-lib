@@ -4,6 +4,155 @@
 Examples
 ########
 
+.. _gym_integration:
+
+**************************
+Integration with Gymnasium
+**************************
+
+`Gymnasium <https://gymnasium.farama.org/>`_, formerly known as OpenAI Gym, is a popular toolkit that provides a standardized interface for reinforcement learning environments. Gymnasium offers a variety of environments, from simple classic control tasks like balancing a pole, which is described below in detail, to complex games like Atari and MuJoCo. It even supports creating custom environments, making it a versatile tool for all things reinforcement learning research.
+
+Reinforced-lib on the other hand provides implementations of various reinforcement learning algorithms. It can seamlessly integrate with Gymnasium by using the environments provided by Gymnasium as the learning context for the algorithms implemented in Reinforced-lib. This integration allows developers to easily train and evaluate their reinforcement learning models using a wide variety of pre-defined scenarios.
+
+Cart Pole example
+=================
+
+The Cart Pole environment is a classic control task in which the goal is to balance a pole on a cart. The environment is described by a 4-dimensional state space, which consists of the cart's position, the cart's velocity, the pole's angle, and the pole's angular velocity. The agent can take one of two actions: push the cart to the left or push the cart to the right. The episode ends when the pole falls below a certain angle or the cart moves outside of the environment's boundaries. The goal is to keep the pole balanced for as long as possible.
+
+The following example demonstrates how to train a reinforcement learning agent using Reinforced-lib and Gymnasium. The agent uses the :ref:`Deep Q-Learning (DQN) <Deep Q-Learning (DQN)>` algorithm to learn how to balance the pole. The DQN algorithm is implemented in Reinforced-lib and the Cart Pole environment is provided by Gymnasium.
+
+We start with the necessary imports:
+
+.. code-block:: python
+
+    import gymnasium as gym
+    import optax
+    from chex import Array
+    from flax import linen as nn
+
+    from reinforced_lib import RLib
+    from reinforced_lib.agents.deep import DQN
+    from reinforced_lib.exts import Gymnasium
+    from reinforced_lib.logs import StdoutLogger, TensorboardLogger
+
+We than define the QNetwork approximator as a simple multi-layer perceptron with a ReLU activation function:
+
+.. code-block:: python
+
+    class QNetwork(nn.Module):
+        @nn.compact
+        def __call__(self, x: Array) -> Array:
+            x = nn.Dense(256)(x)
+            x = nn.relu(x)
+            return nn.Dense(2)(x)
+
+Next, we step into the ``run`` function, which is responsible for training the agent. We start by instantiating the Reinforced-lib, specifying the agent as a DQN, the extension as :ref:`Gymnasium <Gymnasium>`, and the loggers as :ref:`StdoutLogger <StdoutLogger>` and :ref:`TensorboardLogger <TensorboardLogger>` to log both to the console and to a TensorBoard file.  Note that we specify the environment type in the parameters of the extension to allow for automatic inference of environment properties, such as the state and action space sizes.
+
+.. code-block:: python
+
+    def run(num_epochs: int) -> None:
+        rl = RLib(
+            agent_type=DQN,
+            agent_params={
+                'q_network': QNetwork(),
+                'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
+                'discount': 0.95,
+                'epsilon_decay': 0.9975
+            },
+            ext_type=Gymnasium,
+            ext_params={'env_id': 'CartPole-v1'},
+            logger_types=[StdoutLogger, TensorboardLogger]
+        )
+
+We then start the training loop where we iterate over the number of epochs and for each epoch we let the agent interact with the environment. We start by resetting the environment and sampling the initial action of the agent. Then we run the agent in the environment by performing the action in the environment and sampling the next action. We continue this loop until the environment reaches a terminal state. We log the length of the epoch as the performance metric and move on to the next epoch.
+
+.. code-block:: python
+
+        for epoch in range(num_epochs):
+            env = gym.make('CartPole-v1', render_mode='no')
+
+            _, _ = env.reset()
+            action = env.action_space.sample()
+            terminal = False
+            epoch_len = 0
+
+            while not terminal:
+                env_state = env.step(action.item())
+                action = rl.sample(*env_state)
+                terminal = env_state[2] or env_state[3]
+                epoch_len += 1
+            
+            rl.log('epoch_len', epoch_len)
+
+We start the training by calling the ``run`` function with the number of epochs as an argument:
+
+.. code-block:: python
+
+    if __name__ == '__main__':
+        run(num_epochs=300)
+
+The complete, runnable code can be copy pasted from the following snippet:
+
+.. code-block:: python
+
+    import gymnasium as gym
+    import optax
+    from chex import Array
+    from flax import linen as nn
+
+    from reinforced_lib import RLib
+    from reinforced_lib.agents.deep import DQN
+    from reinforced_lib.exts import Gymnasium
+    from reinforced_lib.logs import StdoutLogger, TensorboardLogger
+
+
+    class QNetwork(nn.Module):
+        @nn.compact
+        def __call__(self, x: Array) -> Array:
+            x = nn.Dense(256)(x)
+            x = nn.relu(x)
+            return nn.Dense(2)(x)
+
+
+    def run(num_epochs: int) -> None:
+        rl = RLib(
+            agent_type=DQN,
+            agent_params={
+                'q_network': QNetwork(),
+                'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
+                'discount': 0.95,
+                'epsilon_decay': 0.9975
+            },
+            ext_type=Gymnasium,
+            ext_params={'env_id': 'CartPole-v1'},
+            logger_types=[StdoutLogger, TensorboardLogger]
+        )
+
+        for epoch in range(num_epochs):
+            env = gym.make('CartPole-v1', render_mode='no')
+
+            _, _ = env.reset()
+            action = env.action_space.sample()
+            terminal = False
+            epoch_len = 0
+
+            while not terminal:
+                env_state = env.step(action.item())
+                action = rl.sample(*env_state)
+                terminal = env_state[2] or env_state[3]
+                epoch_len += 1
+            
+            rl.log('epoch_len', epoch_len)
+
+
+    if __name__ == '__main__':
+        run(num_epochs=300)
+
+Other examples
+==============
+
+We provide a few more examples of Reinforced-lib and Gymnasium integration in the `examples <https://github.com/m-wojnar/reinforced-lib/tree/main/examples>`_ directory of the Reinforced-lib repository. The examples include the training of the DQN agent in the `Cart Pole environment <https://github.com/m-wojnar/reinforced-lib/tree/main/examples/cart-pole>`_ (described above) and the training of the DDPG agent in the `Pendulum environment <https://github.com/m-wojnar/reinforced-lib/tree/main/examples/pendulum>`_. The examples are fully runnable and can be used as a starting point for your own reinforcement learning experiments with Reinforced-lib and Gymnasium.
+
 
 .. _ns3_connection:
 
@@ -11,15 +160,48 @@ Examples
 Connection with ns-3
 ********************
 
-We will demonstrate the cooperation of Reinforced-lib with an external WiFi simulation software based on an example of
-an ML-controlled rate adaptation (RA) manager. To simulate the WiFi environment, we will use the popular, research oriented
-network simulator -- ns-3. To learn more about the simulator, we encourage to visit the
+We will demonstrate the cooperation of Reinforced-lib with an external Wi-Fi simulation software based on an example of
+an ML-controlled rate adaptation (RA) manager. To simulate the Wi-Fi environment, we will use the popular, research
+oriented network simulator -- ns-3. To learn more about the simulator, we encourage to visit the
 `official website <https://www.nsnam.org/>`_ or read the
 `ns-3 tutorial <https://www.nsnam.org/docs/release/3.36/tutorial/html/index.html>`_.
 
 
-Environment setup
-=================
+Docker container setup
+======================
+
+To facilitate the setup of the Reinforced-lib and ns-3 connection, we provide a Dockerfile that contains all the necessary
+dependencies and configurations. You need to have Docker installed on your machine, which you can download from the
+`Docker website <https://www.docker.com/get-started>`_.
+
+To build the Docker image, use the Dockerfile `provided in the repository <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/ns-3-ra/Dockerfile>`_.
+Navigate to the directory where the Dockerfile is located and run the following command ("rlib-ns3" is the name of the image):
+
+.. code-block:: bash
+
+    docker build -t "rlib-ns3" .
+
+Once the image is built, you can run the interactive session with the following command:
+
+.. code-block:: bash
+
+    docker run -it "rlib-ns3" bash
+
+To persist the changes made in the container, you can create a volume and mount it to the container by adding the ``-v``
+flag to the ``docker run`` command:
+
+.. code-block:: bash
+
+    docker volume create "rlib-ns3-data"
+    docker run -it -v "rlib-ns3-data:/home" "rlib-ns3" bash
+
+Reinforced-lib and ns-3 are already installed in the container, so you can proceed with the experiments described in the
+:ref:`simulation scenario section <Simulation scenario>`. The library is located in the ``/home/reinforced-lib`` directory and the
+ns-3 in the ``/home/ns-3-dev`` directory.
+
+
+Manual setup
+============
 
 To perform experiments with Python-based Reinforced-lib and C++-based ns-3, you need to setup an environment which
 consists of the following:
@@ -29,7 +211,7 @@ consists of the following:
   * ns3-ai (`GitHub repository <https://github.com/hust-diangroup/ns3-ai/>`_).
 
 Since the ns-3 requires the compilation, we will install all the required modules, transfer ns-3 files required for the
-communication with Reinforced-lib, and copile everything once at the very end.
+communication with Reinforced-lib, and compile everything once at the very end.
 
 
 Installing ns-3
@@ -56,12 +238,18 @@ Installing ns3-ai
 
 The ns3-ai module interconnects ns-3 and Reinforced-lib (or any other python-writen software) by transferring data through
 the shared memory pool. The memory is accessed by both sides thus making the connection. You can read more about the ns3-ai on the
-`ns3-ai official repository <https://github.com/hust-diangroup/ns3-ai>`_. Unfortunately, ns3-ai (as of 18.07.2023) is not compatible with the ns-3.36 or later. We have forked and modified the official ns3-ai repository to make it compatible with the 3.37 version. To install the compatible, forked version run the following commands
+`ns3-ai official repository <https://github.com/hust-diangroup/ns3-ai>`_.
+
+.. note::
+
+    ns3-ai (as of 10.08.2024) is aligned with the latest versions of ns-3. We recommend resetting the repository to a specific version to make it compatible with version 3.37.
 
 .. code-block:: bash
 
     cd $YOUR_NS3_PATH/contrib/
-    git clone --single-branch --branch ml4wifi https://github.com/m-wojnar/ns3-ai.git
+    git clone https://github.com/hust-diangroup/ns3-ai.git
+    cd ns3-ai
+    git reset --hard 86453e840c6e5df849d8c4e9c7f88eade637798c
     pip install "$YOUR_NS3_PATH/contrib/ns3-ai/py_interface"
 
 
@@ -88,12 +276,12 @@ following commands:
 Compiling ns3
 -------------
 
-To have the simulator working and fully integrated with the Reinforced-lib, we need to compile it. We do this from the ``YOUR_NS3_PATH`` in two steps, by first configuring the compilation and than by building ns-3:
+To have the simulator working and fully integrated with the Reinforced-lib, we need to compile it. We do this from the ``YOUR_NS3_PATH`` in two steps, by first configuring the compilation and then by building ns-3:
 
 .. code-block:: bash
 
     cd $YOUR_NS3_PATH
-    ./ns3 configure --build-profile=optimized --enable-examples --enable-tests
+    ./ns3 configure --build-profile=optimized --disable-examples --disable-tests
     ./ns3 build
 
 Once you have built ns-3, you can test the ns-3 and Reinforced-lib integration by executing the script that runs an example
@@ -102,15 +290,15 @@ rate adaptation scenario controlled by the UCB agent.
 .. code-block:: bash
 
     cd $REINFORCED_LIB
-    ./test/test_ns3_integration.sh
+    ./test/test_ns3_integration.sh $YOUR_NS3_PATH
 
 On success, in your home directory, there should be a ``rlib-ns3-integration-test.csv`` file generated filled with some data.
 
 .. _rlib-sim:
 
+
 Simulation scenario
 ===================
-
 
 ns-3 (C++) part
 ---------------
@@ -163,8 +351,8 @@ learn what is the function of each.
         --PrintHelp:                 Print this help message.
 
 
-Reinforced-lib (python) end
----------------------------
+Reinforced-lib (Python) part
+----------------------------
 
 The provided rate adaptation manager is implemented in the file ``$REINFORCED_LIB/examples/ns-3-ra/main.py``. Here we specify the
 communication with the ns-3 simulator by defining the environment's observation space and the action space, we create the ``RLib``
@@ -228,7 +416,7 @@ python and C++. You can learn more about the data exchange model
         ext_type=IEEE_802_11_ax_RA
     )
 
-    exp = Experiment(mempool_key, memory_size, 'ra-sim', ns3_path)
+    exp = Experiment(mempool_key, memory_size, 'ra-sim', ns3_path, using_waf=False)
     var = Ns3AIRL(memblock_key, Env, Act)
 
 In line 73, we create an instance of RLib by supplying the appropriate, parametrized agent and the 802.11ax environment extension.
@@ -314,139 +502,7 @@ You can try running the following commands to test the Reinforced-lib rate adapt
 
         python $REINFORCED_LIB/examples/ns-3-ra/main.py --agent="ParticleFilter" --ns3Path="$YOUR_NS3_PATH" --velocity=1
 
+Source code of the example
+===========================
 
-.. _gym_integration:
-
-*********************************
-Gymnasium environment integration
-*********************************
-
-
-Our library supports defining RL environments in the `Gymnasium <https://gymnasium.farama.org/>`_ (former OpenAI Gym)
-format. We want to show you how well our agents are suited to work with the Gymnasium environments using an example
-of a simple recommender system.
-
-
-Recommender system example
-==========================
-
-Suppose that we have some goods to sell but for each user we can present a single product at a time. We assume that
-each user has some unknown to us preferences about our goods and we want to fit the presentation of the product to their
-taste. The situation can be modeled as a `multi-armed bandit problem <https://en.wikipedia.org/wiki/Multi-armed_bandit>`_
-and we can use our agents (for example the :ref:`epsilon-greedy <Epsilon-greedy>` one) to satisfy it.
-
-
-Environment definition
-----------------------
-
-With the convention of RL design, we recommend to define the environment class in a separate python file. After the imports section, you define the environment class with an appropriate constructor, which provides the dictionary of user preferences, the observation and action spaces.
-
-.. code-block:: python
-    :linenos:
-    :lineno-start: 5
-
-    class RecommenderSystemEnv(gym.Env):
-
-        def __init__(self, preferences: Dict) -> None:
-
-            self.action_space = gym.spaces.Discrete(len(preferences))
-            self.observation_space = gym.spaces.Space()
-            self._preferences = list(preferences.values())
-
-Because we inherit from the `gym.Env` class, we must provide the `reset()` and the `step()` methods at least, which are also necessary to make our recommender system environment work. The reset method is responsible only for seed setting. The step method pulls the bandit's arm and returns the reward.
-
-.. code-block:: python
-    :linenos:
-    :lineno-start: 19
-
-    def reset(
-            self,
-            seed: int = None,
-            options: Dict = None
-    ) -> Tuple[gym.spaces.Space, Dict]:
-
-        seed = seed if seed else np.random.randint(1000)
-        super().reset(seed=seed)
-        np.random.seed(seed)
-
-        return None, {}
-    
-    def step(self, action: int) -> Tuple[gym.spaces.Dict, int, bool, bool, Dict]:
-
-        reward = int(np.random.rand() < self._preferences[action])
-
-        return None, reward, False, False, {}
-
-
-Extension definition
---------------------
-
-To fully benefit from the Reinforced-lib's functionalities we recommend to implement an extension which will improve the
-communication between the agent and the environment, as described in the :ref:`Custom extensions <custom_extensions>`
-section. The source code with the implemented extension to our simple recommender system can be found in our
-`official repository <https://github.com/m-wojnar/reinforced-lib/blob/main/examples/recommender_system/ext.py>`_.
-
-
-Agent - environment interaction
--------------------------------
-
-Once you have defined the environment (and optionally the extension), you can train the agent to act in it efficiently. As
-usual, we begin with necessary imports:
-
-.. code-block:: python
-    :linenos:
-    :lineno-start: 1
-
-    from env import RecommenderSystemEnv
-    from ext import RecommenderSystemExt
-
-    from reinforced_lib import RLib
-    from reinforced_lib.agents.mab import EGreedy
-    from reinforced_lib.logs import PlotsLogger, SourceType
-
-    import gymnasium as gym
-    gym.logger.set_level(40)
-
-We define a `run()` function that constructs the recommender system extension, creates, and resets the appropriate
-environment with user preferences derived from the extension. We also create and initialize the `RLib` instance with the selected agent, previously constructed extension and optionally some loggers to visualise the decision making process.
-
-.. code-block:: python
-    :linenos:
-    :lineno-start: 12
-
-    def run(episodes: int, seed: int) -> None:
-
-        # Construct the extension
-        ext = RecommenderSystemExt()
-
-        # Create and reset the environment which will simulate users behavior
-        env = RecommenderSystemEnv(ext.preferences)
-        _ = env.reset(seed=seed)
-
-        # Wrap everything under RLib object with designated agent
-        rl = RLib(
-            agent_type=EGreedy,
-            agent_params={'e': 0.25},
-            ext_type=RecommenderSystemExt,
-            logger_types=PlotsLogger,
-            logger_sources=[('action', SourceType.METRIC), ('cumulative', SourceType.METRIC)],
-            logger_params={'plots_scatter': True}
-        )
-        rl.init(seed)
-
-Finally we finish the `run()` function with a training loop that asks the agent to select an action, acts on the environment and receives some reward. Beforehand, we select an arbitrary action from the action space and perform the first rewarded step.
-
-.. code-block:: python
-    :linenos:
-    :lineno-start: 30
-
-        # Loop through each episode and update prior knowledge
-        act = env.action_space.sample()
-        _, reward, *_ = env.step(act)
-
-        for i in range(1, episodes):
-            act = rl.sample(reward=reward, time=i)
-            _, reward, *_ = env.step(act)
-
-Evaluating the `run()` function, with some finite number of episodes and a seed, should result in two plots,
-one representing the actions selected by the agent, and the second one representing the cumulative reward versus time.
+The complete, runnable code can be found in the `examples/ns-3-ra <https://github.com/m-wojnar/reinforced-lib/tree/main/examples/ns-3-ra>`_ directory of the Reinforced-lib repository. The example provides many useful scripts for reproducing our experiments and can be used as a starting point for your own reinforcement learning experiments with Reinforced-lib and ns-3. We also encourage you to see another example - implementation of the `centralized contention window optimization with DRL (CCOD) <https://ieeexplore.ieee.org/document/9417575?denied=>`_ in the ``examples/ns-3-ccod`` directory which presents a deep reinforcement learning scenario with Reinforced-lib and ns-3.

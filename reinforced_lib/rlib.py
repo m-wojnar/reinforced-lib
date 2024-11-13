@@ -1,7 +1,7 @@
-from __future__ import annotations
-
 import os
 import pickle
+from copy import deepcopy
+from itertools import product
 from typing import Union
 
 import cloudpickle
@@ -27,7 +27,7 @@ class AgentContainer:
     ----------
     state : BaseAgent
         Current state of the agent.
-    key : jax.random.PRNGKey
+    key : PRNGKey
         A PRNG key used as the random key.
     action : any
         Action selected by the agent.
@@ -56,7 +56,7 @@ class RLib:
     ext_params : dict, optional
         Parameters of the selected extension.
     logger_types : type or list[type], optional
-        Types of the selected logging modules. Must inherit from the ``BaseLogger`` class.
+        Types of the selected loggers. Must inherit from the ``BaseLogger`` class.
     logger_sources : Source or list[Source], optional
         Sources to log.
     logger_params : dict, optional
@@ -90,29 +90,29 @@ class RLib:
 
         self._agent = None
         self._agent_type = agent_type
-        self._agent_params = agent_params
+        self._agent_params = deepcopy(agent_params)
         self._agent_containers = []
 
         self._ext = None
         self._no_ext_mode = no_ext_mode
         self._ext_type = ext_type
-        self._ext_params = ext_params
+        self._ext_params = deepcopy(ext_params)
 
-        self._logger_types = logger_types
-        self._logger_sources = logger_sources
-        self._logger_params = logger_params
+        self._logger_types = deepcopy(logger_types)
+        self._logger_sources = deepcopy(logger_sources)
+        self._logger_params = deepcopy(logger_params)
         self._logs_observer = LogsObserver()
         self._init_loggers = True
         self._cumulative_reward = 0.0
 
         if ext_type:
-            self.set_ext(ext_type, ext_params)
+            self.set_ext(self._ext_type, self._ext_params)
 
         if agent_type:
-            self.set_agent(agent_type, agent_params)
+            self.set_agent(self._agent_type, self._agent_params)
 
         if logger_types:
-            self.set_loggers(logger_types, logger_sources, logger_params)
+            self.set_loggers(self._logger_types, self._logger_sources, self._logger_params)
 
     def __del__(self) -> None:
         """
@@ -148,14 +148,14 @@ class RLib:
             raise IncorrectAgentTypeError(agent_type)
 
         self._agent_type = agent_type
-        self._agent_params = agent_params
+        self._agent_params = deepcopy(agent_params)
 
         if not self._no_ext_mode and self._ext:
-            agent_params = self._ext.get_agent_params(agent_type, agent_type.parameter_space(), agent_params)
+            agent_params = self._ext.get_agent_params(agent_type, agent_type.parameter_space(), self._agent_params)
             self._agent = agent_type(**agent_params)
             self._ext.setup_transformations(self._agent.update_observation_space, self._agent.sample_observation_space)
         else:
-            agent_params = agent_params if agent_params else {}
+            agent_params = self._agent_params if self._agent_params else {}
             self._agent = agent_type(**agent_params)
 
     def set_ext(self, ext_type: type, ext_params: dict = None) -> None:
@@ -182,9 +182,9 @@ class RLib:
             raise IncorrectExtensionTypeError(ext_type)
 
         self._ext_type = ext_type
-        self._ext_params = ext_params
+        self._ext_params = deepcopy(ext_params)
 
-        ext_params = ext_params if ext_params else {}
+        ext_params = self._ext_params if self._ext_params else {}
         self._ext = ext_type(**ext_params)
 
         if self._agent:
@@ -202,56 +202,41 @@ class RLib:
             logger_sources: Union[Source, list[Source]] = None,
             logger_params: dict[str, any] = None
     ) -> None:
-        """
+        r"""
         Initializes loggers of types ``logger_types`` with parameters ``logger_params``. The logger types must inherit
         from the ``BaseLogger`` class. The logger types cannot be changed after the first agent instance has been
         initialized. ``logger_types`` and ``logger_sources`` can be objects or lists of objects, the function broadcasts
-        them to the same length. The ``logger_sources`` parameter specifies the sources to log. A source can be None
-        (then the logger is used to log a custom values passed by the ``log`` method), a name of the sources (e.g.,
-        "action") or tuple containing the name and the ``SourceType`` (e.g., ``("action", SourceType.OBSERVATION)``).
-        If the name itself is inconclusive (e.g., it occurs as a metric and as an observation), the behaviour depends
-        on the implementation of the logger.
+        them so that all loggers are connected to all sources. The ``logger_sources`` parameter specifies the sources
+        to log. A source can be a name (e.g., "action") or tuple containing the name and the ``SourceType`` (e.g.,
+        ``("action", SourceType.OBSERVATION)``). If the name itself is inconclusive (e.g., it occurs as a metric and
+        as an observation), the behavior depends on the implementation of the logger.
 
         Parameters
         ----------
         logger_types : type or list[type]
-            Types of the selected logging modules.
+            Types of the selected loggers.
         logger_sources : Source or list[Source], optional
             Sources to log.
         logger_params : dict, optional
-            Parameters of the selected logging modules.
+            Parameters of the selected loggers.
         """
 
         if not self._init_loggers:
             raise ForbiddenLoggerSetError()
 
-        self._logger_types = logger_types
-        self._logger_sources = logger_sources
-        self._logger_params = logger_params
+        self._logger_types = deepcopy(logger_types)
+        self._logger_sources = deepcopy(logger_sources)
+        self._logger_params = deepcopy(logger_params)
 
-        logger_params = logger_params if logger_params else {}
-        logger_types, logger_sources = self._object_to_list(logger_types), self._object_to_list(logger_sources)
-        logger_types, logger_sources = self._broadcast(logger_types, logger_sources)
+        logger_params =  self._logger_params if  self._logger_params else {}
+        logger_types, logger_sources = self._object_to_list(self._logger_types), self._object_to_list(self._logger_sources)
 
-        for logger_type, source in zip(logger_types, logger_sources):
+        for logger_type, source in product(logger_types, logger_sources):
             self._logs_observer.add_logger(source, logger_type, logger_params)
 
     @staticmethod
     def _object_to_list(obj: Union[any, list[any]]) -> list[any]:
         return obj if isinstance(obj, list) else [obj]
-
-    @staticmethod
-    def _broadcast(list_a: list[any], list_b: list[any]) -> tuple[list[any], list[any]]:
-        if len(list_a) == len(list_b):
-            return list_a, list_b
-
-        if len(list_a) == 1:
-            return list_a * len(list_b), list_b
-
-        if len(list_b) == 1:
-            return list_a, list_b * len(list_a)
-
-        raise TypeError('Incompatible length of given lists.')
 
     @property
     def observation_space(self) -> gym.spaces.Space:
@@ -450,7 +435,7 @@ class RLib:
         path : str, optional
             Path to the checkpoint file. If none specified, saves to the default path.
             If the ``.pkl.lz4`` suffix is not detected, it will be appended automatically.
-        agent_ids : int or array_like, optional
+        agent_ids : int or Array, optional
             The identifier of the agent instance(s) to save. If none specified, saves the state of all agents.
         
         Returns
@@ -504,7 +489,7 @@ class RLib:
             logger_types: Union[type, list[type]] = None,
             logger_sources: Union[Source, list[Source]] = None,
             logger_params: dict[str, any] = None
-    ) -> RLib:
+    ) -> 'RLib':
         """
         Loads the state of the experiment from a file in lz4 format.
 
@@ -517,7 +502,7 @@ class RLib:
         ext_params : dict[str, any], optional
             Dictionary of altered extension parameters with their new values, by default None.
         logger_types : type or list[type], optional
-            Types of the selected logging modules. Must inherit from the ``BaseLogger`` class.
+            Types of the selected loggers. Must inherit from the ``BaseLogger`` class.
         logger_sources : Source or list[Source], optional
             Sources to log.
         logger_params : dict, optional

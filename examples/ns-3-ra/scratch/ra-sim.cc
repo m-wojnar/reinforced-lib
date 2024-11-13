@@ -13,6 +13,7 @@
 #include "ns3/ssid.h"
 #include "ns3/wifi-net-device.h"
 #include "ns3/yans-wifi-helper.h"
+#include "ns3/rlib-wifi-manager.h"
 
 using namespace ns3;
 
@@ -45,6 +46,8 @@ FlowState flowState;
 
 std::ostringstream csvOutput;
 std::string csvPrefix;
+
+RLibWifiManager rlib;
 
 /***** Main with scenario definition *****/
 
@@ -412,6 +415,7 @@ main (int argc, char *argv[])
 
   //Clean-up
   Simulator::Destroy ();
+  m_env->SetFinish ();
 
   return 0;
 }

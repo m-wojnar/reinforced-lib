@@ -1,9 +1,9 @@
 from argparse import ArgumentParser
 
-import haiku as hk
 import jax.numpy as jnp
 import optax
 from chex import Array
+from flax import linen as nn
 
 import gymnasium as gym
 gym.logger.set_level(40)
@@ -14,16 +14,33 @@ from reinforced_lib.exts import Gymnasium
 from reinforced_lib.logs import StdoutLogger, TensorboardLogger
 
 
-@hk.transform_with_state
-def q_network(s: Array, a: Array) -> Array:
-    s = hk.nets.MLP([16, 32, 8])(s)
-    x = jnp.concatenate([s, a], axis=-1)
-    return hk.nets.MLP([256, 256, 1])(x)
+class MLP(nn.Module):
+    features: list[int]
+
+    @nn.compact
+    def __call__(self, x: Array) -> Array:
+        for feature in self.features:
+            x = nn.Dense(feature)(x)
+            x = nn.relu(x)
+        return x
 
 
-@hk.transform_with_state
-def a_network(s: Array) -> Array:
-    return hk.nets.MLP([256, 256, 1])(s)
+class QNetwork(nn.Module):
+    @nn.compact
+    def __call__(self, s: Array, a: Array) -> Array:
+        s = MLP([16, 32])(s)
+        a = MLP([32])(a)
+        x = jnp.concatenate([s, a], axis=-1)
+        x = MLP([256, 256])(x)
+        return nn.Dense(1)(x)
+
+
+class ANetwork(nn.Module):
+    @nn.compact
+    def __call__(self, s: Array) -> Array:
+        s = MLP([256, 256])(s)
+        s = nn.Dense(1, kernel_init=nn.initializers.uniform(0.003))(s)
+        return 2 * nn.tanh(s)
 
 
 def run(num_epochs: int, render_every: int, seed: int) -> None:
@@ -43,15 +60,16 @@ def run(num_epochs: int, render_every: int, seed: int) -> None:
     rl = RLib(
         agent_type=DDPG,
         agent_params={
-            'q_network': q_network,
-            'a_network': a_network,
+            'q_network': QNetwork(),
+            'a_network': ANetwork(),
             'q_optimizer': optax.adam(2e-3),
             'a_optimizer': optax.adam(1e-3),
             'experience_replay_buffer_size': 50000,
             'experience_replay_batch_size': 64,
+            'experience_replay_steps': 1,
             'discount': 0.99,
             'noise': 0.2,
-            'noise_decay': 1.0,
+            'noise_decay': 0.999,
             'tau': 0.005,
         },
         ext_type=Gymnasium,

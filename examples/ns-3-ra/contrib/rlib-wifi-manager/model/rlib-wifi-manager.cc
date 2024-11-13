@@ -1,13 +1,10 @@
 #include "ns3/string.h"
 #include "ns3/double.h"
 #include "ns3/log.h"
-#include "rlib-wifi-manager.h"
+#include "ns3/rlib-wifi-manager.h"
 #include "ns3/wifi-phy.h"
 #include "ns3/wifi-tx-vector.h"
 #include "ns3/wifi-utils.h"
-
-#define Min(a,b) ((a < b) ? a : b)
-#define DEFAULT_MEMBLOCK_KEY 2333
 
 namespace ns3 {
 
@@ -50,8 +47,6 @@ RLibWifiManager::RLibWifiManager ()
 {
   NS_LOG_FUNCTION (this);
 
-  // Setup ns3-ai Env
-  m_env = new Ns3AIRL<sEnv, sAct> (DEFAULT_MEMBLOCK_KEY);
   m_env->SetCond (2, 0);
 }
 

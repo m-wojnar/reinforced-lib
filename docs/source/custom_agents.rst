@@ -47,7 +47,7 @@ We define the Epsilon-greedy agent, which will have 3 static methods:
     @staticmethod
     def init(
         key: PRNGKey,
-        n_arms: jnp.int32
+        n_arms: int
     ) -> EGreedyState:
 
         return EGreedyState(
@@ -56,7 +56,7 @@ We define the Epsilon-greedy agent, which will have 3 static methods:
             Q=jnp.zeros(n_arms),
 
             # The numbers of tries are set as ones, to avoid null division in Q value update
-            N=jnp.ones(n_arms, dtype=jnp.int32)
+            N=jnp.ones(n_arms, dtype=int)
         )
     
     # This method updates the agents state
@@ -64,7 +64,7 @@ We define the Epsilon-greedy agent, which will have 3 static methods:
     def update(
         state: EGreedyState,
         key: PRNGKey,
-        action: jnp.int32,
+        action: int,
         reward: Scalar,
     ) -> EGreedyState:
 
@@ -83,7 +83,7 @@ We define the Epsilon-greedy agent, which will have 3 static methods:
         state: EGreedyState,
         key: PRNGKey,
         e: Scalar
-    ) -> jnp.int32:
+    ) -> int:
 
         # Split PRNGkey to use it twice
         epsilon_key, choice_key = jax.random.split(key)
@@ -107,7 +107,7 @@ Having defined these static methods, we can implement the class constructor:
     
     def __init__(
         self, 
-        n_arms: jnp.int32, 
+        n_arms: int,
         e: Scalar
     ) -> None:
 
@@ -139,8 +139,8 @@ provide initialization arguments specified by :ref:`extensions <Extensions>`.
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
+            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'e': gym.spaces.Box(0.0, 1.0, (1,), float)
         })
 
 Specifying the action space of the agent is accomplished by implementing the ``action_space`` property.
@@ -168,7 +168,7 @@ the library can automatically generate an example set of parameters during the e
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'action': gym.spaces.Discrete(self.n_arms),
-            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
+            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)
         })
     
     # Parameters required by the 'sample' method in Gymnasium format.
@@ -207,7 +207,7 @@ to create your own agent.
 
         def __init__(
                 self,
-                n_arms: jnp.int32,
+                n_arms: int,
                 e: Scalar
         ) -> None:
             assert 0 <= e <= 1
@@ -221,15 +221,15 @@ to create your own agent.
         @staticmethod
         def parameter_space() -> gym.spaces.Dict:
             return gym.spaces.Dict({
-                'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-                'e': gym.spaces.Box(0.0, 1.0, (1,), jnp.float32)
+                'n_arms': gym.spaces.Box(1, jnp.inf, (1,), int),
+                'e': gym.spaces.Box(0.0, 1.0, (1,), float)
             })
 
         @property
         def update_observation_space(self) -> gym.spaces.Dict:
             return gym.spaces.Dict({
                 'action': gym.spaces.Discrete(self.n_arms),
-                'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
+                'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)
             })
 
         @property
@@ -243,19 +243,19 @@ to create your own agent.
         @staticmethod
         def init(
                 key: PRNGKey,
-                n_arms: jnp.int32
+                n_arms: int
         ) -> EGreedyState:
 
             return EGreedyState(
                 Q=jnp.zeros(n_arms),
-                N=jnp.ones(n_arms, dtype=jnp.int32)
+                N=jnp.ones(n_arms, dtype=int)
             )
 
         @staticmethod
         def update(
             state: EGreedyState,
             key: PRNGKey,
-            action: jnp.int32,
+            action: int,
             reward: Scalar
         ) -> EGreedyState:
 
@@ -269,7 +269,7 @@ to create your own agent.
             state: EGreedyState,
             key: PRNGKey,
             e: Scalar
-        ) -> jnp.int32:
+        ) -> int:
 
             epsilon_key, choice_key = jax.random.split(key)
 
@@ -284,10 +284,10 @@ Deep learning agents
 --------------------
 
 Although the above example is a simple one, it is not hard to extend it to deep reinforcement learning (DRL) agents.
-This can be achieved by leveraging the JAX ecosystem, along with the `haiku <https://dm-haiku.readthedocs.io/>`_
+This can be achieved by leveraging the JAX ecosystem, along with the `flax <https://flax.readthedocs.io/>`_
 library, which provides a convenient way to define neural networks, and `optax <https://optax.readthedocs.io/>`_,
 which provides a set of optimizers. Below, we provide excerpts of the code for the :ref:`deep Q-learning agent
-<Deep Q-Learning>`.
+<Deep Q-Learning (DQN)>`.
 
 The state of the DRL agent often contains parameters and state of the neural network as well as an experience
 replay buffer:
@@ -295,9 +295,9 @@ replay buffer:
 .. code-block:: python
 
     @dataclass
-    class QLearningState(AgentState):
-        params: hk.Params
-        state: hk.State
+    class DQNState(AgentState):
+        params: dict
+        state: dict
         opt_state: optax.OptState
 
         replay_buffer: ReplayBuffer
@@ -311,7 +311,7 @@ users to have full control over their choice and enhancing the agent's flexibili
 
     def __init__(
         self,
-        q_network: hk.TransformedWithState,
+        q_network: nn.Module,
         optimizer: optax.GradientTransformation = None,
         ...
     ) -> None:
@@ -327,21 +327,33 @@ By implementing the constructor in this manner, users gain the flexibility to de
 
 .. code-block:: python
 
-    @hk.transform_with_state
-    def q_network(x: Array) -> Array:
-        return hk.nets.MLP([64, 64, 2])(x)
+    class QNetwork(nn.Module):
+        @nn.compact
+        def __call__(self, x):
+            x = nn.Dense(64)(x)
+            x = nn.relu(x)
+            x = nn.Dense(64)(x)
+            x = nn.relu(x)
+            return nn.Dense(2)(x)
 
     rl = RLib(
-        agent_type=QLearning,
+        agent_type=DQN,
         agent_params={
-            'q_network': q_network,
+            'q_network': QNetwork(),
             'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2)
         },
         ...
     )
 
+.. note::
+
+    In some cases, it is necessary to use a PRNG key in the definition of a neural network to allow the stochastic
+    behavior of the model. The flax library provides a ``make_rng(stream_name)`` method that can be used to generate
+    a PRNG key from a given stream. The DRL algorithms implemented in Reinforced-lib offer a stream called ``rlib``
+    by default, so you can use it in your custom model as follows: ``key = self.make_rng('rlib')``.
+
 During the development of a DRL agent, our library offers a set of :ref:`utility functions <JAX>` for your convenience.
-Among these functions is gradient_step, designed to streamline parameter updates for the agent using JAX and optax.
+Among these functions is ``gradient_step``, designed to streamline parameter updates for the agent using JAX and optax.
 In the following example code snippet, we showcase the implementation of a step function responsible for performing
 a single step, taking into account the network, optimizer, and the implemented loss function:
 
@@ -355,7 +367,11 @@ a single step, taking into account the network, optimizer, and the implemented l
         loss_fn=partial(self.loss_fn, q_network=q_network, ...)
     )
 
-Our Python library also includes a pre-built :ref:`experience replay buffer <Experience Replay>`, which is commonly
+There are also other utility functions that can make it easier to implement DRL agents with flax. These are the
+``init`` and ``forward`` methods which are used to initialize the network and to perform a forward pass through the
+network. You can find more information about these functions in the :ref:`documentation <Utils>`.
+
+Our Python library also includes a pre-built :ref:`experience replay buffer <Experience replay>`, which is commonly
 utilized in DRL agents. The following code provides an illustrative example of how to use this utility:
 
 .. code-block:: python

@@ -35,15 +35,15 @@ class ReplayBuffer:
 
     Attributes
     ----------
-    states : array_like
+    states : Array
         Array containing the states.
-    actions : array_like
+    actions : Array
         Array containing the actions.
-    rewards : array_like
+    rewards : Array
         Array containing the rewards.
-    terminals : array_like
+    terminals : Array
         Array containing the terminal flags.
-    next_states : array_like
+    next_states : Array
         Array containing the next states.
     size : int
         Current size of the replay buffer.
@@ -56,13 +56,13 @@ class ReplayBuffer:
     rewards: Array
     terminals: Array
     next_states: Array
-    size: jnp.int32
-    ptr: jnp.int32
+    size: int
+    ptr: int
 
 
 def experience_replay(
-        buffer_size: jnp.int32,
-        batch_size: jnp.int32,
+        buffer_size: int,
+        batch_size: int,
         obs_space_shape: Shape,
         act_space_shape: Shape
 ) -> ExperienceReplay:
@@ -112,7 +112,7 @@ def experience_replay(
             state: Numeric,
             action: Numeric,
             reward: Scalar,
-            terminal: jnp.bool_,
+            terminal: bool,
             next_state: Numeric
     ) -> ReplayBuffer:
         """
@@ -122,15 +122,15 @@ def experience_replay(
         ----------
         buffer : ReplayBuffer
             Dataclass containing the replay buffer values.
-        state : array_like
+        state : Array
             State of the environment.
-        action : array_like
+        action : Array
             Action taken by the agent.
         reward : float
             Reward received by the agent.
         terminal : bool
             Flag indicating if the episode has terminated.
-        next_state : array_like
+        next_state : Array
             Next state of the environment.
 
         Returns
@@ -166,7 +166,7 @@ def experience_replay(
             Tuple containing the batch of states, actions, rewards, terminals and next states.
         """
 
-        idxs = jax.random.uniform(key, shape=(batch_size,), minval=0, maxval=buffer.size).astype(jnp.int32)
+        idxs = jax.random.uniform(key, shape=(batch_size,), minval=0, maxval=buffer.size).astype(int)
 
         states = buffer.states[idxs]
         actions = buffer.actions[idxs]
@@ -176,7 +176,7 @@ def experience_replay(
 
         return states, actions, rewards, terminals, next_states
 
-    def is_ready(buffer: ReplayBuffer) -> jnp.bool_:
+    def is_ready(buffer: ReplayBuffer) -> bool:
         """
         Checks if the replay buffer is ready to be sampled (contains at least ``batch_size`` elements).
 

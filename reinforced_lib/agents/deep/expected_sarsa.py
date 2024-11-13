@@ -3,15 +3,15 @@ from functools import partial
 from typing import Callable
 
 import gymnasium as gym
-import haiku as hk
 import jax
 import jax.numpy as jnp
 import optax
 from chex import dataclass, Array, PRNGKey, Scalar, Shape
+from flax import linen as nn
 
 from reinforced_lib.agents import BaseAgent, AgentState
 from reinforced_lib.utils.experience_replay import experience_replay, ExperienceReplay, ReplayBuffer
-from reinforced_lib.utils.jax_utils import gradient_step
+from reinforced_lib.utils.jax_utils import forward, gradient_step, init
 
 
 @dataclass
@@ -21,9 +21,9 @@ class ExpectedSarsaState(AgentState):
 
     Attributes
     ----------
-    params : hk.Params
+    params : dict
         Parameters of the Q-network.
-    state : hk.State
+    net_state : dict
         State of the Q-network.
     opt_state : optax.OptState
         Optimizer state.
@@ -33,8 +33,8 @@ class ExpectedSarsaState(AgentState):
         Previous environment state.
     """
 
-    params: hk.Params
-    state: hk.State
+    params: dict
+    net_state: dict
     opt_state: optax.OptState
 
     replay_buffer: ReplayBuffer
@@ -50,19 +50,19 @@ class ExpectedSarsa(BaseAgent):
 
     Parameters
     ----------
-    q_network : hk.TransformedWithState
+    q_network : nn.Module
         Architecture of the Q-network.
     obs_space_shape : Shape
         Shape of the observation space.
-    act_space_size : jnp.int32
+    act_space_size : int
         Size of the action space.
     optimizer : optax.GradientTransformation, optional
         Optimizer of the Q-network. If None, the Adam optimizer with learning rate 1e-3 is used.
-    experience_replay_buffer_size : jnp.int32, default=10000
+    experience_replay_buffer_size : int, default=10000
         Size of the experience replay buffer.
-    experience_replay_batch_size : jnp.int32, default=64
+    experience_replay_batch_size : int, default=64
         Batch size of the samples from the experience replay buffer.
-    experience_replay_steps : jnp.int32, default=5
+    experience_replay_steps : int, default=5
         Number of experience replay steps per update.
     discount : Scalar, default=0.99
         Discount factor. :math:`\gamma = 0.0` means no discount, :math:`\gamma = 1.0` means infinite discount. :math:`0 \leq \gamma \leq 1`
@@ -72,13 +72,13 @@ class ExpectedSarsa(BaseAgent):
 
     def __init__(
             self,
-            q_network: hk.TransformedWithState,
+            q_network: nn.Module,
             obs_space_shape: Shape,
-            act_space_size: jnp.int32,
+            act_space_size: int,
             optimizer: optax.GradientTransformation = None,
-            experience_replay_buffer_size: jnp.int32 = 10000,
-            experience_replay_batch_size: jnp.int32 = 64,
-            experience_replay_steps: jnp.int32 = 5,
+            experience_replay_buffer_size: int = 10000,
+            experience_replay_batch_size: int = 64,
+            experience_replay_steps: int = 5,
             discount: Scalar = 0.99,
             tau: Scalar = 1.0
     ) -> None:
@@ -105,7 +105,7 @@ class ExpectedSarsa(BaseAgent):
             obs_space_shape=self.obs_space_shape,
             q_network=q_network,
             optimizer=optimizer,
-            experience_replay=er
+            er=er
         ))
         self.update = jax.jit(partial(
             self.update,
@@ -115,7 +115,7 @@ class ExpectedSarsa(BaseAgent):
                 optimizer=optimizer,
                 loss_fn=partial(self.loss_fn, q_network=q_network, discount=discount, tau=tau)
             ),
-            experience_replay=er,
+            er=er,
             experience_replay_steps=experience_replay_steps
         ))
         self.sample = jax.jit(partial(
@@ -128,27 +128,27 @@ class ExpectedSarsa(BaseAgent):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'obs_space_shape': gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), jnp.int32)),
-            'act_space_size': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'experience_replay_buffer_size': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'experience_replay_batch_size': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'discount': gym.spaces.Box(0.0, 1.0, (1,)),
-            'tau': gym.spaces.Box(0.0, jnp.inf, (1,))
+            'obs_space_shape': gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), int)),
+            'act_space_size': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'experience_replay_buffer_size': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'experience_replay_batch_size': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'discount': gym.spaces.Box(0.0, 1.0, (1,), float),
+            'tau': gym.spaces.Box(0.0, jnp.inf, (1,), float)
         })
 
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape),
+            'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape, float),
             'action': gym.spaces.Discrete(self.act_space_size),
-            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
+            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
             'terminal': gym.spaces.MultiBinary(1)
         })
 
     @property
     def sample_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape)
+            'env_state': gym.spaces.Box(-jnp.inf, jnp.inf, self.obs_space_shape, float)
         })
 
     @property
@@ -159,13 +159,13 @@ class ExpectedSarsa(BaseAgent):
     def init(
             key: PRNGKey,
             obs_space_shape: Shape,
-            q_network: hk.TransformedWithState,
+            q_network: nn.Module,
             optimizer: optax.GradientTransformation,
-            experience_replay: ExperienceReplay
+            er: ExperienceReplay
     ) -> ExpectedSarsaState:
         r"""
         Initializes the Q-network, optimizer and experience replay buffer with given parameters.
-        First state of the environment is assumed to be a tensor of zeros.
+        The first state of the environment is assumed to be a tensor of zeros.
 
         Parameters
         ----------
@@ -173,11 +173,11 @@ class ExpectedSarsa(BaseAgent):
             A PRNG key used as the random key.
         obs_space_shape : Shape
             The shape of the observation space.
-        q_network : hk.TransformedWithState
+        q_network : nn.Module
             The Q-network.
         optimizer : optax.GradientTransformation
             The optimizer.
-        experience_replay : ExperienceReplay
+        er : ExperienceReplay
             The experience replay buffer.
 
         Returns
@@ -187,14 +187,14 @@ class ExpectedSarsa(BaseAgent):
         """
 
         x_dummy = jnp.empty(obs_space_shape)
-        params, state = q_network.init(key, x_dummy)
+        params, net_state = init(q_network, key, x_dummy)
 
         opt_state = optimizer.init(params)
-        replay_buffer = experience_replay.init()
+        replay_buffer = er.init()
 
         return ExpectedSarsaState(
             params=params,
-            state=state,
+            net_state=net_state,
             opt_state=opt_state,
             replay_buffer=replay_buffer,
             prev_env_state=jnp.zeros(obs_space_shape)
@@ -202,17 +202,16 @@ class ExpectedSarsa(BaseAgent):
 
     @staticmethod
     def loss_fn(
-            params: hk.Params,
+            params: dict,
             key: PRNGKey,
-            net_state: hk.State,
-            params_target: hk.Params,
-            net_state_target: hk.State,
+            net_state: dict,
+            params_target: dict,
+            net_state_target: dict,
             batch: tuple,
-            non_zero_loss: jnp.bool_,
-            q_network: hk.TransformedWithState,
+            q_network: nn.Module,
             discount: Scalar,
             tau: Scalar
-    ) -> tuple[Scalar, hk.State]:
+    ) -> tuple[Scalar, dict]:
         r"""
         Loss is the mean squared Bellman error :math:`\mathcal{L}(\theta) = \mathbb{E}_{s, a, r, s'} \left[ \left( r +
         \gamma \sum_{a'} \pi(a'|s') Q(s', a') - Q(s, a) \right)^2 \right]` where :math:`s` is the current state,
@@ -222,21 +221,19 @@ class ExpectedSarsa(BaseAgent):
 
         Parameters
         ----------
-        params : hk.Params
+        params : dict
             The parameters of the Q-network.
         key : PRNGKey
             A PRNG key used as the random key.
-        net_state : hk.State
+        net_state : dict
             The state of the Q-network.
-        params_target : hk.Params
+        params_target : dict
             The parameters of the target Q-network.
-        net_state_target : hk.State
+        net_state_target : dict
             The state of the target Q-network.
         batch : tuple
             A batch of transitions from the experience replay buffer.
-        non_zero_loss : bool
-            Flag used to avoid updating the Q-network when the experience replay buffer is not full.
-        q_network : hk.TransformedWithState
+        q_network : nn.Module
             The Q-network.
         discount : Scalar
             The discount factor.
@@ -245,24 +242,24 @@ class ExpectedSarsa(BaseAgent):
 
         Returns
         -------
-        Tuple[Scalar, hk.State]
+        Tuple[Scalar, dict]
             The loss and the new state of the Q-network.
         """
 
         states, actions, rewards, terminals, next_states = batch
         q_key, q_target_key = jax.random.split(key)
 
-        q_values, state = q_network.apply(params, net_state, q_key, states)
-        q_values = jnp.take_along_axis(q_values, actions.astype(jnp.int32), axis=-1)
+        q_values, net_state = forward(q_network, params, net_state, q_key, states)
+        q_values = jnp.take_along_axis(q_values, actions.astype(int), axis=-1)
 
-        q_values_target, _ = q_network.apply(params_target, net_state_target, q_target_key, next_states)
+        q_values_target, _ = forward(q_network, params_target, net_state_target, q_target_key, next_states)
         probs_target = jax.nn.softmax(q_values_target / tau)
         target = rewards + (1 - terminals) * discount * jnp.sum(probs_target * q_values_target, axis=-1, keepdims=True)
 
         target = jax.lax.stop_gradient(target)
         loss = optax.l2_loss(q_values, target).mean()
 
-        return loss * non_zero_loss, state
+        return loss, net_state
 
     @staticmethod
     def update(
@@ -271,11 +268,11 @@ class ExpectedSarsa(BaseAgent):
             env_state: Array,
             action: Array,
             reward: Scalar,
-            terminal: jnp.bool_,
-            q_network: hk.TransformedWithState,
+            terminal: bool,
+            q_network: nn.Module,
             step_fn: Callable,
-            experience_replay: ExperienceReplay,
-            experience_replay_steps: jnp.int32
+            er: ExperienceReplay,
+            experience_replay_steps: int
     ) -> ExpectedSarsaState:
         r"""
         Appends the transition to the experience replay buffer and performs ``experience_replay_steps`` steps.
@@ -296,11 +293,11 @@ class ExpectedSarsa(BaseAgent):
             The reward received by the agent.
         terminal : bool
             Whether the episode has terminated.
-        q_network : hk.TransformedWithState
+        q_network : nn.Module
             The Q-network.
         step_fn : Callable
             The function that performs a single gradient step on the Q-network.
-        experience_replay : ExperienceReplay
+        er : ExperienceReplay
             The experience replay buffer.
         experience_replay_steps : int
             The number of experience replay steps.
@@ -311,26 +308,26 @@ class ExpectedSarsa(BaseAgent):
             The updated state of the deep expected SARSA agent.
         """
 
-        replay_buffer = experience_replay.append(
-            state.replay_buffer, state.prev_env_state,
-            action, reward, terminal, env_state
-        )
+        replay_buffer = er.append(state.replay_buffer, state.prev_env_state, action, reward, terminal, env_state)
+        params_target, net_state_target = deepcopy(state.params), deepcopy(state.net_state)
 
-        params, net_state, opt_state = state.params, state.state, state.opt_state
-        params_target, net_state_target = deepcopy(params), deepcopy(net_state)
-        
-        non_zero_loss = experience_replay.is_ready(replay_buffer)
-
-        for _ in range(experience_replay_steps):
+        def for_loop_fn(_: int, carry: tuple) -> tuple:
+            params, net_state, opt_state, key = carry
             batch_key, network_key, key = jax.random.split(key, 3)
-            batch = experience_replay.sample(replay_buffer, batch_key)
 
-            loss_params = (network_key, net_state, params_target, net_state_target, batch, non_zero_loss)
+            loss_params = (network_key, net_state, params_target, net_state_target, er.sample(replay_buffer, batch_key))
             params, net_state, opt_state, _ = step_fn(params, loss_params, opt_state)
+
+            return params, net_state, opt_state, key
+
+        params, net_state, opt_state, _ = jax.lax.fori_loop(
+            0, experience_replay_steps * er.is_ready(replay_buffer), for_loop_fn,
+            (state.params, state.net_state, state.opt_state, key)
+        )
 
         return ExpectedSarsaState(
             params=params,
-            state=net_state,
+            net_state=net_state,
             opt_state=opt_state,
             replay_buffer=replay_buffer,
             prev_env_state=env_state
@@ -341,10 +338,10 @@ class ExpectedSarsa(BaseAgent):
             state: ExpectedSarsaState,
             key: PRNGKey,
             env_state: Array,
-            q_network: hk.TransformedWithState,
-            act_space_size: jnp.int32,
+            q_network: nn.Module,
+            act_space_size: int,
             tau: Scalar
-    ) -> jnp.int32:
+    ) -> int:
         r"""
         Selects an action using the softmax policy with the temperature parameter :math:`\tau`:
 
@@ -359,9 +356,9 @@ class ExpectedSarsa(BaseAgent):
             A PRNG key used as the random key.
         env_state : Array
             The current state of the environment.
-        q_network : hk.TransformedWithState
+        q_network : nn.Module
             The Q-network.
-        act_space_size : jnp.int32
+        act_space_size : int
             The size of the action space.
         tau : Scalar
             The temperature parameter.
@@ -372,7 +369,6 @@ class ExpectedSarsa(BaseAgent):
             Selected action.
         """
 
-        network_key, categorical_key = jax.random.split(key)
-
-        logits = q_network.apply(state.params, state.state, network_key, env_state)[0]
-        return jax.random.categorical(categorical_key, logits / tau)
+        network_key, action_key = jax.random.split(key)
+        logits = forward(q_network, state.params, state.net_state, network_key, env_state)[0]
+        return jax.random.categorical(action_key, logits / tau)

@@ -14,14 +14,14 @@ Key concepts of extensions
 There are three main benefits of using extensions:
 
 #. Automatic initialization of agents - an extension can provide default arguments that can be used to
-   initialize an agent. For example, if we would like to train the :ref:`deep Double Q-learning agent
-   <Deep Double Q-Learning (DQN)>` on a `cart-pole` environment without using any extension, we would
+   initialize an agent. For example, if we would like to train the :ref:`deep Q-learning agent
+   <Deep Q-Learning (DQN)>` on a `cart-pole` environment without using any extension, we would
    probably do it in the following way:
 
    .. code-block:: python
 
        rl = RLib(
-           agent_type=QLearning,
+           agent_type=DQN,
            agent_params={
                'q_network': q_network,
                'obs_space_shape': (4,),
@@ -36,7 +36,7 @@ There are three main benefits of using extensions:
    .. code-block:: python
 
        rl = RLib(
-           agent_type=QLearning,
+           agent_type=DQN,
            agent_params={'q_network': q_network}
            ext_type=Gymnasium,
            ext_params={'env_id': 'CartPole-v1'},
@@ -47,7 +47,7 @@ There are three main benefits of using extensions:
    .. code-block:: python
 
        rl = RLib(
-           agent_type=QLearning,
+           agent_type=DQN,
            agent_params={
                'q_network': q_network,
                'act_space_size': 3
@@ -104,7 +104,7 @@ There are three main benefits of using extensions:
            'delta_time': 0.18232,
            'n_successful': 10,
            'n_failed': 0,
-           'context': np.array(
+           'context': jnp.array(
                [7.3, 14.6, 21.9, 29.3, 43.9, 58.5,
                65.8, 73.1, 87.8, 97.5, 109.7, 121.9]
            )
@@ -166,11 +166,11 @@ space can look like this:
 .. code-block:: python
 
     observation_space = gym.spaces.Dict({
-        'time': gym.spaces.Box(0.0, np.inf, (1,)),
-        'n_successful': gym.spaces.Box(0, np.inf, (1,), np.int32),
-        'n_failed': gym.spaces.Box(0, np.inf, (1,), np.int32),
-        'n_wifi': gym.spaces.Box(1, np.inf, (1,), np.int32),
-        'power': gym.spaces.Box(-np.inf, np.inf, (1,)),
+        'time': gym.spaces.Box(0.0, jnp.inf, (1,), float),
+        'n_successful': gym.spaces.Box(0, jnp.inf, (1,), int),
+        'n_failed': gym.spaces.Box(0, jnp.inf, (1,), int),
+        'n_wifi': gym.spaces.Box(1, jnp.inf, (1,), int),
+        'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
         'cw': gym.spaces.Discrete(32767)
     })
 
@@ -190,7 +190,7 @@ format. It will help the library to check if a given value type is compatible wi
 
 .. code-block:: python
 
-    @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    @parameter(parameter_type=gym.spaces.Box(-jnp.inf, jnp.inf, (1,)))
     def default_power(self) -> float:
         return 16.0206
 
@@ -200,7 +200,7 @@ the decorator:
 
 .. code-block:: python
 
-    @parameter(parameter_name='default_power', parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    @parameter(parameter_name='default_power', parameter_type=gym.spaces.Box(-jnp.inf, jnp.inf, (1,)))
     def default_pow(self) -> float:
         return 16.0206
 
@@ -227,7 +227,7 @@ type in the decorator:
 
 .. code-block:: python
 
-    @observation(observation_name='reward', observation_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+    @observation(observation_name='reward', observation_type=gym.spaces.Box(-jnp.inf, jnp.inf, (1,)))
     def custom_reward(self, mcs: int, n_successful: int, n_failed: int, *args, **kwargs) -> float:
         if n_successful + n_failed > 0:
             return self._wifi_modes_rates[mcs] * n_successful / (n_successful + n_failed)
@@ -244,7 +244,8 @@ starting point for creating your own extensions. The IEEE 802.11ax rate adaptati
 .. code-block:: python
 
     import gymnasium as gym
-    import numpy as np
+    import jax.numpy as jnp
+    from chex import Array, Scalar
 
     from reinforced_lib.exts import BaseExt, observation, parameter
 
@@ -255,88 +256,87 @@ starting point for creating your own extensions. The IEEE 802.11ax rate adaptati
             self.last_time = 0.0
 
         observation_space = gym.spaces.Dict({
-            'time': gym.spaces.Box(0.0, np.inf, (1,)),
-            'n_successful': gym.spaces.Box(0, np.inf, (1,), np.int32),
-            'n_failed': gym.spaces.Box(0, np.inf, (1,), np.int32),
-            'n_wifi': gym.spaces.Box(1, np.inf, (1,), np.int32),
-            'power': gym.spaces.Box(-np.inf, np.inf, (1,)),
+            'time': gym.spaces.Box(0.0, jnp.inf, (1,), float),
+            'n_successful': gym.spaces.Box(0, jnp.inf, (1,), int),
+            'n_failed': gym.spaces.Box(0, jnp.inf, (1,), int),
+            'n_wifi': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
             'cw': gym.spaces.Discrete(32767)
         })
 
-        _wifi_modes_rates = np.array([
-            7.3, 14.6, 21.9, 29.3, 43.9, 58.5,
-            65.8, 73.1, 87.8, 97.5, 109.7, 121.9
-        ], dtype=np.float32)
+        _wifi_modes_rates = jnp.array([
+            7.3, 14.6, 21.9, 29.3, 43.9, 58.5, 65.8, 73.1, 87.8, 97.5, 109.7, 121.9
+        ], dtype=float)
 
-        @observation(observation_type=gym.spaces.Box(0.0, np.inf, (len(_wifi_modes_rates),)))
-        def rates(self, *args, **kwargs) -> np.ndarray:
+        @observation(observation_type=gym.spaces.Box(0.0, jnp.inf, (len(_wifi_modes_rates),), float))
+        def rates(self, *args, **kwargs) -> Array:
             return self._wifi_modes_rates
 
-        @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (len(_wifi_modes_rates),)))
-        def context(self, *args, **kwargs) -> np.ndarray:
+        @observation(observation_type=gym.spaces.Box(-jnp.inf, jnp.inf, (len(_wifi_modes_rates),), float))
+        def context(self, *args, **kwargs) -> Array:
             return self.rates()
 
-        @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+        @observation(observation_type=gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float))
         def reward(self, action: int, n_successful: int, n_failed: int, *args, **kwargs) -> float:
             if n_successful + n_failed > 0:
                 return self._wifi_modes_rates[action] * n_successful / (n_successful + n_failed)
             else:
                 return 0.0
 
-        @observation(observation_type=gym.spaces.Box(0.0, np.inf, (1,)))
-        def delta_time(self, time: float, *args, **kwargs) -> float:
+        @observation(observation_type=gym.spaces.Box(0.0, jnp.inf, (1,), float))
+        def delta_time(self, time: Scalar, *args, **kwargs) -> float:
             delta_time = time - self.last_time
             self.last_time = time
             return delta_time
 
-        @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (6,)))
+        @observation(observation_type=gym.spaces.Box(-jnp.inf, jnp.inf, (6,), float))
         def env_state(
-                self, time: float, n_successful: int, n_failed: int,
-                n_wifi: int, power: float, cw: int, *args, **kwargs
-        ) -> np.ndarray:
-            return np.array([self.delta_time(time), n_successful, n_failed, n_wifi, power, cw], dtype=np.float32)
+                self, time: Scalar, n_successful: int, n_failed: int,
+                n_wifi: int, power: Scalar, cw: int, *args, **kwargs
+        ) -> Array:
+            return jnp.array([self.delta_time(time), n_successful, n_failed, n_wifi, power, cw], dtype=float)
 
         @observation(observation_type=gym.spaces.MultiBinary(1))
         def terminal(self, *args, **kwargs) -> bool:
             return False
 
-        @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
+        @parameter(parameter_type=gym.spaces.Box(1, jnp.inf, (1,), int))
         def n_mcs(self) -> int:
             return len(self._wifi_modes_rates)
 
-        @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
+        @parameter(parameter_type=gym.spaces.Box(1, jnp.inf, (1,), int))
         def n_arms(self) -> int:
             return self.n_mcs()
 
-        @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-        def default_power(self) -> float:
+        @parameter(parameter_type=gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float))
+        def default_power(self) -> Scalar:
             return 16.0206
 
-        @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
-        def min_reward(self) -> float:
+        @parameter(parameter_type=gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float))
+        def min_reward(self) -> Scalar:
             return 0
 
-        @parameter(parameter_type=gym.spaces.Box(-np.inf, np.inf, (1,)))
+        @parameter(parameter_type=gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float))
         def max_reward(self) -> int:
             return self._wifi_modes_rates.max()
 
-        @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
+        @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), int)))
         def obs_space_shape(self) -> tuple:
             return tuple((6,))
 
-        @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, np.inf, (1,), np.int32)))
+        @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(1, jnp.inf, (1,), int)))
         def act_space_shape(self) -> tuple:
             return tuple((1,))
 
-        @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
+        @parameter(parameter_type=gym.spaces.Box(1, jnp.inf, (1,), int))
         def act_space_size(self) -> int:
             return 12
 
-        @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
+        @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)))
         def min_action(self) -> tuple:
             return 0
 
-        @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-np.inf, np.inf)))
+        @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)))
         def max_action(self) -> tuple:
             return 11
 

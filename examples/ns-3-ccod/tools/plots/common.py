@@ -1,7 +1,7 @@
 import os
 
-import matplotlib.pylab as pl
 import numpy as np
+import matplotlib.pylab as pl
 import pandas as pd
 from scipy.stats import t
 
@@ -11,7 +11,7 @@ DATA_FILE = os.path.join(TOOLS_DIR, 'outputs', 'all_results.csv')
 
 ALL_MANAGERS = {
     'CSMA': 'Standard 802.11',
-    'DQN': 'CCOD w/ DQN',
+    'DDQN': 'CCOD w/ DQN',
     'DDPG': 'CCOD w/ DDPG'
 }
 CONFIDENCE_INTERVAL = 0.99
@@ -37,6 +37,7 @@ PLOT_PARAMS = {
 }
 
 COLORS = pl.cm.viridis(np.linspace(0., 0.75, len(ALL_MANAGERS)))
+MARKERS = ['s', 'v', '^']
 
 
 def get_thr_ci(

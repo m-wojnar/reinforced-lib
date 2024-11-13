@@ -1,6 +1,6 @@
 import gymnasium as gym
-import numpy as np
-from numpy import ndarray
+import jax.numpy as jnp
+from chex import Array
 
 from reinforced_lib.exts import BaseExt
 from reinforced_lib.exts.utils import observation
@@ -8,7 +8,7 @@ from reinforced_lib.exts.utils import observation
 
 class DummyAgent:
     update_observation_space = gym.spaces.Dict({
-        'time': gym.spaces.Box(0.0, 100.0, (1,)),
+        'time': gym.spaces.Box(0.0, 100.0, (1,), float),
         'n': gym.spaces.Discrete(10),
         'params': gym.spaces.Tuple([
             gym.spaces.Discrete(20),
@@ -20,7 +20,7 @@ class DummyAgent:
     })
 
     sample_observation_space = gym.spaces.Dict({
-        'matrix': gym.spaces.Box(0.0, 1.0, (10, 2))
+        'matrix': gym.spaces.Box(0.0, 1.0, (10, 2), float),
     })
 
     action_space = gym.spaces.Discrete(10)
@@ -39,10 +39,10 @@ class DummyExt(BaseExt):
         'not_used': gym.spaces.MultiBinary((12, 15))
     })
 
-    @observation(observation_type=gym.spaces.Box(0.0, 1.0, (10, 2)))
-    def matrix(self, arg: float, *args, **kwargs) -> ndarray:
+    @observation(observation_type=gym.spaces.Box(0.0, 1.0, (10, 2), float))
+    def matrix(self, arg: float, *args, **kwargs) -> Array:
         assert 0.0 <= arg <= 1.0
-        return np.full((10, 2), arg)
+        return jnp.full((10, 2), arg)
 
     @observation('time')
     def dummy_function(self, *args, **kwargs) -> float:

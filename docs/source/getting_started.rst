@@ -49,25 +49,28 @@ significantly simplified. Below, we present the basic training loop with the sim
 .. code-block:: python
 
     import gymnasium as gym
-    import haiku as hk
     import optax
     from chex import Array
+    from flax import linen as nn
 
     from reinforced_lib import RLib
-    from reinforced_lib.agents.deep import QLearning
+    from reinforced_lib.agents.deep import DQN
     from reinforced_lib.exts import Gymnasium
 
 
-    @hk.transform_with_state
-    def q_network(x: Array) -> Array:
-        return hk.nets.MLP([256, 2])(x)
+    class QNetwork(nn.Module):
+        @nn.compact
+        def __call__(self, x: Array) -> Array:
+            x = nn.Dense(256)(x)
+            x = nn.relu(x)
+            return nn.Dense(2)(x)
 
 
     if __name__ == '__main__':
         rl = RLib(
-            agent_type=QLearning,
+            agent_type=DQN,
             agent_params={
-                'q_network': q_network,
+                'q_network': QNetwork(),
                 'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
             },
             ext_type=Gymnasium,
@@ -88,7 +91,7 @@ significantly simplified. Below, we present the basic training loop with the sim
 
 After the necessary imports, we create an instance of the ``RLib`` class. We provide the chosen
 agent type and the appropriate extension for the problem. This extension will help the agent to infer necessary
-information from the environment. Next create a Gymnasium environment and define the training loop. Inside the loop,
+information from the environment. Next create a gymnasium environment and define the training loop. Inside the loop,
 we call the ``sample`` method which passes the observations to the agent, updates the agent's internal state
 and returns an action proposed by the agent's policy. We apply the returned action in the environment to get its
 altered state. We encourage you to see the :ref:`API <api_page>` section for more details about the ``RLib`` class.
@@ -114,13 +117,48 @@ flag to ``False`` in the ``sample`` method:
 
     action = rl.sample(*env_state, is_training=False)
 
+Interaction with multiple agents
+--------------------------------
 
-Logging
+Reinforced-lib allows you to use multiple agent instances in the same environment. This feature is useful when you want
+to train multiple agents in parallel or use multiple agents to solve the same problem. To achieve this, you need to
+initialize the instances of the agents by calling the ``init`` method of the ``RLib`` class a certain number of times:
+
+.. code-block:: python
+
+    rl = RLib(..)
+
+    for _ in range(n_agents):
+        rl.init()
+
+Reproducibility
+~~~~~~~~~~~~~~~
+
+JAX is focused on reproducibility, and it provides a robust pseudo-random number generator (PRNG) that allows you to
+control the randomness of the computations. PRNG requires setting the random seed to ensure that the results of the
+computation are reproducible. Reinforced-lib provides an API for setting the random seed for the JAX library.
+You can set the seed by providing the ``seed`` parameter when creating the instance of the agent:
+
+.. code-block:: python
+
+    rl = RLib(...)
+    rl.init(seed=123)
+
+The seed is initially configured as 42 and the ``init`` method is triggered automatically after the first sampling call.
+It eliminates the need to manually call the ``init`` method unless you want to provide custom seed, thus ensuring
+reproducibility.
+
+.. note::
+
+    Remember that the reproducibility of the computations is guaranteed only for the agents from Reinforced-lib.
+    You have to ensure that the environment you use is reproducible as well.
+
+Loggers
 -------
 
-The logging module provides a simple yet powerful API for visualizing and analyzing the running algorithm or watching
+The loggers module provides a simple yet powerful API for visualizing and analyzing the running algorithm or watching
 the training process. You can monitor any observations passed to the agent, the agent's state, and the basic metrics in
-real time. If you want to learn more about the logging module, check out the :ref:`Custom loggers <custom_loggers>`
+real time. If you want to learn more about the loggers module, check out the :ref:`Custom loggers <custom_loggers>`
 section.
 
 Basic logging
@@ -141,7 +179,29 @@ parameter specifies the predefined source of the logger. The source is a name of
 or the metric. `TensorBoard <https://www.tensorflow.org/tensorboard>`_ is a powerful visualization toolkit that
 allows you to monitor the training process in real time, create interactive visualizations, and save the logs for later
 analysis. You can use the ``TensorboardLogger`` along with other loggers built into Reinforced-lib. To learn more about
-available loggers, check out the :ref:`Logging module <logging_page>` section.
+available loggers, check out the :ref:`Loggers module <loggers_page>` section.
+
+.. warning::
+
+    Some loggers perform actions upon completion of the training, such as saving the logs, closing the file, or
+    uploading the logs to the cloud. Therefore, it is important to gracefully close the Reinforced-lib instance
+    to ensure that the logs are saved properly. If you create a Reinforced-lib instance in a function, the destructor
+    will be called automatically when the function ends and you do not have to worry about anything. However, if
+    you create an instance in the main script, you have to close it manually by calling the ``finish`` method:
+
+    .. code-block:: python
+
+        rl = RLib(...)
+        # ...
+        rl.finish()
+
+    or by using the ``del`` statement:
+
+    .. code-block:: python
+
+        rl = RLib(...)
+        # ...
+        del rl
 
 Advanced logging
 ~~~~~~~~~~~~~~~~
@@ -157,23 +217,13 @@ You can easily change the logger type, add more sources, and customize the param
         logger_params={'plots_smoothing': 0.9}
     )
 
-Note that ``terminal`` is the observation name, ``epsilon`` is name of the state of the ``QLearning`` agent,
+Note that ``terminal`` is the observation name, ``epsilon`` is name of the state of the ``DQN`` agent,
 and ``action`` is the name of the metric. You can mix sources names as long as it does not lead to inconclusiveness.
 In the example above, it can be seen that ``action`` is both the name of the observation and the metric. In this case,
 you have to write the source name as a tuple containing a name and the type of the source ``(str, SourceType)``
 as in the code above.
 
-You can also plug multiple loggers to one source:
-
-.. code-block:: python
-
-    rl = RLib(
-        ...
-        logger_types=[StdoutLogger, CsvLogger, PlotsLogger],
-        logger_sources='cumulative'
-    )
-
-Or mix different loggers and sources:
+You can also plug multiple loggers to output the logs to different destinations simultaneously:
 
 .. code-block:: python
 
@@ -183,8 +233,6 @@ Or mix different loggers and sources:
         logger_sources=['terminal', 'epsilon', ('action', SourceType.METRIC)],
     )
 
-In this case remember to provide a list of loggers that has the same length as the list of sources, because given
-loggers will be used to log values for consecutive sources.
 
 Custom logging
 ~~~~~~~~~~~~~~
@@ -210,7 +258,7 @@ It is possible to mix predefined sources with custom ones:
     rl = RLib(
         ...
         logger_types=[TensorboardLogger, PlotsLogger, StdoutLogger],
-        logger_sources=[None, None, ('reward', SourceType.METRIC)]
+        logger_sources=('reward', SourceType.METRIC)
     )
 
     rl.log('my_value', 42)
@@ -255,6 +303,62 @@ with the training, we load the whole experiment to a new RLib instance.
     # Continue the training
     # ...
 
+Reinforced-lib can even save the architecture of your agent's neural network. It is possible thanks to the
+`cloudpickle <https://github.com/cloudpipe/cloudpickle>`_ library allowing to serialize the flax modules.
+However, if you use your own implementation of agents or extensions, you have to ensure that they are available
+when you restore the experiment as Reinforced-lib does not save the source code of the custom classes.
+
+.. note::
+
+    Remember that the ``RLib`` class will not save the state of the environment. You have to save the environment
+    state separately if you want to continue the training from the exact point where you ended.
+
+.. warning::
+
+    As of today (2024-02-08), cloudpickle does not support the serialization of the custom modules defined outside of
+    the main definition. It means that if you implement part of your model in a separate class, you will not be able
+    to restore the experiment. We are working on a solution to this problem.
+
+    The temporary solution is to define the whole model in one class as follows:
+
+    .. code-block:: python
+
+        class QNetwork(nn.Module):
+            @nn.compact
+            def __call__(self, x):
+                class MyModule(nn.Module):
+                    @nn.compact
+                    def __call__(self, x):
+                        ...
+                        return x
+
+                x = MyModule()(x)
+                ...
+                return x
+
+    To improve code readability, you can also define modules in external functions and then call them to include
+    custom module definitions in the main class. For example:
+
+    .. code-block:: python
+
+        def my_module_fn():
+            class MyModule(nn.Module):
+                @nn.compact
+                def __call__(self, x):
+                    ...
+                    return x
+
+            return MyModule
+
+        class QNetwork(nn.Module):
+            @nn.compact
+            def __call__(self, x):
+                MyModule = my_module_fn(x)
+
+                x = MyModule()(x)
+                ...
+                return x
+
 
 Dynamic parameter change
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -266,14 +370,14 @@ optimizer:
 .. code-block:: python
 
     from reinforced_lib import RLib
-    from reinforced_lib.agents.deep import QLearning
+    from reinforced_lib.agents.deep import DQN
     from reinforced_lib.exts import Gymnasium
 
     # Setting up the experiment
     rl = RLib(
-        agent_type=QLearning,
+        agent_type=DQN,
         agent_params={
-            'q_network': q_network,
+            'q_network': QNetwork(),
             'optimizer': optax.adam(1e-3),
         },
         ext_type=Gymnasium,
@@ -290,7 +394,7 @@ optimizer:
     rl = RLib.load(
         "<checkpoint-path>",
         agent_params={
-            'q_network': q_network,
+            'q_network': QNetwork(),
             'optimizer': optax.adam(1e-4),
         }
     )
@@ -391,6 +495,25 @@ All built-in agents are adapted to the seamless export to the TensorFlow Lite fo
 agent, you need to implement the ``update_observation_space`` and ``sample_observation_space`` methods.  Although not
 mandatory, we strongly encourage their implementation as they allow easy sampling of the parameters of the agent's
 methods. To learn more about the agent's methods, check out the :ref:`Custom agents <custom_agents>` section.
+
+
+64-bit floating-point precision
+-------------------------------
+
+By default, JAX uses 32-bit floating-point precision. However, in some cases, you might want to use 64-bit
+floating-point precision. The easiest way to achieve this is to set the ``JAX_ENABLE_X64`` environment variable to
+``True``:
+
+.. code-block:: bash
+
+    export JAX_ENABLE_X64=True
+
+Alternatively, you can set the environment variable in your Python script:
+
+.. code-block:: python
+
+    import os
+    os.environ['JAX_ENABLE_X64'] = 'True'
 
 
 Real-world examples

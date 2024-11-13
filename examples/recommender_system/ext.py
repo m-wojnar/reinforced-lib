@@ -1,5 +1,5 @@
 import gymnasium as gym
-import numpy as np
+import jax.numpy as jnp
 
 from reinforced_lib.exts import BaseExt, observation, parameter
 
@@ -24,27 +24,27 @@ class RecommenderSystemExt(BaseExt):
     
     observation_space = gym.spaces.Dict({
         'action': gym.spaces.Discrete(len(preferences)),
-        'reward': gym.spaces.Box(-np.inf, np.inf, (1,)),
-        'time': gym.spaces.Box(0.0, np.inf, (1,))
+        'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
+        'time': gym.spaces.Box(0.0, jnp.inf, (1,), float),
     })
 
     def __init__(self) -> None:
         super().__init__()
         self._preferences = list(self.preferences.values())
-        self._context = np.ones(len(self.preferences))
+        self._context = jnp.ones(len(self.preferences))
 
-    @observation(observation_type=gym.spaces.Box(-np.inf, np.inf, (len(preferences),), np.float32))
+    @observation(observation_type=gym.spaces.Box(-jnp.inf, jnp.inf, (len(preferences),), float))
     def context(self, *args, **kwargs):
         return self._context
 
-    @observation(observation_type=gym.spaces.Box(0, np.inf, (1,), np.int32))
+    @observation(observation_type=gym.spaces.Box(0, jnp.inf, (1,), int))
     def n_successful(self, reward: float, *args, **kwargs):
         return reward
 
-    @observation(observation_type=gym.spaces.Box(0, np.inf, (1,), np.int32))
+    @observation(observation_type=gym.spaces.Box(0, jnp.inf, (1,), int))
     def n_failed(self, reward: float, *args, **kwargs):
         return 1 - reward
 
-    @parameter(parameter_type=gym.spaces.Box(1, np.inf, (1,), np.int32))
+    @parameter(parameter_type=gym.spaces.Box(1, jnp.inf, (1,), int))
     def n_arms(self):
         return len(self._preferences)

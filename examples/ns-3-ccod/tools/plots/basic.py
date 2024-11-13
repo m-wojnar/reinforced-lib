@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 
 from common import *
@@ -11,7 +10,7 @@ def plot_results() -> None:
 
     for i, (manager, manager_name) in enumerate(ALL_MANAGERS.items()):
         mean, ci_low, ci_high = get_thr_ci(df[df.agent == manager], 'nWifi')
-        plt.plot(mean.index, mean, marker='o', markersize=3, label=manager_name, c=COLORS[i])
+        plt.plot(mean.index, mean, marker=MARKERS[i], markersize=2, label=manager_name, c=COLORS[i])
         plt.fill_between(mean.index, ci_low, ci_high, alpha=0.3, color=COLORS[i], linewidth=0.0)
 
     plt.xlim((0, 55))

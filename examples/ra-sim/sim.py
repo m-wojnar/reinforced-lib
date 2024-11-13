@@ -44,11 +44,11 @@ def distance_to_snr(distance: Numeric) -> Numeric:
     return REFERENCE_SNR - (REFERENCE_LOSS + 10 * EXPONENT * jnp.log10(distance))
 
 
-def success_probability(snr: Scalar, mcs: jnp.int32) -> Scalar:
+def success_probability(snr: Scalar, mcs: int) -> Scalar:
     return norm.cdf(snr, loc=MIN_SNRS[mcs], scale=1 / jnp.sqrt(8))
 
 
-def collision_probability(n_wifi: jnp.int32) -> Scalar:
+def collision_probability(n_wifi: int) -> Scalar:
     return 0.154887 * jnp.log(1.03102 * n_wifi)
 
 
@@ -56,8 +56,8 @@ def collision_probability(n_wifi: jnp.int32) -> Scalar:
 class RASimState:
     time: Array
     snr: Array
-    ptr: jnp.int32
-    cw: jnp.int32
+    ptr: int
+    cw: int
 
 
 @dataclass
@@ -70,8 +70,8 @@ def ra_sim(
         simulation_time: Scalar,
         velocity: Scalar,
         initial_position: Scalar,
-        n_wifi: jnp.int32,
-        total_frames: jnp.int32
+        n_wifi: int,
+        total_frames: int
 ) -> Env:
 
     phy_rates = jnp.array([6.8, 13.6, 20.4, 27.2, 40.8, 54.6, 61.3, 68.1, 81.8, 90.9, 101.8, 112.5])
@@ -89,7 +89,7 @@ def ra_sim(
 
         return state, _get_env_state(state, 0, 0, 0)
 
-    def _get_env_state(state: RASimState, action: jnp.int32, n_successful: jnp.int32, n_failed: jnp.int32) -> dict:
+    def _get_env_state(state: RASimState, action: int, n_successful: int, n_failed: int) -> dict:
         return {
             'time': state.time[state.ptr],
             'n_successful': n_successful,
@@ -100,9 +100,9 @@ def ra_sim(
         }
 
     @jax.jit
-    def step(state: RASimState, action: jnp.int32, key: PRNGKey) -> tuple[RASimState, dict, Scalar, jnp.bool_]:
+    def step(state: RASimState, action: int, key: PRNGKey) -> tuple[RASimState, dict, Scalar, jnp.bool_]:
         n_all = AMPDU_SIZES[action]
-        n_successful = (n_all * success_probability(state.snr[state.ptr], action)).astype(jnp.int32)
+        n_successful = (n_all * success_probability(state.snr[state.ptr], action)).astype(int)
         collision = collision_probability(n_wifi) > jax.random.uniform(key)
 
         n_successful = n_successful * (1 - collision)
@@ -143,11 +143,11 @@ class RASimEnv(gym.Env):
     def __init__(self) -> None:
         self.action_space = gym.spaces.Discrete(12)
         self.observation_space = gym.spaces.Dict({
-            'time': gym.spaces.Box(0.0, jnp.inf, (1,)),
-            'n_successful': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
-            'n_failed': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
-            'n_wifi': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
+            'time': gym.spaces.Box(0.0, jnp.inf, (1,), float),
+            'n_successful': gym.spaces.Box(0, jnp.inf, (1,), int),
+            'n_failed': gym.spaces.Box(0, jnp.inf, (1,), int),
+            'n_wifi': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
             'cw': gym.spaces.Discrete(32767)
         })
 

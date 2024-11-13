@@ -4,6 +4,7 @@
 [![License: MPL 2.0][license-badge]][license]
 [![build and test][tests-badge]][github-actions]
 [![Documentation Status][rtd-badge]][documentation]
+[![DOI](https://img.shields.io/badge/DOI-10.1016/j.softx.2024.101706-blue.svg)](https://doi.org/10.1016/j.softx.2024.101706)
 
 [pypi-badge]: https://img.shields.io/pypi/v/reinforced-lib
 [pypi]: https://pypi.org/project/reinforced-lib/
@@ -14,34 +15,34 @@
 [rtd-badge]: https://readthedocs.org/projects/reinforced-lib/badge/?version=latest
 [documentation]: https://reinforced-lib.readthedocs.io/en/latest/
 
-**Introducing Reinforced-lib:** a lightweight Python library for rapid development of RL solutions. It is open-source, 
-prioritizes ease of use, provides comprehensive documentation, and offers both deep reinforcement learning 
-(DRL) and classic non-neural agents. Built on [JAX](https://jax.readthedocs.io/en/latest/), it facilitates exporting 
-trained models to embedded devices, and makes it great for research and prototyping with RL algorithms. Access to JAX's 
-JIT functionality ensure high-performance results.
+**Introducing Reinforced-lib:** a lightweight Python library for the rapid development of reinforcement-learning (RL) 
+solutions. It is open-source, prioritizes ease of use, provides comprehensive documentation, and offers both deep 
+reinforcement learning (DRL) and classic non-neural agents. Built on [JAX](https://jax.readthedocs.io/en/latest/), 
+it facilitates exporting trained models to embedded devices, and makes it great for research and prototyping with RL 
+algorithms. Access to JAX's just-in-time (JIT) compilation ensures high-performance results.
 
 ## Installation
 
-You can install the latest released version of Reinforced-lib from PyPI via:
+You can install the latest version of Reinforced-lib from PyPI:
 
 ```bash
 pip install reinforced-lib
 ```
 
-To have an easy access to the [example files](https://github.com/m-wojnar/reinforced-lib/tree/main/examples)
-you can clone the source code from our repository, and than install it locally with pip:
+To have easy access to the [example files](https://github.com/m-wojnar/reinforced-lib/tree/main/examples)
+you can clone the source code from our repository, and then install it locally with pip:
 
 ```bash
 git clone git@github.com:m-wojnar/reinforced-lib.git
 cd reinforced-lib
-pip install .
+pip install -e .
 ```
 
-In the spirit of making Reinforced-lib a lightweight solution, we included only the necessary dependencies in the base 
-requirements. To fully benefit from Reinforced-lib conveniences, like TF Lite export, install with the "full" suffix:
+In the spirit of making Reinforced-lib a lightweight solution, we include only the necessary dependencies in the base 
+requirements. To fully benefit from Reinforced-lib's conveniences, such as TF Lite export, install with the "full" suffix:
 
 ```bash
-pip3 install ".[full]"
+pip install ".[full]"
 ```
 
 ## Key components
@@ -50,8 +51,8 @@ Reinforced-lib facilitates seamless interaction between RL agents and the enviro
 within of the library, represented in the API as different modules.
 
 - **RLib** - The core module which provides a simple and intuitive interface to manage agents, use extensions, 
-  and configure the logging system. Even if you're not a reinforcement learning (RL) expert, *RLib* makes it easy to 
-  implement the agent-environment interaction loop.
+  and configure the logging system. Even if you're not an RL expert, *RLib* makes it easy to  implement the 
+  agent-environment interaction loop.
 
 - **Agents** - Choose from a variety of RL agents available in the *Agents* module. These agents are designed to be 
   versatile and work with any environment. If needed, you can even create your own agents using our documented recipes.
@@ -59,7 +60,7 @@ within of the library, represented in the API as different modules.
 - **Extensions** - Enhance agent observations with domain-specific knowledge by adding a suitable extension from the 
   *Extensions* module. This module enables seamless agent switching and parameter tuning without extensive reconfiguration.
 
-- **Logging** - This module allows you to monitor agent-environment interactions. Customize and adapt logging to your 
+- **Loggers** - This module allows you to monitor agent-environment interactions. Customize and adapt logging to your 
   specific needs, capturing training metrics, internal agent state, or environment observations. The library includes 
   various loggers for creating plots and output files, simplifying visualization and data processing.
 
@@ -70,10 +71,13 @@ The figure below provides a visual representation of Reinforced-lib and the data
 ## JAX Backend
 
 Our library is built on top of JAX, a high-performance numerical computing library. JAX makes it easy to implement 
-RL algorithms efficiently. It provides powerful transformations, including JIT compilation,  automatic differentiation, 
+RL algorithms efficiently. It provides powerful transformations, including JIT compilation, automatic differentiation, 
 vectorization, and parallelization. Our library is fully compatible with DeepMind's JAX ecosystem, granting access to 
 state-of-the-art RL models and helper libraries. JIT compilation significantly accelerates execution and ensures 
-portability across different architectures (CPUs, GPUs, TPUs) without requiring code modifications.
+portability across different architectures (CPUs, GPUs, TPUs) without requiring code modifications. 
+JAX offers another benefit through its robust pseudorandom number generator system, employed in our library to 
+guarantee result reproducibility. This critical aspect of scientific research is frequently underestimated but 
+remains highly significant.
 
 ## Edge Device Export
 
@@ -90,25 +94,28 @@ effortlessly using Reinforced-lib.
 
 ```python
 import gymnasium as gym
-import haiku as hk
 import optax
 from chex import Array
+from flax import linen as nn
 
 from reinforced_lib import RLib
-from reinforced_lib.agents.deep import QLearning
+from reinforced_lib.agents.deep import DQN
 from reinforced_lib.exts import Gymnasium
 
 
-@hk.transform_with_state
-def q_network(x: Array) -> Array:
-    return hk.nets.MLP([256, 2])(x)
+class QNetwork(nn.Module):
+    @nn.compact
+    def __call__(self, x: Array) -> Array:
+        x = nn.Dense(256)(x)
+        x = nn.relu(x)
+        return nn.Dense(2)(x)
 
 
 if __name__ == '__main__':
     rl = RLib(
-        agent_type=QLearning,
+        agent_type=DQN,
         agent_params={
-            'q_network': q_network,
+            'q_network': QNetwork(),
             'optimizer': optax.rmsprop(3e-4, decay=0.95, eps=1e-2),
         },
         ext_type=Gymnasium,
@@ -130,13 +137,18 @@ if __name__ == '__main__':
 
 ## Citing Reinforced-lib
 
-To cite this repository:
+To cite this repository, please use the following BibTeX entry for the Reinforced-lib paper:
 
-```
-@software{reinforcedlib2022,
-  author = {Maksymilian Wojnar and Wojciech Ciężobka},
-  title = {{R}einforced-lib: {R}einforcement learning library},
-  url = {http://github.com/m-wojnar/reinforced-lib},
-  year = {2022},
+```bibtex
+@article{reinforcedlib2022,
+  author = {Maksymilian Wojnar and Szymon Szott and Krzysztof Rusek and Wojciech Ciezobka},
+  title = {{R}einforced-lib: {R}apid prototyping of reinforcement learning solutions},
+  journal = {SoftwareX},
+  volume = {26},
+  pages = {101706},
+  year = {2024},
+  issn = {2352-7110},
+  doi = {https://doi.org/10.1016/j.softx.2024.101706},
+  url = {https://www.sciencedirect.com/science/article/pii/S2352711024000773}
 }
 ```

@@ -1,5 +1,6 @@
 import os.path
 from collections import defaultdict
+from copy import deepcopy
 
 import jax.numpy as jnp
 import matplotlib.pyplot as plt
@@ -12,7 +13,7 @@ from reinforced_lib.utils import timestamp
 class PlotsLogger(BaseLogger):
     r"""
     Logger that presents and saves values as matplotlib plots. Offers smoothing of the curve, scatter plots, and
-    multiple curves in a single chart (while logging arrays). ``PlotsLogger`` is able to synchronizes the logged
+    multiple curves in a single chart (while logging arrays). ``PlotsLogger`` is able to synchronize the logged
     values in time. This means that if the same source is logged less often than other sources, the step will be
     increased accordingly to maintain the appropriate spacing between the values on the x-axis.
 
@@ -75,8 +76,7 @@ class PlotsLogger(BaseLogger):
             return smoothed
 
         def lineplot(values: list, steps: list, alpha: Scalar = 1.0, label: bool = False) -> None:
-            values = jnp.array(values)
-            values = jnp.squeeze(values)
+            values = jnp.array(values).squeeze()
 
             if values.ndim == 1:
                 plt.plot(steps, values, alpha=alpha, c='C0')
@@ -126,13 +126,13 @@ class PlotsLogger(BaseLogger):
 
     def log_array(self, source: Source, value: Array, *_) -> None:
         """
-        Adds a given array to the plot values.
+        Log values from an array to the same plot. Creates multiple line plots for each value in the array.
 
         Parameters
         ----------
         source : Source
             Source of the logged value.
-        value : array_like
+        value : Array
             Array to log.
         """
 
@@ -140,7 +140,7 @@ class PlotsLogger(BaseLogger):
 
     def _log(self, source: Source, value: Numeric) -> None:
         """
-        Adds a given scalar to the plot values.
+        Adds a given value to the plot.
 
         Parameters
         ----------
@@ -162,5 +162,5 @@ class PlotsLogger(BaseLogger):
         else:
             step = self._steps[name][-1] + 1 if self._steps[name] else 0
 
-        self._values[name].append(value)
+        self._values[name].append(deepcopy(value))
         self._steps[name].append(step)

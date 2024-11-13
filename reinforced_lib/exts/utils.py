@@ -1,7 +1,7 @@
 from typing import Callable, NamedTuple
 
 import gymnasium as gym
-import numpy as np
+import jax.numpy as jnp
 
 
 class ObservationInfo(NamedTuple):
@@ -104,8 +104,8 @@ def test_box(a: gym.spaces.Space, b: gym.spaces.Box) -> bool:
     """
 
     return isinstance(a, gym.spaces.Box) and \
-        np.array_equal(a.low, b.low) and \
-        np.array_equal(a.high, b.high) and \
+        jnp.array_equal(a.low, b.low) and \
+        jnp.array_equal(a.high, b.high) and \
         a.shape == b.shape and \
         a.dtype == b.dtype
 
@@ -150,7 +150,7 @@ def test_multi_binary(a: gym.spaces.Space, b: gym.spaces.MultiBinary) -> bool:
     """
 
     return isinstance(a, gym.spaces.MultiBinary) and \
-        np.array_equal(a.n, b.n)
+        jnp.array_equal(a.n, b.n)
 
 
 def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> bool:
@@ -171,7 +171,7 @@ def test_multi_discrete(a: gym.spaces.Space, b: gym.spaces.MultiDiscrete) -> boo
     """
 
     return isinstance(a, gym.spaces.MultiDiscrete) and \
-        np.array_equal(a.nvec, b.nvec) and \
+        jnp.array_equal(a.nvec, b.nvec) and \
         a.dtype == b.dtype
 
 

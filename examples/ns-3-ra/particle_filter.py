@@ -7,8 +7,7 @@ from chex import Array, PRNGKey, Scalar
 from jax.scipy.stats import norm
 
 from reinforced_lib.agents import BaseAgent
-from reinforced_lib.agents.core.particle_filter import ParticleFilter as ParticleFilterBase
-from reinforced_lib.agents.core.particle_filter import ParticleFilterState, linear_transition
+from reinforced_lib.utils.particle_filter import ParticleFilter as ParticleFilterBase, ParticleFilterState, linear_transition
 
 
 class ParticleFilter(BaseAgent):
@@ -47,7 +46,7 @@ class ParticleFilter(BaseAgent):
             default_power: Scalar,
             min_snr_init: Scalar = 0.0,
             max_snr_init: Scalar = 40.0,
-            particles_num: jnp.int32 = 1000,
+            particles_num: int = 1000,
             scale: Scalar = 10.0
     ) -> None:
         assert scale > 0
@@ -71,29 +70,29 @@ class ParticleFilter(BaseAgent):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'default_power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
-            'min_snr_init': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
-            'max_snr_init': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
-            'particles_num': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'scale': gym.spaces.Box(0.0, jnp.inf, (1,))
+            'default_power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
+            'min_snr_init': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
+            'max_snr_init': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
+            'particles_num': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'scale': gym.spaces.Box(0.0, jnp.inf, (1,), float)
         })
 
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'action': gym.spaces.Discrete(self.n_mcs),
-            'n_successful': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
-            'n_failed': gym.spaces.Box(0, jnp.inf, (1,), jnp.int32),
-            'delta_time': gym.spaces.Box(0.0, jnp.inf, (1,)),
-            'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
+            'n_successful': gym.spaces.Box(0, jnp.inf, (1,), int),
+            'n_failed': gym.spaces.Box(0, jnp.inf, (1,), int),
+            'delta_time': gym.spaces.Box(0.0, jnp.inf, (1,), float),
+            'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
             'cw': gym.spaces.Discrete(32767)
         })
 
     @property
     def sample_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,)),
-            'rates': gym.spaces.Box(0.0, jnp.inf, (self.n_mcs,))
+            'power': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
+            'rates': gym.spaces.Box(0.0, jnp.inf, (self.n_mcs,), float)
         })
 
     @property
@@ -123,12 +122,12 @@ class ParticleFilter(BaseAgent):
             self,
             state: ParticleFilterState,
             key: PRNGKey,
-            action: jnp.int32,
-            n_successful: jnp.int32,
-            n_failed: jnp.int32,
+            action: int,
+            n_successful: int,
+            n_failed: int,
             delta_time: Scalar,
             power: Scalar,
-            cw: jnp.int32,
+            cw: int,
             scale: Scalar
     ) -> ParticleFilterState:
         r"""
@@ -188,7 +187,7 @@ class ParticleFilter(BaseAgent):
             power: Scalar,
             rates: Array,
             pf: ParticleFilterBase
-    ) -> jnp.int32:
+    ) -> int:
         r"""
         The algorithm draws :math:`\theta` from the categorical distribution according to the particle positions
         and weights. Then it calculates the corresponding SINR value :math:`\gamma = \theta + P_{tx}`.
@@ -207,7 +206,7 @@ class ParticleFilter(BaseAgent):
             A PRNG key used as the random key.
         power : float
             Power used during the transmission [dBm].
-        rates : array_like
+        rates : Array
             Transmission data rates corresponding to each MCS [Mb/s].
         pf : ParticleFilterBase
             Instance of the base ParticleFilter class.
@@ -224,10 +223,7 @@ class ParticleFilter(BaseAgent):
         return jnp.argmax(p_s * rates)
 
     @staticmethod
-    def _observation_fn(
-            state: ParticleFilterState,
-            observation: tuple[jnp.int32, jnp.int32, jnp.int32, Scalar, jnp.int32, Array]
-    ) -> ParticleFilterState:
+    def _observation_fn(state: ParticleFilterState, observation: tuple) -> ParticleFilterState:
         """
         Updates particles weights based on the observation from the environment.
 

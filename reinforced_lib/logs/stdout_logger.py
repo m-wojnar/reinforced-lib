@@ -1,4 +1,5 @@
 import json
+from copy import deepcopy
 
 import jax.numpy as jnp
 import numpy as np
@@ -49,7 +50,7 @@ class StdoutLogger(BaseLogger):
         ----------
         source : Source
             Source of the logged value.
-        value : array_like
+        value : Array
             Array to log.
         custom : bool
             Whether the source is a custom source.
@@ -114,6 +115,6 @@ class StdoutLogger(BaseLogger):
                 print('\t'.join(f'{n}: {v}' for n, v in self._values.items()))
                 self._values = {}
 
-            self._values[name] = value
+            self._values[name] = deepcopy(value)
         else:
             print(f'{name}: {value}')

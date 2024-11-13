@@ -15,7 +15,7 @@ class Exp3State(AgentState):
 
     Attributes
     ----------
-    omega : array_like
+    omega : Array
         Preference for each arm.
     """
 
@@ -47,7 +47,7 @@ class Exp3(BaseAgent):
 
     def __init__(
             self,
-            n_arms: jnp.int32,
+            n_arms: int,
             gamma: Scalar,
             min_reward: Scalar,
             max_reward: Scalar
@@ -63,17 +63,17 @@ class Exp3(BaseAgent):
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
         return gym.spaces.Dict({
-            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), jnp.int32),
-            'gamma': gym.spaces.Box(0, 1, (1,), jnp.float32),
-            'min_reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32),
-            'max_reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
+            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), int),
+            'gamma': gym.spaces.Box(0, 1, (1,), float),
+            'min_reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float),
+            'max_reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)
         })
 
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
         return gym.spaces.Dict({
             'action': gym.spaces.Discrete(self.n_arms),
-            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), jnp.float32)
+            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)
         })
 
     @property
@@ -87,7 +87,7 @@ class Exp3(BaseAgent):
     @staticmethod
     def init(
             key: PRNGKey,
-            n_arms: jnp.int32
+            n_arms: int
     ) -> Exp3State:
         """
         Initializes the Exp3 agent state with uniform preference for each arm.
@@ -113,7 +113,7 @@ class Exp3(BaseAgent):
     def update(
         state: Exp3State,
         key: PRNGKey,
-        action: jnp.int32,
+        action: int,
         reward: Scalar,
         gamma: Scalar,
         min_reward: Scalar,
@@ -168,7 +168,7 @@ class Exp3(BaseAgent):
         state: Exp3State,
         key: PRNGKey,
         gamma: Scalar
-    ) -> jnp.int32:
+    ) -> int:
         r"""
         The Exp3 policy is stochastic. Algorithm chooses a random arm with probability :math:`\gamma`, otherwise it
         draws arm :math:`a` with probability :math:`\omega(a) / \sum_{b=1}^N \omega(b)`.
@@ -189,4 +189,4 @@ class Exp3(BaseAgent):
         """
 
         pi = (1 - gamma) * state.omega / state.omega.sum() + gamma / state.omega.size
-        return jax.random.categorical(key, jnp.log(pi.squeeze()))
+        return jax.random.categorical(key, jnp.log(pi.flatten()))
