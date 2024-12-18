@@ -167,3 +167,31 @@ Upper confidence bound (UCB)
 .. autoclass:: UCB
     :show-inheritance:
     :members:
+
+
+Random scheduler
+----------------
+
+.. currentmodule:: reinforced_lib.agents.mab.scheduler.random
+
+.. autoclass:: RandomSchedulerState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: RandomScheduler
+    :show-inheritance:
+    :members:
+
+
+Round-robin scheduler
+---------------------
+
+.. currentmodule:: reinforced_lib.agents.mab.scheduler.round_robin
+
+.. autoclass:: RoundRobinSchedulerState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: RoundRobinScheduler
+    :show-inheritance:
+    :members:

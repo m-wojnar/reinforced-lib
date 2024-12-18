@@ -3,53 +3,54 @@ from functools import partial
 import gymnasium as gym
 import jax
 import jax.numpy as jnp
-from chex import dataclass, Array, PRNGKey, Scalar
+from chex import dataclass, Numeric, PRNGKey
 
 from reinforced_lib.agents import AgentState, BaseAgent
 
 
 @dataclass
-class RoundRobinState(AgentState):
+class RoundRobinSchedulerState(AgentState):
     r"""
     Container for the state of the round-robin scheduler.
 
     Attributes
     ----------
-    item : Array
+    item : Numeric
         Scheduled item.
     """
-    item: Array
+
+    item: Numeric
 
 
 class RoundRobinScheduler(BaseAgent):
     r"""
-        Round-robin with MAB interface. This scheduler pics item sequentially.
-        Sampling is deterministic, one must call ``update`` to change state.
+    Round-robin with MAB interface. This scheduler pics item sequentially.
+    Sampling is deterministic, one must call ``update`` to change state.
 
-        Parameters
-        ----------
-        n_arms : int
-            Number of bandit arms. :math:`N \in \mathbb{N}_{+}` .
-        starting_arm: int
-            Initial arm to start sampling from.
+    Parameters
+    ----------
+    n_arms : int
+        Number of items to choose from. :math:`N \in \mathbb{N}_{+}`.
+    initial_item: int, default=0
+        Initial item to start sampling from.
     """
 
-    def __init__(self, n_arms: int, starting_arm: int) -> None:
+    def __init__(self, n_arms: int, initial_item: int = 0) -> None:
         self.n_arms = n_arms
 
-        self.init = jax.jit(partial(self.init, item=starting_arm))
-        self.update = jax.jit(partial(self.update, N=n_arms))
+        self.init = jax.jit(partial(self.init, item=initial_item))
+        self.update = jax.jit(partial(self.update, n_arms=n_arms))
         self.sample = jax.jit(self.sample)
 
     @staticmethod
     def parameter_space() -> gym.spaces.Dict:
-        return gym.spaces.Dict(
-            {'n_arms': gym.spaces.Box(1, jnp.inf, (1,), int), })
+        return gym.spaces.Dict({
+            'n_arms': gym.spaces.Box(1, jnp.inf, (1,), int)
+        })
 
     @property
     def update_observation_space(self) -> gym.spaces.Dict:
-        return gym.spaces.Dict({'action': gym.spaces.Discrete(self.n_arms),
-            'reward': gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)})
+        return gym.spaces.Dict({})
 
     @property
     def sample_observation_space(self) -> gym.spaces.Dict:
@@ -60,16 +61,13 @@ class RoundRobinScheduler(BaseAgent):
         return gym.spaces.Discrete(self.n_arms)
 
     @staticmethod
-    def init(key: PRNGKey, item: int) -> RoundRobinState:
-        return RoundRobinState(item=jnp.asarray(item))
+    def init(key: PRNGKey, item: Numeric) -> RoundRobinSchedulerState:
+        return RoundRobinSchedulerState(item=jnp.asarray(item))
 
     @staticmethod
-    def update(state: RoundRobinState, key: PRNGKey, action: int,
-               reward: Scalar, N: int) -> RoundRobinState:
-        a = state.item + jnp.ones_like(state.item)
-        a = jnp.mod(a, N)
-        return RoundRobinState(item=a)
+    def update(state: RoundRobinSchedulerState, key: PRNGKey, n_arms: int) -> RoundRobinSchedulerState:
+        return RoundRobinSchedulerState(item=(state.item + 1) % n_arms)
 
     @staticmethod
-    def sample(state: RoundRobinState, key: PRNGKey, *args, **kwargs) -> int:
+    def sample(state: RoundRobinSchedulerState, key: PRNGKey) -> Numeric:
         return state.item
