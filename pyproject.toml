@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "reinforced-lib"
-version = "1.1.4"
+version = "1.1.5"
 requires-python = ">=3.9, <4"
 
 description = "Reinforcement learning library"
@@ -14,7 +14,8 @@ keywords = ["deep-reinforcement-learning", "jax", "library", "machine-learning",
 
 authors = [
     {name = "Maksymilian Wojnar", email = "mwojnar@agh.edu.pl"},
-    {name = "Wojciech Ciężobka", email = "wciezobka@agh.edu.pl"}
+    {name = "Wojciech Ciężobka", email = "wciezobka@agh.edu.pl"},
+    {name = "Krzysztof Rusek", email = "krusek@agh.edu.pl"}
 ]
 
 classifiers = [
