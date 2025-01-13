@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "reinforced-lib"
-version = "1.1.5"
+version = "1.2.0"
 requires-python = ">=3.12, <4"
 
 description = "Reinforcement learning library"
