@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
     # agent setup
     agent = EGreedy(len(mean_r), 0.1, optimistic_start=0.0)
-    state = agent.init(jax.random.PRNGKey(seed=42))
+    state = agent.init(jax.random.key(42))
 
     # print observation and action spaces
     print(agent.update_observation_space)
@@ -20,7 +20,7 @@ if __name__ == '__main__':
     print(agent.action_space)
 
     # helper variables
-    key = jax.random.PRNGKey(43)
+    key = jax.random.key(43)
     time = jnp.linspace(0, 20, 1000)
 
     actions = []

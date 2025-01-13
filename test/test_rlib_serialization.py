@@ -14,7 +14,7 @@ class TestRLibSerialization(unittest.TestCase):
     arms_probs = jnp.array([1.0, 1.0, 0.99, 0.97, 0.91, 0.77, 0.32, 0.05, 0.01, 0.0, 0.0, 0.0])
     time = jnp.linspace(0, 10, 1000)
     t_change = jnp.max(time) / 2
-    key = jax.random.PRNGKey(42)
+    key = jax.random.key(42)
 
 
     def run_experiment(self, reload: bool, new_decay: float = None) -> list[int]:

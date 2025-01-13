@@ -182,7 +182,7 @@ class RASimEnv(gym.Env):
 
         seed = seed if seed else random.randint(0, sys.maxsize)
         super().reset(seed=seed)
-        self.key = jax.random.PRNGKey(seed)
+        self.key = jax.random.key(seed)
 
         options = options if options else {}
         self.options |= options

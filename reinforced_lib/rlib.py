@@ -295,7 +295,7 @@ class RLib:
         """
 
         agent_id = len(self._agent_containers)
-        init_key, key = jax.random.split(jax.random.PRNGKey(seed))
+        init_key, key = jax.random.split(jax.random.key(seed))
 
         self._agent_containers.append(AgentContainer(
             state=self._agent.init(init_key),
@@ -596,7 +596,7 @@ class RLib:
 
         if agent_id is None:
             init_tfl, update_tfl, sample_tfl = self._agent.export(
-                init_key=jax.random.PRNGKey(42)
+                init_key=jax.random.key(42)
             )
         else:
             init_tfl, update_tfl, sample_tfl = self._agent.export(
