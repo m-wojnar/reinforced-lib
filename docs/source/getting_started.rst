@@ -36,7 +36,7 @@ In the spirit of making Reinforced-lib a lightweight solution, we included only 
 
 .. note::
 
-    Since we tested the Reinforced-lib on Python 3.9, we recommend using Python 3.9+.
+    Since we tested the Reinforced-lib on Python 3.12, we recommend using Python 3.12+.
 
 
 Basic usage

@@ -112,19 +112,19 @@ class TestRLibToTflite(unittest.TestCase):
 
         class QNetwork(nn.Module):
             @nn.compact
-            def __call__(self, x):
-                x = nn.Dense(64)(x)
-                x = nn.relu(x)
-                return nn.Dense(1)(x)
+            def __call__(self, s, a):
+                s = nn.Dense(64)(s)
+                s = nn.relu(s)
+                return nn.Dense(1)(s)
 
         class ANetwork(nn.Module):
             @nn.compact
-            def __call__(self, x):
-                x = nn.Dense(32)(x)
-                x = nn.relu(x)
-                x = nn.Dense(32)(x)
-                x = nn.relu(x)
-                return nn.Dense(1)(x)
+            def __call__(self, s):
+                s = nn.Dense(32)(s)
+                s = nn.relu(s)
+                s = nn.Dense(32)(s)
+                s = nn.relu(s)
+                return nn.Dense(1)(s)
 
         rl = RLib(
             agent_type=DDPG,
@@ -147,19 +147,19 @@ class TestRLibToTflite(unittest.TestCase):
 
         class QNetwork(nn.Module):
             @nn.compact
-            def __call__(self, x):
-                x = nn.Dense(64)(x)
-                x = nn.relu(x)
-                return nn.Dense(1)(x)
+            def __call__(self, s, a):
+                s = nn.Dense(64)(s)
+                s = nn.relu(s)
+                return nn.Dense(1)(s)
 
         class ANetwork(nn.Module):
             @nn.compact
-            def __call__(self, x):
-                x = nn.Dense(32)(x)
-                x = nn.relu(x)
-                x = nn.Dense(32)(x)
-                x = nn.relu(x)
-                return nn.Dense(1)(x)
+            def __call__(self, s):
+                s = nn.Dense(32)(s)
+                s = nn.relu(s)
+                s = nn.Dense(32)(s)
+                s = nn.relu(s)
+                return nn.Dense(1)(s)
 
         rl = RLib(
             agent_type=DDPG,

@@ -21,7 +21,7 @@ if __name__ == '__main__':
     print(agent.action_space)
 
     # helper variables
-    key = jax.random.PRNGKey(42)
+    key = jax.random.key(42)
     time = jnp.linspace(0, 20, 2000)
     actions = []
     a = 0

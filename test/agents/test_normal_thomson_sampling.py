@@ -24,7 +24,7 @@ class TSTestCase(unittest.TestCase):
         a = ts.sample(next_state, k3)
 
     def test_agent(self):
-        k = jax.random.PRNGKey(42)
+        k = jax.random.key(42)
         k, sample_key = jax.random.split(k)
 
         ts = NormalThompsonSampling(n_arms=2, alpha=1., beta=1., lam=2., mu=0.)
