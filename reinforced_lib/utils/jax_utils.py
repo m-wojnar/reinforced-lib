@@ -38,7 +38,7 @@ def gradient_step(
     """
 
     (loss, aux), grads = jax.value_and_grad(loss_fn, has_aux=True)(objective, *loss_params)
-    updates, opt_state = optimizer.update(grads, opt_state)
+    updates, opt_state = optimizer.update(grads, opt_state, objective)
     objective = optax.apply_updates(objective, updates)
 
     return objective, aux, opt_state, loss
