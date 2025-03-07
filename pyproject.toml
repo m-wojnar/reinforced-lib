@@ -32,16 +32,13 @@ classifiers = [
 ]
 
 dependencies = [
-    "chex~=0.1.88",
-    "cloudpickle~=3.1.0",
-    "flax~=0.10.2",
-    "gymnasium~=1.0.0",
-    "jax~=0.4.38",
-    "lz4~=4.3.3",
-    "matplotlib~=3.9.4",
-    "optax~=0.2.4",
+    "cloudpickle~=3.1.1",
+    "gymnasium~=1.1.1",
+    "jax-ai-stack~=2025.2.5",
+    "lz4~=4.4.3",
+    "matplotlib~=3.10.1",
     "tensorboardX~=2.6.2.2",
-    "wandb~=0.19.2"
+    "wandb~=0.19.8"
 ]
 
 [project.optional-dependencies]
