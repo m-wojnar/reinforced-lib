@@ -6,8 +6,8 @@ Welcome to Reinforced-lib's documentation!
 .. image:: https://img.shields.io/pypi/v/reinforced-lib
     :target: https://pypi.org/project/reinforced-lib/
 
-.. image:: https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg
-    :target: https://opensource.org/licenses/MPL-2.0
+.. image:: https://img.shields.io/badge/Licenses-CC_BY_4.0-brightgreen
+    :target: https://github.com/m-wojnar/reinforced-lib/blob/main/LICENSE
 
 .. image:: https://github.com/m-wojnar/reinforced-lib/actions/workflows/python-package.yml/badge.svg
     :target: https://github.com/m-wojnar/reinforced-lib/actions
