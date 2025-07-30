@@ -1,15 +1,15 @@
 # Reinforced-lib: Reinforcement learning library
 
 [![PyPI version][pypi-badge]][pypi]
-[![License: MPL 2.0][license-badge]][license]
+[![License: CC-BY 4.0][license-badge]][license]
 [![build and test][tests-badge]][github-actions]
 [![Documentation Status][rtd-badge]][documentation]
 [![DOI](https://img.shields.io/badge/DOI-10.1016/j.softx.2024.101706-blue.svg)](https://doi.org/10.1016/j.softx.2024.101706)
 
 [pypi-badge]: https://img.shields.io/pypi/v/reinforced-lib
 [pypi]: https://pypi.org/project/reinforced-lib/
-[license-badge]: https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg
-[license]: https://opensource.org/licenses/MPL-2.0
+[license-badge]: https://img.shields.io/badge/Licenses-CC_BY_4.0-brightgreen
+[license]: https://github.com/m-wojnar/reinforced-lib/blob/main/LICENSE
 [tests-badge]: https://github.com/m-wojnar/reinforced-lib/actions/workflows/python-package.yml/badge.svg
 [github-actions]: https://github.com/m-wojnar/reinforced-lib/actions
 [rtd-badge]: https://readthedocs.org/projects/reinforced-lib/badge/?version=latest
