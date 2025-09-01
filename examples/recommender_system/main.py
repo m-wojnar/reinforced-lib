@@ -5,9 +5,6 @@ from reinforced_lib import RLib
 from reinforced_lib.agents.mab import EGreedy
 from reinforced_lib.logs import PlotsLogger, SourceType
 
-import gymnasium as gym
-gym.logger.set_level(40)
-
 
 def run(episodes: int, seed: int) -> None:
 

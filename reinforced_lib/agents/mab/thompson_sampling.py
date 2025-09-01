@@ -28,7 +28,7 @@ class ThompsonSamplingState(AgentState):
 class ThompsonSampling(BaseAgent):
     r"""
     Contextual Bernoulli Thompson sampling agent with the exponential smoothing. The implementation is inspired by  the
-    work of Krotov et al. [7]_. Thompson sampling is based on a beta distribution with parameters related to the number
+    work of Krotov et al. [9]_. Thompson sampling is based on a beta distribution with parameters related to the number
     of successful and failed attempts. Higher values of the parameters decrease the entropy of the distribution while
     changing the ratio of the parameters shifts the expected value.
 
@@ -41,7 +41,7 @@ class ThompsonSampling(BaseAgent):
 
     References
     ----------
-    .. [7] Alexander Krotov, Anton Kiryanov and Evgeny Khorov. 2020. Rate Control With Spatial Reuse
+    .. [9] Alexander Krotov, Anton Kiryanov and Evgeny Khorov. 2020. Rate Control With Spatial Reuse
        for Wi-Fi 6 Dense Deployments. IEEE Access. 8. 168898-168909.
     """
 

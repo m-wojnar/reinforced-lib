@@ -38,11 +38,11 @@ class UCB(BaseAgent):
     c : float
         Degree of exploration. :math:`c \geq 0`.
     gamma : float, default=1.0
-        If less than one, a discounted UCB algorithm [8]_ is used. :math:`\gamma \in (0, 1]`.
+        If less than one, a discounted UCB algorithm [10]_ is used. :math:`\gamma \in (0, 1]`.
 
     References
     ----------
-    .. [8] Aurélien Garivier, Eric Moulines. 2008. On Upper-Confidence Bound Policies for Non-Stationary
+    .. [10] Aurélien Garivier, Eric Moulines. 2008. On Upper-Confidence Bound Policies for Non-Stationary
        Bandit Problems. 10.48550/ARXIV.0805.3415.
     """
 

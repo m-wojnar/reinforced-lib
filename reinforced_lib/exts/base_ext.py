@@ -21,6 +21,7 @@ class BaseExt(ABC):
         self._parameter_functions: dict[str, Callable] = {}
 
         self._add_action_to_observations = False
+        self._add_actions_to_observations = False
 
         for name in dir(self):
             obj = getattr(self, name)
@@ -124,6 +125,17 @@ class BaseExt(ABC):
                 self.observation_space['action'] = agent_sample_space['action']
 
             self._add_action_to_observations = True
+
+        if 'actions' not in self._observation_functions and \
+                isinstance(self.observation_space, gym.spaces.Dict) and \
+                'actions' not in self.observation_space:
+
+            if 'actions' in agent_update_space.spaces:
+                self.observation_space['actions'] = agent_update_space['actions']
+            if 'actions' in agent_sample_space.spaces:
+                self.observation_space['actions'] = agent_sample_space['actions']
+
+            self._add_actions_to_observations = True
 
         self._update_space_transform = self._transform_spaces(self.observation_space, agent_update_space)
         self._sample_space_transform = self._transform_spaces(self.observation_space, agent_sample_space)
@@ -391,5 +403,8 @@ class BaseExt(ABC):
 
         if self._add_action_to_observations:
             kwargs['action'] = action
+
+        if self._add_actions_to_observations:
+            kwargs['actions'] = action
 
         return self._update_space_transform(*args, **kwargs), self._sample_space_transform(*args, **kwargs)

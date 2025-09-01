@@ -30,7 +30,7 @@ class EGreedyState(AgentState):
 
 class EGreedy(BaseAgent):
     r"""
-    Epsilon-greedy [5]_ agent with an optimistic start behavior and optional exponential recency-weighted average update.
+    Epsilon-greedy [7]_ agent with an optimistic start behavior and optional exponential recency-weighted average update.
     It selects a random action from a set of all actions :math:`\mathscr{A}` with probability
     :math:`\epsilon` (exploration), otherwise it chooses the currently best action (exploitation).
     Epsilon can be decayed over time to shift the policy from exploration to exploitation.
@@ -52,7 +52,7 @@ class EGreedy(BaseAgent):
 
     References
     ----------
-    .. [5] Richard Sutton and Andrew Barto. 2018. Reinforcement Learning: An Introduction. The MIT Press.
+    .. [7] Richard Sutton and Andrew Barto. 2018. Reinforcement Learning: An Introduction. The MIT Press.
     """
 
     def __init__(

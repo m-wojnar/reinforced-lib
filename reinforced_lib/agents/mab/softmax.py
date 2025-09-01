@@ -33,7 +33,7 @@ class Softmax(BaseAgent):
     Softmax agent with baseline and optional exponential recency-weighted average update. It learns a preference
     function :math:`H`, which indicates a preference of selecting one arm over others. Algorithm policy can be
     controlled by the temperature parameter :math:`\tau`. The implementation is inspired by the work of Sutton
-    and Barto [5]_. **Note:** For this agent, some environments find it very beneficial to use 64-bit JAX mode!
+    and Barto [7]_. **Note:** For this agent, some environments find it very beneficial to use 64-bit JAX mode!
 
     Parameters
     ----------
@@ -141,7 +141,7 @@ class Softmax(BaseAgent):
            H_{t + 1}(a) = H_t(a) + \alpha (R_t - \bar{R}_t)(\mathbb{1}_{A_t = a} - \pi_t(a)),
 
         where :math:`\bar{R_t}` is the average of all rewards up to but not including step :math:`t`
-        (by definition :math:`\bar{R}_1 = R_1`). The derivation of given formula can be found in [5]_.
+        (by definition :math:`\bar{R}_1 = R_1`). The derivation of given formula can be found in [7]_.
 
         In the stationary case, :math:`\bar{R_t}` can be calculated as
         :math:`\bar{R}_{t + 1} = \bar{R}_t + \frac{1}{t} \lbrack R_t - \bar{R}_t \rbrack`. To improve the

@@ -33,7 +33,7 @@ class NormalThompsonSamplingState(AgentState):
 
 class NormalThompsonSampling(BaseAgent):
     r"""
-    Normal Thompson sampling agent [10]_. The normal-inverse-gamma distribution is a conjugate prior for the normal
+    Normal Thompson sampling agent [11]_. The normal-inverse-gamma distribution is a conjugate prior for the normal
     distribution with unknown mean and variance. The parameters of the distribution are updated after each observation.
     The mean of the normal distribution is sampled from the normal-inverse-gamma distribution and the action with
     the highest expected value is selected.
@@ -53,7 +53,7 @@ class NormalThompsonSampling(BaseAgent):
 
     References
     ----------
-    .. [10] Kevin P. Murphy. 2007. Conjugate Bayesian analysis of the Gaussian distribution.
+    .. [11] Kevin P. Murphy. 2007. Conjugate Bayesian analysis of the Gaussian distribution.
        https://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf
     """
 
@@ -148,7 +148,7 @@ class NormalThompsonSampling(BaseAgent):
             reward: Scalar
     ) -> NormalThompsonSamplingState:
         r"""
-        Normal Thompson sampling update according to [10]_.
+        Normal Thompson sampling update according to [11]_.
 
         .. math::
           \begin{align}

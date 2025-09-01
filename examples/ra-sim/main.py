@@ -2,7 +2,6 @@ from argparse import ArgumentParser
 from time import perf_counter
 
 import gymnasium as gym
-gym.logger.set_level(40)
 
 import sim
 from ext import IEEE_802_11_ax_RA

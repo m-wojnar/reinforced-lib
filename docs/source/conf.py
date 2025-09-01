@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.abspath('../../reinforced_lib'))
 # -- Project information -----------------------------------------------------
 
 project = 'reinforced-lib'
-copyright = '2024, Maksymilian Wojnar, Wojciech Ciężobka'
+copyright = '2025, Maksymilian Wojnar, Wojciech Ciężobka'
 author = 'Maksymilian Wojnar, Wojciech Ciężobka'
 
 

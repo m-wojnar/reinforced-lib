@@ -36,6 +36,16 @@ Gymnasium
     :members:
 
 
+GymnasiumVectorized
+-------------------
+
+.. currentmodule:: reinforced_lib.exts.gymnasium_vectorized
+
+.. autoclass:: GymnasiumVectorized
+    :show-inheritance:
+    :members:
+
+
 Extension utils
 ---------------
 

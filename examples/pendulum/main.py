@@ -1,12 +1,10 @@
 from argparse import ArgumentParser
 
+import gymnasium as gym
 import jax.numpy as jnp
 import optax
 from chex import Array
 from flax import linen as nn
-
-import gymnasium as gym
-gym.logger.set_level(40)
 
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import DDPG
