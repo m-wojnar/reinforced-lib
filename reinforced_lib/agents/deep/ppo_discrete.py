@@ -358,7 +358,7 @@ class PPODiscrete(BaseAgent):
         else:
             v_loss = 0.5 * optax.squared_error(new_values, returns).mean()
 
-        entropy = PPODiscrete.entropy(log_probs).mean()
+        entropy = PPODiscrete.entropy(new_log_probs).mean()
         loss = pg_loss - entropy_coef * entropy + value_coef * v_loss
 
         return loss, net_state
