@@ -50,7 +50,9 @@ class Evosax(BaseAgent):
     on backpropagation through the value or policy network. Instead, the network parameters are evolved using
     black-box optimization. This agent is suitable for environments with both discrete and continuous action spaces.
     The user is responsible for providing appropriate network output in the correct format (e.g., discrete actions
-    should be sampled from logits with ``jax.random.categorical`` inside the network definition).
+    should be sampled from logits with ``jax.random.categorical`` inside the network definition). Note that
+    this agent does not discount future rewards, therefore, the fitness is computed as a simple sum of rewards
+    obtained during the evaluation phase.
 
     Parameters
     ----------
