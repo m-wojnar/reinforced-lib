@@ -44,6 +44,7 @@ def run(num_epochs: int, population_size: int, seed: int) -> None:
         agent_params={
             'network': Network(),
             'evo_strategy': PGPE,
+            'evo_strategy_default_params': {'std_init': 0.1},
             'population_size': population_size
         },
         ext_type=GymnasiumVectorized,

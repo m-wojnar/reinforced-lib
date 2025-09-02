@@ -64,8 +64,10 @@ class Evosax(BaseAgent):
         Shape of the observation space.
     act_space_shape : Shape, default=(1,)
         Shape of the action space. For discrete action spaces, use (1,).
-    evo_strategy_params : dict, default=None
-        Parameters for the evolution strategy.
+    evo_strategy_kwargs : dict, default=None
+        Parameters for the evolution strategy initialization. The population size and initial solution are set automatically.
+    evo_strategy_default_params : dict, default=None
+        Custom default parameters for the evolution strategy. If None, the default parameters are used.
     num_eval_steps : int, default=None
         Number of evaluation steps. If None, the evaluation runs until all episodes end.
 
@@ -81,12 +83,16 @@ class Evosax(BaseAgent):
             population_size: int,
             obs_space_shape: Shape,
             act_space_shape: Shape,
-            evo_strategy_params: dict = None,
+            evo_strategy_kwargs: dict = None,
+            evo_strategy_default_params: dict = None,
             num_eval_steps: int = None
     ) -> None:
 
-        if evo_strategy_params is None:
-            evo_strategy_params = {}
+        if evo_strategy_kwargs is None:
+            evo_strategy_kwargs = {}
+
+        if evo_strategy_default_params is None:
+            evo_strategy_default_params = {}
 
         self.obs_space_shape = obs_space_shape if jnp.ndim(obs_space_shape) > 0 else (obs_space_shape,)
         self.act_space_shape = act_space_shape if jnp.ndim(act_space_shape) > 0 else (act_space_shape,)
@@ -96,15 +102,16 @@ class Evosax(BaseAgent):
         variables = network.init(jax.random.key(0), x_dummy)
         num_params, params_format_fn = self.get_params_format_fn(variables)
 
-        evo_strategy_params['population_size'] = population_size
-        evo_strategy_params['solution'] = jnp.zeros(num_params)
-        evo_strategy = evo_strategy(**evo_strategy_params)
+        evo_strategy_kwargs['population_size'] = population_size
+        evo_strategy_kwargs['solution'] = jnp.zeros(num_params)
+        evo_strategy = evo_strategy(**evo_strategy_kwargs)
 
         self.init = jax.jit(partial(
             self.init,
             population_size=population_size,
             variables=variables,
-            evo_strategy=evo_strategy
+            evo_strategy=evo_strategy,
+            evo_strategy_default_params=evo_strategy_default_params
         ))
         self.update = jax.jit(partial(
             self.update,
@@ -168,7 +175,8 @@ class Evosax(BaseAgent):
             key: PRNGKey,
             population_size: int,
             variables: dict,
-            evo_strategy: EvolutionaryAlgorithm
+            evo_strategy: EvolutionaryAlgorithm,
+            evo_strategy_default_params: dict
     ) -> EvosaxState:
         r"""
         Initializes the evolution strategy state and the population. The fitness values, step counter,
@@ -184,6 +192,8 @@ class Evosax(BaseAgent):
             The initialized parameters of the agent network.
         evo_strategy : EvolutionaryAlgorithm
             Initialized evosax evolution strategy.
+        evo_strategy_default_params : dict
+            Custom default parameters for the evolution strategy.
 
         Returns
         -------
@@ -192,6 +202,8 @@ class Evosax(BaseAgent):
         """
 
         es_params = evo_strategy.default_params
+        es_params = es_params.replace(**evo_strategy_default_params)
+
         es_state = evo_strategy.init(key, variables, es_params)
         population, es_state = evo_strategy.ask(key, es_state, es_params)
 
