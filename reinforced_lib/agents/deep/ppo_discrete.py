@@ -428,7 +428,7 @@ class PPODiscrete(BaseAgent):
         _, log_probs_act = PPODiscrete.log_prob(logits, actions)
         rollout_memory = rb.append(state.rollout_memory, state.prev_env_states, actions, rewards, terminals, values, log_probs_act)
 
-        def update(state: PPOState, rollout_memory: RolloutMemory, env_states: Array, key: PRNGKey) -> PPOState:
+        def do_update(state: PPOState, rollout_memory: RolloutMemory, env_states: Array, key: PRNGKey) -> PPOState:
             network_key, shuffle_key, update_key = jax.random.split(key, 3)
 
             (_, last_values), net_state = forward(network, state.params, state.net_state, network_key, env_states)
@@ -467,14 +467,15 @@ class PPODiscrete(BaseAgent):
                 counter=0
             )
 
-        return jax.lax.cond(
-            state.counter + 1 == rollout_length,
-            update,
-            lambda state, rollout_memory, env_states, _: state.replace(
+        def carry_on(state: PPOState, rollout_memory: RolloutMemory, env_states: Array, _) -> PPOState:
+            return state.replace(
                 rollout_memory=rollout_memory,
                 prev_env_states=env_states,
                 counter=state.counter + 1
-            ),
+            )
+
+        return jax.lax.cond(
+            state.counter + 1 == rollout_length, do_update, carry_on,
             state, rollout_memory, env_states, update_key
         )
 
