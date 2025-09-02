@@ -43,7 +43,7 @@ class PPOState(AgentState):
     counter: int
 
 
-class PPO(BaseAgent):
+class PPODiscrete(BaseAgent):
     r"""
     Proximal Policy Optimization (PPO) agent [5]_. This implementation uses the clipped surrogate objective.
     The policy and value functions should be represented by a single Flax module with two outputs: the action logits
@@ -259,6 +259,15 @@ class PPO(BaseAgent):
         )
 
     @staticmethod
+    def log_prob(logits: Array, actions: Array) -> tuple[Array, Array]:
+        log_probs = jax.nn.log_softmax(logits)
+        return log_probs, jnp.take_along_axis(log_probs, actions.astype(int), axis=-1).squeeze(axis=-1)
+
+    @staticmethod
+    def entropy(log_probs: Array) -> Array:
+        return -(log_probs * jnp.exp(log_probs)).sum(axis=-1)
+
+    @staticmethod
     def loss_fn(
             params: dict,
             key: PRNGKey,
@@ -331,8 +340,7 @@ class PPO(BaseAgent):
         states, actions, _, _, values, log_probs, returns, advantages = batch
 
         (logits, new_values), net_state = forward(network, params, net_state, key, states)
-        new_log_probs = jax.nn.log_softmax(logits)
-        new_log_probs_act = jnp.take_along_axis(new_log_probs, actions.astype(int), axis=-1).squeeze(axis=-1)
+        new_log_probs, new_log_probs_act = PPODiscrete.log_prob(logits, actions)
 
         if normalize_advantage:
             advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
@@ -350,7 +358,7 @@ class PPO(BaseAgent):
         else:
             v_loss = 0.5 * optax.squared_error(new_values, returns).mean()
 
-        entropy = -(new_log_probs * jnp.exp(new_log_probs)).sum(axis=-1).mean()
+        entropy = PPODiscrete.entropy(log_probs).mean()
         loss = pg_loss - entropy_coef * entropy + value_coef * v_loss
 
         return loss, net_state
@@ -417,8 +425,7 @@ class PPO(BaseAgent):
         state = state.replace(net_state=net_state)
         actions = actions[..., None]
 
-        log_probs = jax.nn.log_softmax(logits)
-        log_probs_act = jnp.take_along_axis(log_probs, actions, axis=-1).squeeze(axis=-1)
+        _, log_probs_act = PPODiscrete.log_prob(logits, actions)
         rollout_memory = rb.append(state.rollout_memory, state.prev_env_states, actions, rewards, terminals, values, log_probs_act)
 
         def update(state: PPOState, rollout_memory: RolloutMemory, env_states: Array, key: PRNGKey) -> PPOState:

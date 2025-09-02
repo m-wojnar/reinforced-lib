@@ -50,10 +50,10 @@ class GymnasiumVectorized(BaseExt):
 
         raise AttributeError()
 
-    @parameter()
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)))
     def min_action(self) -> tuple:
         return self.env.single_action_space.low
 
-    @parameter()
+    @parameter(parameter_type=gym.spaces.Sequence(gym.spaces.Box(-jnp.inf, jnp.inf, (1,), float)))
     def max_action(self) -> tuple:
         return self.env.single_action_space.high

@@ -7,7 +7,7 @@ from chex import Array
 from flax import linen as nn
 
 from reinforced_lib import RLib
-from reinforced_lib.agents.deep import PPO
+from reinforced_lib.agents.deep import PPODiscrete
 from reinforced_lib.exts import GymnasiumVectorized
 from reinforced_lib.logs import StdoutLogger, TensorboardLogger, WeightsAndBiasesLogger
 
@@ -61,7 +61,7 @@ def run(num_steps: int, num_envs: int, seed: int) -> None:
     """
 
     rl = RLib(
-        agent_type=PPO,
+        agent_type=PPODiscrete,
         agent_params={
             'network': PPOAgent(),
             'optimizer': optax.adam(1e-4, b1=0.9, eps=1e-5),

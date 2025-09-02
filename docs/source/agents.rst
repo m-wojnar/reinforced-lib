@@ -75,16 +75,26 @@ Deep Deterministic Policy Gradient (DDPG)
     :members:
 
 
-Proximal Policy Optimization (PPO)
-----------------------------------
+Proximal Policy Optimization (PPO) [discrete]
+---------------------------------------------
 
-.. currentmodule:: reinforced_lib.agents.deep.ppo
+.. currentmodule:: reinforced_lib.agents.deep.ppo_discrete
 
 .. autoclass:: PPOState
     :show-inheritance:
     :members:
 
-.. autoclass:: PPO
+.. autoclass:: PPODiscrete
+    :show-inheritance:
+    :members:
+
+
+Proximal Policy Optimization (PPO) [continuous]
+-----------------------------------------------
+
+.. currentmodule:: reinforced_lib.agents.deep.ppo_continuous
+
+.. autoclass:: PPOContinuous
     :show-inheritance:
     :members:
 
