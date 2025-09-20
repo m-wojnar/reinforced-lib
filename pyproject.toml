@@ -37,7 +37,7 @@ dependencies = [
     "lz4~=4.4.4",
     "matplotlib~=3.10.6",
     "tensorboardX~=2.6.4",
-    "wandb~=0.21.3"
+    "wandb~=0.22.0"
 ]
 
 [project.optional-dependencies]

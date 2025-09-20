@@ -99,6 +99,20 @@ Proximal Policy Optimization (PPO) [continuous]
     :members:
 
 
+Evosax wrapper
+--------------
+
+.. currentmodule:: reinforced_lib.agents.neuro.evosax
+
+.. autoclass:: EvosaxState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: Evosax
+    :show-inheritance:
+    :members:
+
+
 Epsilon-greedy
 --------------
 
@@ -217,5 +231,19 @@ Round-robin scheduler
     :members:
 
 .. autoclass:: RoundRobinScheduler
+    :show-inheritance:
+    :members:
+
+
+Masked MAB
+----------
+
+.. currentmodule:: reinforced_lib.experimental.masked
+
+.. autoclass:: MaskedState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: Masked
     :show-inheritance:
     :members:

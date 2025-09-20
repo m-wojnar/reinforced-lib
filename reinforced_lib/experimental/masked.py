@@ -39,11 +39,55 @@ class Masked(BaseAgent):
         self.sample = jax.jit(partial(self.sample, agent=agent))
 
     @staticmethod
-    def init(key: PRNGKey, *args, agent: BaseAgent, mask: Array, **kwargs) -> MaskedState:
+    def init(key: PRNGKey, *args: tuple, agent: BaseAgent, mask: Array, **kwargs: dict) -> MaskedState:
+        r"""
+        Initialize the masked agent state given the mask and the base agent.
+
+        Parameters
+        ----------
+        key : PRNGKey
+            A PRNG key used as the random key.
+        args : tuple
+            Positional arguments passed to the base agent init method.
+        agent : BaseAgent
+            A base agent whose state is initialized.
+        mask : Array
+            Binary mask array of the length equal to the number of arms.
+        kwargs : dict
+            Keyword arguments passed to the base agent init method.
+
+        Returns
+        -------
+        MaskedState
+            Initialized masked agent state.
+        """
+
         return MaskedState(agent_state=agent.init(key, *args, **kwargs), mask=mask)
 
     @staticmethod
-    def update(state: MaskedState, key: PRNGKey, *args, agent: BaseAgent, **kwargs) -> MaskedState:
+    def update(state: MaskedState, key: PRNGKey, *args: tuple, agent: BaseAgent, **kwargs: dict) -> MaskedState:
+        r"""
+        Update the base agent state. The entries corresponding to the masked actions are not updated.
+
+        Parameters
+        ----------
+        state : MaskedState
+            Current masked agent state.
+        key : PRNGKey
+            A PRNG key used as the random key.
+        args : tuple
+            Positional arguments passed to the base agent update method.
+        agent : BaseAgent
+            A base agent whose state is updated.
+        kwargs : dict
+            Keyword arguments passed to the base agent update method.
+
+        Returns
+        -------
+        MaskedState
+            Updated masked agent state.
+        """
+
         tree_mask = jax.tree.map(lambda _: jnp.expand_dims(state.mask, 1), state.agent_state)
         agent_state = agent.update(state.agent_state, key, *args, **kwargs)
         agent_state = jax.tree.map(lambda s, ns, m: jnp.where(m, s, ns), state.agent_state, agent_state, tree_mask)
@@ -51,6 +95,28 @@ class Masked(BaseAgent):
 
     @staticmethod
     def sample(state: MaskedState, key: PRNGKey, *args, agent: BaseAgent, **kwargs) -> int:
+        r"""
+        Sample an action from the base agent. If the sampled action is masked, resample until an unmasked action is found.
+
+        Parameters
+        ----------
+        state : MaskedState
+            Current masked agent state.
+        key : PRNGKey
+            A PRNG key used as the random key.
+        args : tuple
+            Positional arguments passed to the base agent sample method.
+        agent : BaseAgent
+            A base agent whose action is sampled.
+        kwargs : dict
+            Keyword arguments passed to the base agent sample method.
+
+        Returns
+        -------
+        int
+            Sampled action.
+        """
+
         sample_key, while_key = jax.random.split(key, 2)
         action = agent.sample(state.agent_state, sample_key, *args, **kwargs)
 
