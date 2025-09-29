@@ -6,11 +6,12 @@ import numpy as np
 import optax
 from chex import Array
 from flax import linen as nn
+from tqdm import tqdm
 
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import PPODiscrete
 from reinforced_lib.exts import GymnasiumVectorized
-from reinforced_lib.logs import CsvLogger, StdoutLogger
+from reinforced_lib.logs import CsvLogger
 
 
 class ActionNetwork(nn.Module):
@@ -81,7 +82,7 @@ def run(num_steps: int, num_envs: int, seed: int) -> None:
         },
         ext_type=GymnasiumVectorized,
         ext_params={'env_id': 'CartPole-v1', 'num_envs': num_envs},
-        logger_types=[StdoutLogger, CsvLogger],
+        logger_types=[CsvLogger],
         logger_params={'csv_path': f'cartpole-ppo-{num_envs}-envs-{seed}.csv'}
     )
 
@@ -95,12 +96,15 @@ def run(num_steps: int, num_envs: int, seed: int) -> None:
     return_0, step = 0, 0
     start_time = time.perf_counter()
 
+    pbar = tqdm(total=num_steps)
+
     while step < num_steps:
         env_states = env.step(np.asarray(actions))
         actions = rl.sample(*env_states)
 
         return_0 += env_states[1][0]
         step += num_envs
+        pbar.update(num_envs)
 
         if env_states[2][0] or env_states[3][0]:
             rl.log('return', return_0)

@@ -32,7 +32,7 @@ classifiers = [
 dependencies = [
     "cloudpickle~=3.1.1",
     "evosax~=0.2.0",
-    "gymnasium~=1.2.0",
+    "gymnasium~=1.2.1",
     "jax-ai-stack~=2025.4.9",
     "lz4~=4.4.4",
     "matplotlib~=3.10.6",
@@ -50,5 +50,6 @@ full = [
     # "ns3-ai==1.0.2",
     "pygame~=2.6.1",
     "seaborn~=0.13.2",
-    "tensorflow~=2.19.1"
+    "tensorflow~=2.19.1",
+    "tqdm~=4.67.1"
 ]
