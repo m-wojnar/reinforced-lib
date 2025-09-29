@@ -6,7 +6,6 @@ import numpy as np
 import optax
 from chex import Array
 from flax import linen as nn
-from tqdm import tqdm
 
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import PPODiscrete
@@ -48,14 +47,14 @@ class PPOAgent(nn.Module):
         return logits, values
 
 
-def run(num_steps: int, num_envs: int, seed: int) -> None:
+def run(time_limit: float, num_envs: int, seed: int) -> None:
     """
     Run ``num_steps`` cart-pole Gymnasium steps.
 
     Parameters
     ----------
-    num_steps : int
-        Number of simulation steps to perform.
+    time_limit : float
+        Maximum time (in seconds) to run the experiment.
     num_envs : int
         Number of parallel environments to use.
     seed : int
@@ -96,15 +95,12 @@ def run(num_steps: int, num_envs: int, seed: int) -> None:
     return_0, step = 0, 0
     start_time = time.perf_counter()
 
-    pbar = tqdm(total=num_steps)
-
-    while step < num_steps:
+    while time.perf_counter() - start_time < time_limit:
         env_states = env.step(np.asarray(actions))
         actions = rl.sample(*env_states)
 
         return_0 += env_states[1][0]
         step += num_envs
-        pbar.update(num_envs)
 
         if env_states[2][0] or env_states[3][0]:
             rl.log('return', return_0)
@@ -116,7 +112,7 @@ def run(num_steps: int, num_envs: int, seed: int) -> None:
 if __name__ == '__main__':
     args = ArgumentParser()
 
-    args.add_argument('--num_steps', default=int(1e7), type=int)
+    args.add_argument('--time_limit', default=120, type=float)
     args.add_argument('--num_envs', default=64, type=int)
     args.add_argument('--seed', default=42, type=int)
 

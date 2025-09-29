@@ -50,6 +50,5 @@ full = [
     # "ns3-ai==1.0.2",
     "pygame~=2.6.1",
     "seaborn~=0.13.2",
-    "tensorflow~=2.19.1",
-    "tqdm~=4.67.1"
+    "tensorflow~=2.19.1"
 ]
