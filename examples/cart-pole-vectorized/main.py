@@ -1,3 +1,4 @@
+import time
 from argparse import ArgumentParser
 
 import gymnasium as gym
@@ -9,7 +10,7 @@ from flax import linen as nn
 from reinforced_lib import RLib
 from reinforced_lib.agents.deep import PPODiscrete
 from reinforced_lib.exts import GymnasiumVectorized
-from reinforced_lib.logs import StdoutLogger, TensorboardLogger, WeightsAndBiasesLogger
+from reinforced_lib.logs import CsvLogger, StdoutLogger
 
 
 class ActionNetwork(nn.Module):
@@ -75,47 +76,43 @@ def run(num_steps: int, num_envs: int, seed: int) -> None:
             'value_coef': 0.5,
             'rollout_length': 32,
             'num_envs': num_envs,
-            'batch_size': 512,
+            'batch_size': (num_envs * 32) // 4,
             'num_epochs': 4
         },
         ext_type=GymnasiumVectorized,
         ext_params={'env_id': 'CartPole-v1', 'num_envs': num_envs},
-        logger_types=[StdoutLogger, TensorboardLogger, WeightsAndBiasesLogger]
+        logger_types=[StdoutLogger, CsvLogger],
+        logger_params={'csv_path': f'cartpole-ppo-{num_envs}-envs-{seed}.csv'}
     )
 
     def make_env():
         return gym.make('CartPole-v1', render_mode='no')
 
-    step = 0
+    env = gym.vector.SyncVectorEnv([make_env for _ in range(num_envs)])
+    _, _ = env.reset(seed=seed)
+
+    actions = env.action_space.sample()
+    return_0, step = 0, 0
+    start_time = time.perf_counter()
 
     while step < num_steps:
-        env = gym.vector.SyncVectorEnv([make_env for _ in range(num_envs)])
+        env_states = env.step(np.asarray(actions))
+        actions = rl.sample(*env_states)
 
-        _, _ = env.reset(seed=seed + step)
-        actions = env.action_space.sample()
+        return_0 += env_states[1][0]
+        step += num_envs
 
-        terminal = np.array([False] * num_envs)
-        max_epoch_len, min_epoch_len = 0, 0
-
-        while not np.all(terminal):
-            env_states = env.step(np.asarray(actions))
-            actions = rl.sample(*env_states)
-
-            terminal = terminal | env_states[2] | env_states[3]
-            max_epoch_len += 1
-
-            if not np.any(terminal):
-                min_epoch_len += 1
-
-        rl.log('max_epoch_len', max_epoch_len)
-        rl.log('min_epoch_len', min_epoch_len)
-        step += max_epoch_len * num_envs
+        if env_states[2][0] or env_states[3][0]:
+            rl.log('return', return_0)
+            rl.log('steps', step)
+            rl.log('time', time.perf_counter() - start_time)
+            return_0 = 0
 
 
 if __name__ == '__main__':
     args = ArgumentParser()
 
-    args.add_argument('--num_steps', default=int(1e6), type=int)
+    args.add_argument('--num_steps', default=int(1e7), type=int)
     args.add_argument('--num_envs', default=64, type=int)
     args.add_argument('--seed', default=42, type=int)
 
