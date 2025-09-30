@@ -49,7 +49,8 @@ class PPOAgent(nn.Module):
 
 def run(time_limit: float, num_envs: int, seed: int) -> None:
     """
-    Run ``num_steps`` cart-pole Gymnasium steps.
+    Run ``num_envs`` CartPole Gymnasium environments in parallel using PPO to optimize the policy.
+    The experiment runs for a maximum of ``time_limit`` seconds.
 
     Parameters
     ----------
@@ -86,7 +87,7 @@ def run(time_limit: float, num_envs: int, seed: int) -> None:
     )
 
     def make_env():
-        return gym.make('CartPole-v1', render_mode='no')
+        return gym.make('CartPole-v1')
 
     env = gym.vector.SyncVectorEnv([make_env for _ in range(num_envs)])
     _, _ = env.reset(seed=seed)
@@ -112,7 +113,7 @@ def run(time_limit: float, num_envs: int, seed: int) -> None:
 if __name__ == '__main__':
     args = ArgumentParser()
 
-    args.add_argument('--time_limit', default=120, type=float)
+    args.add_argument('--time_limit', default=85, type=float)
     args.add_argument('--num_envs', default=64, type=int)
     args.add_argument('--seed', default=42, type=int)
 

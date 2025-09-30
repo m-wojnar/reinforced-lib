@@ -1,11 +1,11 @@
 #!/bin/bash
 
-num_envs=(2 4 8 16 32 64)
+evo_algs=("CMA_ES" "PGPE" "SimpleGA")
 seeds=(1 2 3 4 5 6 7 8 9 10)
 
-for n in "${num_envs[@]}"; do
+for alg in "${evo_algs[@]}"; do
     for s in "${seeds[@]}"; do
         echo "Running with $n environments and seed $s"
-        python main.py --num_envs $n --seed $s
+        python main.py --evo_alg $alg --seed $s
     done
 done
