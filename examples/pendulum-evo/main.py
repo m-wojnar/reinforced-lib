@@ -3,13 +3,14 @@ from argparse import ArgumentParser
 import evosax.algorithms
 import gymnasium as gym
 import numpy as np
+import optax
 from chex import Array
 from flax import linen as nn
 
 from reinforced_lib import RLib
 from reinforced_lib.agents.neuro import Evosax
 from reinforced_lib.exts import GymnasiumVectorized
-from reinforced_lib.logs import CsvLogger, StdoutLogger
+from reinforced_lib.logs import CsvLogger
 
 
 class Network(nn.Module):
@@ -40,17 +41,23 @@ def run(evo_alg: type, num_epochs: int, population_size: int, seed: int) -> None
         Integer used as the random key.
     """
 
+    if isinstance(evo_alg, evosax.algorithms.SimpleES):
+        evo_kwargs = {'optimizer': optax.adam(0.03)}
+    else:
+        evo_kwargs = {}
+
     rl = RLib(
         agent_type=Evosax,
         agent_params={
             'network': Network(),
             'evo_strategy': evo_alg,
-            'evo_strategy_default_params': {'std_init': 0.1},
+            'evo_strategy_kwargs': evo_kwargs,
+            'evo_strategy_default_params': {'std_init': 0.05},
             'population_size': population_size
         },
         ext_type=GymnasiumVectorized,
         ext_params={'env_id': 'Pendulum-v1', 'num_envs': population_size},
-        logger_types=[CsvLogger, StdoutLogger],
+        logger_types=CsvLogger,
         logger_params={'csv_path': f'pendulum-{evo_alg.__name__}-evo-{seed}.csv'}
     )
 
@@ -78,7 +85,7 @@ if __name__ == '__main__':
     args = ArgumentParser()
 
     args.add_argument('--evo_alg', type=str, required=True)
-    args.add_argument('--num_epochs', default=300, type=int)
+    args.add_argument('--num_epochs', default=500, type=int)
     args.add_argument('--population_size', default=64, type=int)
     args.add_argument('--seed', default=42, type=int)
 

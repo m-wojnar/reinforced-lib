@@ -44,15 +44,22 @@ class EvosaxState(AgentState):
 
 class Evosax(BaseAgent):
     r"""
-    Evolution strategies (ES)-based agent using the evosax library [12]_. This implementation maintains a population
+    Evolution strategies (ES)-based agent using the ``evosax`` library [12]_. This implementation maintains a population
     of candidate solutions (parameter vectors), evaluates them in parallel across environments, and updates the
     population by applying an evolutionary algorithm. Unlike gradient-based RL methods, this agent does not rely
     on backpropagation through the value or policy network. Instead, the network parameters are evolved using
     black-box optimization. This agent is suitable for environments with both discrete and continuous action spaces.
-    The user is responsible for providing appropriate network output in the correct format (e.g., discrete actions
-    should be sampled from logits with ``jax.random.categorical`` inside the network definition). Note that
-    this agent does not discount future rewards, therefore, the fitness is computed as a simple sum of rewards
-    obtained during the evaluation phase.
+
+    **Note!** The user is responsible for providing appropriate network output in the correct format (e.g., discrete
+    actions should be sampled from logits with ``jax.random.categorical`` inside the network definition).
+
+    **Note!** This agent does not discount future rewards, therefore, the fitness is computed as a simple sum of
+    rewards obtained during the evaluation phase.
+
+    **Note!** This agent is compatible only with distribution-based evolution strategies from the ``evosax`` library
+    (see `this list <https://github.com/RobertTLange/evosax/tree/main/evosax/algorithms/distribution_based>`_ for
+    available algorithms). Population-based methods (`listed here <https://github.com/RobertTLange/evosax/tree/main/evosax/algorithms/population_based>`_
+    will be supported in future releases.
 
     Parameters
     ----------

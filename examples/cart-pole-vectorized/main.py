@@ -82,7 +82,7 @@ def run(time_limit: float, num_envs: int, seed: int) -> None:
         },
         ext_type=GymnasiumVectorized,
         ext_params={'env_id': 'CartPole-v1', 'num_envs': num_envs},
-        logger_types=[CsvLogger],
+        logger_types=CsvLogger,
         logger_params={'csv_path': f'cartpole-ppo-{num_envs}-envs-{seed}.csv'}
     )
 
