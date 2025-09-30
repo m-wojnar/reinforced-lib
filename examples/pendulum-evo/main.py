@@ -41,10 +41,16 @@ def run(evo_alg: type, num_epochs: int, population_size: int, seed: int) -> None
         Integer used as the random key.
     """
 
-    if isinstance(evo_alg, evosax.algorithms.SimpleES):
-        evo_kwargs = {'optimizer': optax.adam(0.03)}
-    else:
-        evo_kwargs = {}
+    evo_kwargs = {}
+    evo_params = {}
+
+    if isinstance(evo_alg, evosax.algorithms.CMA_ES):
+        evo_params['std_init'] = 0.05
+    elif isinstance(evo_alg, evosax.algorithms.SimpleES):
+        evo_kwargs['optimizer'] = optax.adam(0.03)
+        evo_params['std_init'] = 0.05
+    elif isinstance(evo_alg, evosax.algorithms.SimulatedAnnealing):
+        evo_kwargs['std_schedule'] = optax.constant_schedule(0.01)
 
     rl = RLib(
         agent_type=Evosax,
@@ -52,7 +58,7 @@ def run(evo_alg: type, num_epochs: int, population_size: int, seed: int) -> None
             'network': Network(),
             'evo_strategy': evo_alg,
             'evo_strategy_kwargs': evo_kwargs,
-            'evo_strategy_default_params': {'std_init': 0.05},
+            'evo_strategy_default_params': evo_params,
             'population_size': population_size
         },
         ext_type=GymnasiumVectorized,
