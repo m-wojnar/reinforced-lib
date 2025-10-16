@@ -5,6 +5,7 @@
 [![build and test][tests-badge]][github-actions]
 [![Documentation Status][rtd-badge]][documentation]
 [![DOI](https://img.shields.io/badge/DOI-10.1016/j.softx.2024.101706-blue.svg)](https://doi.org/10.1016/j.softx.2024.101706)
+[![DOI](https://img.shields.io/badge/DOI-10.1016/j.softx.2025.102400-blue.svg)](https://doi.org/10.1016/j.softx.2025.102400)
 
 [pypi-badge]: https://img.shields.io/pypi/v/reinforced-lib
 [pypi]: https://pypi.org/project/reinforced-lib/
@@ -150,5 +151,21 @@ To cite this repository, please use the following BibTeX entry for the Reinforce
   issn = {2352-7110},
   doi = {https://doi.org/10.1016/j.softx.2024.101706},
   url = {https://www.sciencedirect.com/science/article/pii/S2352711024000773}
+}
+```
+
+If you are using Reinforced-lib v2.0.0 or later, you can alse cite the following paper:
+
+```bibtex
+@article{reinforcedlib2025,
+  author = {Maksymilian Wojnar},
+  title = {{V}ersion v2.0.0 — {R}einforced-lib: {R}apid prototyping of reinforcement learning solutions},
+  journal = {SoftwareX},
+  volume = {32},
+  pages = {102400},
+  year = {2025},
+  issn = {2352-7110},
+  doi = {https://doi.org/10.1016/j.softx.2025.102400},
+  url = {https://www.sciencedirect.com/science/article/pii/S2352711025003668},
 }
 ```
