@@ -18,6 +18,9 @@ Welcome to Reinforced-lib's documentation!
 .. image:: https://img.shields.io/badge/DOI-10.1016/j.softx.2024.101706-blue.svg
     :target: https://doi.org/10.1016/j.softx.2024.101706
 
+.. image:: https://img.shields.io/badge/DOI-10.1016/j.softx.2025.102400-blue.svg
+    :target: https://doi.org/10.1016/j.softx.2025.102400
+
 **Introducing Reinforced-lib:** a lightweight Python library for rapid development of reinforcement-learning (RL) solutions. It is open-source, prioritizes ease of use, provides comprehensive documentation, and offers both deep reinforcement learning (DRL) and classic non-neural agents. Built on `JAX <https://jax.readthedocs.io/en/latest/>`_, it facilitates exporting trained models to embedded devices, and makes it great for research and prototyping with RL algorithms. Access to JAX's JIT functionality ensure high-performance results.
 
 Key components
@@ -123,4 +126,20 @@ To cite this repository, please use the following BibTeX entry for the Reinforce
       issn = {2352-7110},
       doi = {https://doi.org/10.1016/j.softx.2024.101706},
       url = {https://www.sciencedirect.com/science/article/pii/S2352711024000773}
+    }
+
+If you are using Reinforced-lib v2.0.0 or later, you can alse cite the following paper:
+
+.. code-block:: latex
+
+    @article{reinforcedlib2025,
+      author = {Maksymilian Wojnar},
+      title = {{V}ersion v2.0.0 — {R}einforced-lib: {R}apid prototyping of reinforcement learning solutions},
+      journal = {SoftwareX},
+      volume = {32},
+      pages = {102400},
+      year = {2025},
+      issn = {2352-7110},
+      doi = {https://doi.org/10.1016/j.softx.2025.102400},
+      url = {https://www.sciencedirect.com/science/article/pii/S2352711025003668},
     }
