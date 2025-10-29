@@ -52,6 +52,3 @@ full = [
     "seaborn~=0.13.2",
     "tensorflow~=2.20.0"
 ]
-
-[tool.setuptools]
-packages = ["reinforced_lib"]
