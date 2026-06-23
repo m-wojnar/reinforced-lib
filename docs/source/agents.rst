@@ -183,6 +183,20 @@ Normal Thompson sampling
     :members:
 
 
+Discrete Thompson sampling
+--------------------------
+
+.. currentmodule:: reinforced_lib.agents.mab.discrete_thompson_sampling
+
+.. autoclass:: DiscreteThompsonSamplingState
+    :show-inheritance:
+    :members:
+
+.. autoclass:: DiscreteThompsonSampling
+    :show-inheritance:
+    :members:
+
+
 Log-normal Thompson sampling
 ----------------------------
 
