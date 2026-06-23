@@ -5,3 +5,8 @@ from reinforced_lib.agents.mab.lognormal_thompson_sampling import LogNormalThomp
 from reinforced_lib.agents.mab.softmax import Softmax
 from reinforced_lib.agents.mab.thompson_sampling import ThompsonSampling
 from reinforced_lib.agents.mab.ucb import UCB
+
+try:
+    from reinforced_lib.agents.mab.discrete_thompson_sampling import DiscreteThompsonSampling
+except ModuleNotFoundError:
+    pass
