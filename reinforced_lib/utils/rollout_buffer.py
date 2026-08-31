@@ -212,7 +212,7 @@ def rollout_buffer(
             return adv_t, adv_t
 
         _, adv_seq = jax.lax.scan(scan_fn, init=jnp.zeros(num_envs), xs=jnp.arange(rollout_length), reverse=True)
-        advantages = jnp.flip(adv_seq, axis=0).T
+        advantages = adv_seq.T
         returns = advantages + buffer.values
 
         return buffer.replace(advantages=advantages, returns=returns)
